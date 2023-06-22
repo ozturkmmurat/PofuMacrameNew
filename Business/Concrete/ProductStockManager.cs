@@ -1,4 +1,5 @@
 ﻿using Business.Abstract;
+using Core.Aspects.Autofac.Transaction;
 using Core.Utilities.Result.Abstract;
 using Core.Utilities.Result.Concrete;
 using DataAccess.Abstract;
@@ -21,6 +22,16 @@ namespace Business.Concrete
             if (productStock != null)
             {
                 _productStockDal.Add(productStock);
+                return new SuccessResult();
+            }
+            return new ErrorResult();
+        }
+
+        public IResult AddList(List<ProductStock> productStocks)
+        {
+            if (productStocks != null)
+            {
+                _productStockDal.AddRange(productStocks);
                 return new SuccessResult();
             }
             return new ErrorResult();
@@ -56,6 +67,16 @@ namespace Business.Concrete
             return new ErrorDataResult<ProductStock>();
         }
 
+        public IDataResult<ProductStock> GetByProductId(int productId)
+        {
+            var result = _productStockDal.Get(x => x.ProductId == productId);
+            if (result != null)
+            {
+                return new SuccessDataResult<ProductStock>(result);
+            }
+            return new ErrorDataResult<ProductStock>();
+        }
+
         public IDataResult<ProductStock> GetByVariantId(int variantId)
         {
             var result = _productStockDal.Get(x => x.VariantId == variantId);
@@ -71,6 +92,16 @@ namespace Business.Concrete
             if (productStock != null)
             {
                 _productStockDal.Update(productStock);
+                return new SuccessResult();
+            }
+            return new ErrorResult();
+        }
+
+        public IResult UpdateList(List<ProductStock> productStocks)
+        {
+            if (productStocks != null)
+            {
+                _productStockDal.UpdateRange(productStocks);
                 return new SuccessResult();
             }
             return new ErrorResult();

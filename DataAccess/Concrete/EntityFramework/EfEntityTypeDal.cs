@@ -8,7 +8,7 @@ using System.Text;
 
 namespace DataAccess.Concrete.EntityFramework
 {
-    public class EfSubCategoryDal : EfEntityRepositoryBase<SubCategory, PofuMacrameContext>, ISubCategoryDal
+    public class EfEntityTypeDal : EfEntityRepositoryBase<EntityType, PofuMacrameContext>, IEntityTypeDal
     {
     }
 }

@@ -1,5 +1,7 @@
 ﻿using Core.Helpers.FileHelper;
 using Core.Helpers.GuidHelper;
+using Core.Utilities.Result.Abstract;
+using Core.Utilities.Result.Concrete;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
@@ -16,6 +18,15 @@ namespace Core.Utilities.Helpers
             {
                 File.Delete(filePath); // Var ise belirtilen dosyayı sil 
             }
+        }
+
+        public IResult Get(string filePath)
+        {
+            if (File.Exists(filePath))
+            {
+                return new SuccessResult();
+            }
+            return null;
         }
 
         public string Update(IFormFile file,string filePath, string root)  //
@@ -40,7 +51,7 @@ namespace Core.Utilities.Helpers
                                                       // Adında yeni bir klasör oluşturmasını söylüyoruz 
 
                 }
-                string extension = Path.GetExtension(file.Name); // Dosya uzantısını elde ediyoruz .jpg mi .txt mi .png mi 
+                string extension = Path.GetExtension(file.FileName); // Dosya uzantısını elde ediyoruz .jpg mi .txt mi .png mi 
                 string guid = GuidHelper.CreateGuid(); // Guidhelper classında  CreateGuid metoduyla benzersiz bir ada sahip dosya adı oluşturuyoruz
                 string filePath = guid + extension;  // Dosya adı ile uzantısını birleştirip filepath oluşturuyoruz böyle ortaya örneğin 
                                                     // Şöyle bir şey çıkıyor  kedifotografi.jpg  kedifotografi  guid yani benzeri olmayan ad  extension ise uzantısı

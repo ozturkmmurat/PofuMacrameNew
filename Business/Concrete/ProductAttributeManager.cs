@@ -57,6 +57,16 @@ namespace Business.Concrete
             return new ErrorDataResult<List<ProductAttribute>>();
         }
 
+        public IDataResult<List<ProductAttributeDto>> GetAllDtoByProductId(int productId)
+        {
+            var result = _productAttributeDal.GetAllFilterDto(x => x.ProductId == productId);
+            if (result != null)
+            {
+                return new SuccessDataResult<List<ProductAttributeDto>>(result);
+            }
+            return new ErrorDataResult<List<ProductAttributeDto>>();
+        }
+
         public IResult Update(ProductAttribute productAttribute)
         {
             if (productAttribute != null)

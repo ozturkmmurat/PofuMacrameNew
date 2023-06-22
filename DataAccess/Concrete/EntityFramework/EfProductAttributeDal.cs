@@ -13,5 +13,25 @@ namespace DataAccess.Concrete.EntityFramework
 {
     public class EfProductAttributeDal : EfEntityRepositoryBase<ProductAttribute, PofuMacrameContext>, IProductAttributeDal
     {
+        public List<ProductAttributeDto> GetAllFilterDto(Expression<Func<ProductAttributeDto, bool>> filter = null)
+        {
+            using (PofuMacrameContext context = new PofuMacrameContext())
+            {
+                var result = from pa in context.ProductAttributes
+                             join p in context.Products
+                             on pa.ProductId equals p.Id
+                             join a in context.Attributes
+                             on pa.AttributeId equals a.Id
+
+
+                             select new ProductAttributeDto
+                             {
+                                 ProductId = p.Id,
+                                 ProductName = p.Title,
+                                 AttributeName = a.Name
+                             };
+                return filter == null ? result.ToList() : result.Where(filter).ToList();
+            }
+        }
     }
 }

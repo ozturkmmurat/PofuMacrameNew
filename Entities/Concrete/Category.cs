@@ -8,6 +8,7 @@ namespace Entities.Concrete
     public class Category : IEntity
     {
         public int Id { get; set; }
+        public int ParentId { get; set; }
         public string CategoryName { get; set; }
     }
 }

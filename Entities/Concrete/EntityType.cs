@@ -5,10 +5,9 @@ using System.Text;
 
 namespace Entities.Concrete
 {
-    public class ProductCategory :  IEntity
+    public class EntityType : IEntity
     {
         public int Id { get; set; }
-        public int ProductId { get; set; }
-        public int SubCategoryId { get; set; }
+        public string EntityTypeName { get; set; }
     }
 }

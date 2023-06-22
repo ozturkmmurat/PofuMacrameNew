@@ -6,7 +6,7 @@ using System.Text;
 
 namespace DataAccess.Abstract
 {
-    public interface ISubCategoryDal : IEntityRepository<SubCategory>
+    public interface IImageDal : IEntityRepository<Image>
     {
     }
 }

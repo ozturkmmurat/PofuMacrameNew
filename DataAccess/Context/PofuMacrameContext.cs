@@ -18,17 +18,20 @@ namespace DataAccess.Context
             }
         }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+        }
+
         public DbSet<Entities.Concrete.Attribute> Attributes { get; set; }
         public DbSet<AttributeValue> AttributeValues { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductAttribute> ProductAttributes { get; set; }
-        public DbSet<ProductCategory> ProductCategories { get; set; }
         public DbSet<ProductStock> ProductStocks { get; set; }
-        public DbSet<SubCategory> SubCategories { get; set; }
         public DbSet<SubOrder> SubOrders { get; set; }
-        public DbSet<SubVariant> SubVariants { get; set; }
         public DbSet<Variant> Variants { get; set; }
+        public DbSet<EntityType> EntityTypes { get; set; }
+        public DbSet<Image> Images { get; set; }
     }
 }

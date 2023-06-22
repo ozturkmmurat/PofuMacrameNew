@@ -8,7 +8,7 @@ using System.Text;
 
 namespace DataAccess.Concrete.EntityFramework
 {
-    class EfProductCategoryDal : EfEntityRepositoryBase<ProductCategory, PofuMacrameContext>, IProductCategoryDal
+    public class EfImageDal : EfEntityRepositoryBase<Image, PofuMacrameContext>, IImageDal
     {
     }
 }

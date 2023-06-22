@@ -6,7 +6,7 @@ using System.Text;
 
 namespace DataAccess.Abstract
 {
-    public interface ISubVariantDal : IEntityRepository<SubVariant>
+    public interface IEntityTypeDal : IEntityRepository<EntityType>
     {
     }
 }

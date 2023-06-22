@@ -1,6 +1,6 @@
 ﻿using Core.DataAccess;
 using Entities.Concrete;
-using Entities.Dtos;
+using Entities.Dtos.Variant.Select;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -10,6 +10,5 @@ namespace DataAccess.Abstract
 {
     public interface IVariantDal : IEntityRepository<Variant>
     {
-        List<VariantDto> GetAllFilterDto(Expression<Func<VariantDto, bool>> filter = null);
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Core.Utilities.Result.Abstract;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,5 +11,6 @@ namespace Core.Helpers.FileHelper
         string Upload(IFormFile formFile,string root);
         string Update(IFormFile formFile,string filePath, string root);
         void Delete(string filePath);
+        IResult Get(string filePath);
     }
 }
