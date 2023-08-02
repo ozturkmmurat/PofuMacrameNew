@@ -11,11 +11,10 @@ namespace Business.Abstract
     public interface IProductService
     {
         IDataResult<List<Product>> GetAll();
+        IDataResult<List<SelectProductDto>> GetAllDto();
         IDataResult<Product> GetById(int id);
-        IDataResult<List<SelectProductDto>> GetAllProductAndVariant();
-        string CreateStockCode(AddProductDto addProductDto);
         IResult Add(Product product);
-        IResult TsaAdd(AddProductDto addProductDto);
+        IResult TsaAdd(ProductDto addProductDto);
         IResult Update(Product product);
         IResult Delete(Product product);
     }

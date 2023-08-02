@@ -1,5 +1,6 @@
 ﻿using Core.Utilities.Result.Abstract;
 using Entities.Concrete;
+using Entities.Dtos.Product;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,7 +16,7 @@ namespace Business.Abstract
         IResult Add(ProductStock productStock);
         IResult AddList(List<ProductStock> productStocks);
         IResult Update(ProductStock productStock);
-        IResult UpdateList(List<ProductStock> productStocks);
         IResult Delete(ProductStock productStock);
+        IDataResult<List<ProductStock>> MappingProductStock(ProductDto productDto);
     }
 }

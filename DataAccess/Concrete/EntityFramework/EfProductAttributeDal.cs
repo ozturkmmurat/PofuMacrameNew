@@ -27,7 +27,7 @@ namespace DataAccess.Concrete.EntityFramework
                              select new ProductAttributeDto
                              {
                                  ProductId = p.Id,
-                                 ProductName = p.Title,
+                                 ProductName = p.ProductName,
                                  AttributeName = a.Name
                              };
                 return filter == null ? result.ToList() : result.Where(filter).ToList();

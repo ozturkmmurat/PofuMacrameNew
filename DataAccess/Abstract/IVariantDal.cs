@@ -10,5 +10,6 @@ namespace DataAccess.Abstract
 {
     public interface IVariantDal : IEntityRepository<Variant>
     {
+        List<ViewVariantDto> GetAllFilterDto(Expression<Func<ViewVariantDto, bool>> filter = null);
     }
 }

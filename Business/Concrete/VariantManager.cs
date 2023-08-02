@@ -6,7 +6,9 @@ using Core.Utilities.Result.Concrete;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.Dtos;
+using Entities.Dtos.Product;
 using Entities.Dtos.Variant;
+using Entities.Dtos.Variant.Select;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -34,34 +36,50 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
-        public string CreateStockCode(List<AddVariantDto> addVariantDtos)
+        public IResult AddList(List<Variant> variants)
         {
-            if (addVariantDtos != null)
+            if (variants != null)
             {
-                string variantStockCode = null;
-                for (int i = 0; i < 1; i++)
+                _variantDal.AddRange(variants);
+                return new SuccessResult();
+            }
+            return new ErrorResult();
+        }
+
+        public IDataResult<List<Variant>> CreateStockCode(ProductDto productDto)
+        {
+            if (productDto != null)
+            {
+
+                List<Variant> variants = new List<Variant>();
+                for (int i = 0; i < productDto.AddVariantDtos.Count; i++)
                 {
-                    for (int j = 0; j < addVariantDtos[i].AttrCode.Count; j++)
+                    string variantStockCode = null;
+                    for (int j = 0; j < productDto.AddVariantDtos[i].AttrCode.Count; j++)
                     {
                         if (variantStockCode == null)
                         {
-                            variantStockCode += addVariantDtos[i].ProductId + "-" + addVariantDtos[i].VariantId + "-" + addVariantDtos[i].AttrCode[j] + "-";
+                            variantStockCode += productDto.ProductId + "-"  + productDto.AddVariantDtos[i].AttrCode[j] + "-";
                         }
-                        else if (addVariantDtos[i].AttrCode.Count == 1)
+                        else if (productDto.AddVariantDtos[i].AttrCode.Count == 1)
                         {
-                            variantStockCode += addVariantDtos[i].AttrCode[j];
+                            variantStockCode += productDto.AddVariantDtos[i].AttrCode[j];
                         }
-                        else if (addVariantDtos[i].AttrCode[j] == addVariantDtos[i].AttrCode[addVariantDtos[i].AttrCode.Count - 1])
+                        else if (productDto.AddVariantDtos[i].AttrCode[j] == productDto.AddVariantDtos[i].AttrCode[productDto.AddVariantDtos[i].AttrCode.Count - 1])
                         {
-                            variantStockCode += addVariantDtos[i].AttrCode[j] + "-" + CreateCodeTime.CreateTime();
+                            variantStockCode += productDto.AddVariantDtos[i].AttrCode[j] + "-" + CreateCodeTime.CreateTime();
                         }
                         else
                         {
-                            variantStockCode += "-" + addVariantDtos[i].AttrCode[j];
+                            variantStockCode += "-" + productDto.AddVariantDtos[i].AttrCode[j];
                         }
                     }
+                    Variant variant = new Variant();
+                    variant.StockCode = variantStockCode;
+                    variant.ProductId = productDto.ProductId;
+                    variants.Add(variant);
                 }
-                return variantStockCode;
+                return new SuccessDataResult<List<Variant>>(variants);
             }
             return null;
         }
@@ -96,6 +114,16 @@ namespace Business.Concrete
             return new ErrorDataResult<List<Variant>>();
         }
 
+        public IDataResult<List<ViewVariantDto>> GetAllDto()
+        {
+            var result = _variantDal.GetAllFilterDto();
+            if (result != null)
+            {
+                return new SuccessDataResult<List<ViewVariantDto>>(result);
+            }
+            return new ErrorDataResult<List<ViewVariantDto>>(result);
+        }
+
         public IDataResult<Variant> GetById(int id)
         {
             var result = _variantDal.Get(x => x.Id == id);
@@ -104,58 +132,6 @@ namespace Business.Concrete
                 return new SuccessDataResult<Variant>(result);
             }
             return new ErrorDataResult<Variant>();
-        }
-
-        public IDataResult<List<Variant>> MappingVariant(List<AddVariantDto> addVariantDtos)
-        {
-            if (addVariantDtos != null)
-            {
-                List<Variant> variants = new List<Variant>();
-                for (int i = 0; i < addVariantDtos.Count; i++)
-                {
-                    Variant variant = new Variant();
-                    variant.Id = addVariantDtos[i].VariantId;
-                    variant.ProductId = addVariantDtos[i].ProductId;
-                    variants.Add(variant);
-                }
-                return new SuccessDataResult<List<Variant>>(variants);
-            }
-            return new ErrorDataResult<List<Variant>>();
-        }
-
-        public IResult TsaAddList(List<AddVariantDto> addVariantDtos)
-        {
-            if (addVariantDtos != null)
-            {
-                List<ProductStock> productStocks = new List<ProductStock>();
-                AddVariantDto addVariantDto = new AddVariantDto();
-                var mapResult = MappingVariant(addVariantDtos);
-                string variantStockCode = null;
-                _variantDal.AddRange(mapResult.Data);
-                for (int i = 0; i < addVariantDtos.Count; i++)
-                {
-                    ProductStock productStock = new ProductStock();
-                    productStock.VariantId = mapResult.Data[i].Id;
-                    variantStockCode = CreateStockCode(addVariantDtos);
-                    if (variantStockCode == null)
-                    {
-                        return new ErrorResult();
-                    }
-                    productStock.ProductId = addVariantDtos[i].ProductId;
-                    productStock.Price = addVariantDtos[i].ProductStock.Price;
-                    productStock.Quantity = addVariantDtos[i].ProductStock.Quantity;
-                    productStock.StockCode = variantStockCode;
-                    productStocks.Add(productStock);
-                }
-                _productStockService.AddList(productStocks);
-                return new SuccessResult();
-            }
-            return new ErrorResult();
-        }
-
-        public IResult TsaUpdateList(List<AddVariantDto> addVariantDtos)
-        {
-            throw new NotImplementedException();
         }
 
         public IResult Update(Variant variant)

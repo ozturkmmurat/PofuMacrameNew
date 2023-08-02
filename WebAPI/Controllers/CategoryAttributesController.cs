@@ -1,0 +1,73 @@
+﻿using Business.Abstract;
+using Entities.Concrete;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace WebAPI.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class CategoryAttributesController : ControllerBase
+    {
+        ICategoryAttributeService _categoryAttributeService;
+        public CategoryAttributesController(ICategoryAttributeService categoryAttributeService)
+        {
+            _categoryAttributeService = categoryAttributeService;
+        }
+
+        [HttpGet("GetAll")]
+        public IActionResult GetAll()
+        {
+            var result = _categoryAttributeService.GetAll();
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetAllDtoTrueSlicerAttribute")]
+        public IActionResult GetAllViewDtoTrueVariantAttribute(int categoryId)
+        {
+            var result = _categoryAttributeService.GetAllDtoTrueSlicerAttribute(categoryId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        [HttpPost("Add")]
+        public IActionResult Add(CategoryAttribute categoryAttribute)
+        {
+            var result = _categoryAttributeService.Add(categoryAttribute);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        [HttpPost("Update")]
+        public IActionResult Update(CategoryAttribute categoryAttribute)
+        {
+            var result = _categoryAttributeService.Update(categoryAttribute);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        [HttpPost("Delete")]
+        public IActionResult Delete(CategoryAttribute categoryAttribute)
+        {
+            var result = _categoryAttributeService.Delete(categoryAttribute);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+    }
+}

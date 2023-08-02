@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+
 namespace Business.DependecyResolvers.Autofac
 {
     public class AutofacBusinessModule : Module
@@ -30,6 +31,15 @@ namespace Business.DependecyResolvers.Autofac
             builder.RegisterType<EfProductAttributeDal>().As<IProductAttributeDal>().SingleInstance();
             builder.RegisterType<ProductAttributeManager>().As<IProductAttributeService>().SingleInstance();
 
+            builder.RegisterType<EfCategoryDal>().As<ICategoryDal>().SingleInstance();
+            builder.RegisterType<CategoryManager>().As<ICategoryService>().SingleInstance();
+
+            builder.RegisterType<EfCategoryAttributeDal>().As<ICategoryAttributeDal>().SingleInstance();
+            builder.RegisterType<CategoryAttributeManager>().As<ICategoryAttributeService>().SingleInstance();
+
+            builder.RegisterType<EfCategoryImageDal>().As<ICategoryImageDal>().SingleInstance();
+            builder.RegisterType<CategoryImageManager>().As<ICategoryImageService>().SingleInstance();
+
             builder.RegisterType<EfProductDal>().As<IProductDal>().SingleInstance();
             builder.RegisterType<ProductManager>().As<IProductService>().SingleInstance();
 
@@ -42,11 +52,9 @@ namespace Business.DependecyResolvers.Autofac
             builder.RegisterType<EfVariantDal>().As<IVariantDal>().SingleInstance();
             builder.RegisterType<VariantManager>().As<IVariantService>().SingleInstance();
 
-            builder.RegisterType<EfEntityTypeDal>().As<IEntityTypeDal>().SingleInstance();
-            builder.RegisterType<EntityTypeManager>().As<IEntityTypeService>().SingleInstance();
+            builder.RegisterType<EfProductAttributeImageDal>().As<IProductAttributeImageDal>().SingleInstance();
+            builder.RegisterType<ProductAttributeImageManager>().As<IProductAttributeImageService>().SingleInstance();
 
-            builder.RegisterType<EfImageDal>().As<IImageDal>().SingleInstance();
-            builder.RegisterType<ImageManager>().As<IImageService>().SingleInstance();
             builder.RegisterType<FileHelperManager>().As<IFileHelper>().SingleInstance();
 
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();

@@ -31,10 +31,10 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("GetAllProductAndVariant")]
-        public IActionResult GetAllProductAndVariant()
+        [HttpGet("GetAllDto")]
+        public IActionResult GetAllDto()
         {
-            var result = _productService.GetAllProductAndVariant();
+            var result = _productService.GetAllDto();
             if (result.Success)
             {
                 return Ok(result);
@@ -65,8 +65,9 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("TsaAdd")]
-        public IActionResult TsaAdd(AddProductDto addProductDto)
+        public IActionResult TsaAdd([FromForm] ProductDto addProductDto)
         {
+            var req = Request;
             var result = _productService.TsaAdd(addProductDto);
             if (result.Success)
             {

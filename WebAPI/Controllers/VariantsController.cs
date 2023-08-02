@@ -32,6 +32,17 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
+        [HttpGet("GetAllDto")]
+        public IActionResult GetAllDto()
+        {
+            var result = _variantService.GetAllDto();
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
         [HttpGet("GetAllByProductId")]
         public IActionResult GetAllByProductId(int productId)
         {
@@ -47,28 +58,6 @@ namespace WebAPI.Controllers
         public IActionResult GetById(int id)
         {
             var result = _variantService.GetById(id);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-        }
-
-        [HttpPost("TsaAddList")]
-        public IActionResult TsaAdd(List<AddVariantDto> addVariantDtos)
-        {
-            var result = _variantService.TsaAddList(addVariantDtos);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-        }
-
-        [HttpPost("TsaUpdateList")]
-        public IActionResult TsaUpdate(List<AddVariantDto> addVariantDtos)
-        {
-            var result = _variantService.TsaUpdateList(addVariantDtos);
             if (result.Success)
             {
                 return Ok(result);

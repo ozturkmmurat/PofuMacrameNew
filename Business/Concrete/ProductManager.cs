@@ -37,41 +37,43 @@ namespace Business.Concrete
             return new ErrorResult();
         }
         [TransactionScopeAspect]
-        public IResult TsaAdd(AddProductDto addProductDto)
+        public IResult TsaAdd(ProductDto addProductDto)
         {
             if (addProductDto != null)
             {
                 Product product = new Product()
                 {
                     CategoryId = addProductDto.CategoryId,
-                    Title = addProductDto.Title,
+                    ProductName = addProductDto.ProductName,
                     Description = addProductDto.Description
                 };
                 _productDal.Add(product);
                 addProductDto.ProductId = product.Id;
-                string productStockCode = CreateStockCode(addProductDto);
-                if (productStockCode == null)
+
+                var variantCreateStockCode = _variantService.CreateStockCode(addProductDto);
+                if (variantCreateStockCode == null)
                 {
                     return new ErrorResult();
                 }
-                ProductStock productStock = new ProductStock()
+                else
                 {
-                    ProductId = addProductDto.ProductId,
-                    Price = addProductDto.ProductStocks[0].Price,
-                    Quantity = addProductDto.ProductStocks[0].Quantity,
-                    StockCode = productStockCode
-                };
-                _productStockService.Add(productStock);
-                if (addProductDto.AddVariantDtos != null)
-                {
-                    for (int i = 0; i < addProductDto.AddVariantDtos.Count; i++)
+                    if (variantCreateStockCode != null)
                     {
-                        addProductDto.AddVariantDtos[i].ProductId = product.Id;
-                    }
-                   var result = _variantService.TsaAddList(addProductDto.AddVariantDtos);
-                    if (!result.Success)
-                    {
-                        return new ErrorResult();
+
+                        var result = _variantService.AddList(variantCreateStockCode.Data);
+                        for (int i = 0; i < addProductDto.AddVariantDtos.Count; i++)
+                        {
+                            addProductDto.AddVariantDtos[i].VariantId = variantCreateStockCode.Data[i].Id;
+                        }
+                        if (!result.Success)
+                        {
+                            return new ErrorResult();
+                        }
+                        else
+                        {
+                            var mapPrdStckResult = _productStockService.MappingProductStock(addProductDto);
+                            var addProductStock = _productStockService.AddList(mapPrdStckResult.Data);
+                        }
                     }
                 }
                 return new SuccessResult();
@@ -119,38 +121,9 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
-        public string CreateStockCode(AddProductDto addProductDto)
+        public IDataResult<List<SelectProductDto>> GetAllDto()
         {
-            if (addProductDto != null)
-            {
-                string productStockCode = null;
-                for (int i = 0; i < addProductDto.AttrCode.Count; i++)
-                {
-                    if (productStockCode == null)
-                    {
-                        productStockCode += addProductDto.ProductId + "-" + addProductDto.AttrCode[i];
-                    }
-                    else if (addProductDto.AttrCode.Count == 1)
-                    {
-                        productStockCode += addProductDto.AttrCode[i];
-                    }
-                    else if (addProductDto.AttrCode[i] == addProductDto.AttrCode[addProductDto.AttrCode.Count - 1])
-                    {
-                        productStockCode += addProductDto.AttrCode[i] + "-" + CreateCodeTime.CreateTime();
-                    }
-                    else
-                    {
-                        productStockCode += "-" + addProductDto.AttrCode[i];
-                    }
-                }
-                return productStockCode;
-            }
-            return null;
-        }
-
-        public IDataResult<List<SelectProductDto>> GetAllProductAndVariant()
-        {
-            var result = _productDal.GetAllProductAndVariant();
+            var result = _productDal.GetAllFilterDto();
             if (result != null)
             {
                 return new SuccessDataResult<List<SelectProductDto>>(result);
