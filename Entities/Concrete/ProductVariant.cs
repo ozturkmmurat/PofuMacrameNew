@@ -6,11 +6,13 @@ using System.Text;
 
 namespace Entities.Concrete
 {
-    public class Variant : IEntity
+    public class ProductVariant : IEntity
     {
         public int Id { get; set; }
         public int ProductId { get; set; }
+        public int AttributeId { get; set; }
+        public int AttributeValueId { get; set; }
+        public int? ParentId { get; set; }
         public string StockCode { get; set; }
-        public decimal Price { get; set; }
     }
 }

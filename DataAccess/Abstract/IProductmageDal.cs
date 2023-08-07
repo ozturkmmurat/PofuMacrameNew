@@ -6,7 +6,7 @@ using System.Text;
 
 namespace DataAccess.Abstract
 {
-    public interface IProductAttributeImageDal : IEntityRepository<ProductAttributeImage>
+    public interface IProductmageDal : IEntityRepository<ProductImage>
     {
     }
 }

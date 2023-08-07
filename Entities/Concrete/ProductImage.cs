@@ -10,9 +10,11 @@ using System.Text;
 
 namespace Entities.Concrete
 {
-    public class ProductAttributeImage : IEntity
+    public class ProductImage : IEntity
     {
         public int Id { get; set; }
+        public int ProductId { get; set; }
+        public int ProductVariantId { get; set; }
         public int ProductAttributeId { get; set; }
         public string Path { get; set; }
         public DateTime CreateDate { get; set; }

@@ -80,7 +80,7 @@ namespace Business.Concrete
 
         public IDataResult<ProductStock> GetByVariantId(int variantId)
         {
-            var result = _productStockDal.Get(x => x.VariantId == variantId);
+            var result = _productStockDal.Get(x => x.ProductVariantId == variantId);
             if (result != null)
             {
                 return new SuccessDataResult<ProductStock>(result);
@@ -98,7 +98,7 @@ namespace Business.Concrete
                     ProductStock productStock = new ProductStock()
                     {
                         ProductId = productDto.ProductId,
-                        VariantId = productDto.AddVariantDtos[i].VariantId,
+                        ProductVariantId = productDto.AddVariantDtos[i].VariantId,
                         Quantity = productDto.ProductStocks[i].Quantity
                     };
                     productStocks.Add(productStock);

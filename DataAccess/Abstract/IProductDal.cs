@@ -12,6 +12,6 @@ namespace DataAccess.Abstract
 {
     public interface IProductDal : IEntityRepository<Product>
     {
-        List<SelectProductDto> GetAllFilterDto();
+        List<SelectListProductDto> GetAllFilterDto();
     }
 }

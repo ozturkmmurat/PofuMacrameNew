@@ -11,5 +11,7 @@ namespace Entities.Concrete
         public int CategoryId { get; set; }
         public string ProductName { get; set; }
         public string Description { get; set; }
+        public string StockCode { get; set; }
+        public bool IsVariant { get; set; }
     }
 }

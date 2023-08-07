@@ -17,11 +17,11 @@ namespace Business.Concrete
     {
         IProductDal _productDal;
         IProductStockService _productStockService;
-        IVariantService _variantService;
+        IProductVariantService _variantService;
         public ProductManager(
             IProductDal productDal,
             IProductStockService productStockService,
-            IVariantService variantService)
+            IProductVariantService variantService)
         {
             _productDal = productDal;
             _productStockService = productStockService;
@@ -121,14 +121,14 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
-        public IDataResult<List<SelectProductDto>> GetAllDto()
+        public IDataResult<List<SelectListProductDto>> GetAllDto()
         {
             var result = _productDal.GetAllFilterDto();
             if (result != null)
             {
-                return new SuccessDataResult<List<SelectProductDto>>(result);
+                return new SuccessDataResult<List<SelectListProductDto>>(result);
             }
-            return new ErrorDataResult<List<SelectProductDto>>();
+            return new ErrorDataResult<List<SelectListProductDto>>();
         }
     }
 }

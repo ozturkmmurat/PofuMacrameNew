@@ -15,43 +15,43 @@ using System.Text;
 
 namespace Business.Concrete
 {
-    public class VariantManager : IVariantService
+    public class ProductVariantManager : IProductVariantService
     {
-        IVariantDal _variantDal;
+        IProductVariantDal _productVariantDal;
         IProductStockService _productStockService;
-        public VariantManager(
-            IVariantDal variantDal,
+        public ProductVariantManager(
+            IProductVariantDal productVariantDal,
             IProductStockService productStockService)
         {
-            _variantDal = variantDal;
+            _productVariantDal = productVariantDal;
             _productStockService = productStockService;
         }
-        public IResult Add(Variant variant)
+        public IResult Add(ProductVariant variant)
         {
             if (variant != null)
             {
-                _variantDal.Add(variant);
+                _productVariantDal.Add(variant);
                 return new SuccessResult();
             }
             return new ErrorResult();
         }
 
-        public IResult AddList(List<Variant> variants)
+        public IResult AddList(List<ProductVariant> variants)
         {
             if (variants != null)
             {
-                _variantDal.AddRange(variants);
+                _productVariantDal.AddRange(variants);
                 return new SuccessResult();
             }
             return new ErrorResult();
         }
 
-        public IDataResult<List<Variant>> CreateStockCode(ProductDto productDto)
+        public IDataResult<List<ProductVariant>> CreateStockCode(ProductDto productDto)
         {
             if (productDto != null)
             {
 
-                List<Variant> variants = new List<Variant>();
+                List<ProductVariant> variants = new List<ProductVariant>();
                 for (int i = 0; i < productDto.AddVariantDtos.Count; i++)
                 {
                     string variantStockCode = null;
@@ -74,49 +74,49 @@ namespace Business.Concrete
                             variantStockCode += "-" + productDto.AddVariantDtos[i].AttrCode[j];
                         }
                     }
-                    Variant variant = new Variant();
+                    ProductVariant variant = new ProductVariant();
                     variant.StockCode = variantStockCode;
                     variant.ProductId = productDto.ProductId;
                     variants.Add(variant);
                 }
-                return new SuccessDataResult<List<Variant>>(variants);
+                return new SuccessDataResult<List<ProductVariant>>(variants);
             }
             return null;
         }
 
-        public IResult Delete(Variant variant)
+        public IResult Delete(ProductVariant variant)
         {
             if (variant != null)
             {
-                _variantDal.Delete(variant);
+                _productVariantDal.Delete(variant);
                 return new SuccessResult();
             }
             return new ErrorResult();
         }
 
-        public IDataResult<List<Variant>> GetAll()
+        public IDataResult<List<ProductVariant>> GetAll()
         {
-            var result = _variantDal.GetAll();
+            var result = _productVariantDal.GetAll();
             if (result != null)
             {
-                return new SuccessDataResult<List<Variant>>(result);
+                return new SuccessDataResult<List<ProductVariant>>(result);
             }
-            return new ErrorDataResult<List<Variant>>();
+            return new ErrorDataResult<List<ProductVariant>>();
         }
 
-        public IDataResult<List<Variant>> GetAllByProductId(int productId)
+        public IDataResult<List<ProductVariant>> GetAllByProductId(int productId)
         {
-            var result = _variantDal.GetAll(x => x.ProductId == productId);
+            var result = _productVariantDal.GetAll(x => x.ProductId == productId);
             if (result != null)
             {
-                return new SuccessDataResult<List<Variant>>(result);
+                return new SuccessDataResult<List<ProductVariant>>(result);
             }
-            return new ErrorDataResult<List<Variant>>();
+            return new ErrorDataResult<List<ProductVariant>>();
         }
 
         public IDataResult<List<ViewVariantDto>> GetAllDto()
         {
-            var result = _variantDal.GetAllFilterDto();
+            var result = _productVariantDal.GetAllFilterDto();
             if (result != null)
             {
                 return new SuccessDataResult<List<ViewVariantDto>>(result);
@@ -124,21 +124,21 @@ namespace Business.Concrete
             return new ErrorDataResult<List<ViewVariantDto>>(result);
         }
 
-        public IDataResult<Variant> GetById(int id)
+        public IDataResult<ProductVariant> GetById(int id)
         {
-            var result = _variantDal.Get(x => x.Id == id);
+            var result = _productVariantDal.Get(x => x.Id == id);
             if (result != null)
             {
-                return new SuccessDataResult<Variant>(result);
+                return new SuccessDataResult<ProductVariant>(result);
             }
-            return new ErrorDataResult<Variant>();
+            return new ErrorDataResult<ProductVariant>();
         }
 
-        public IResult Update(Variant variant)
+        public IResult Update(ProductVariant variant)
         {
             if (variant != null)
             {
-                _variantDal.Update(variant);
+                _productVariantDal.Update(variant);
                 return new SuccessResult();
             }
             return new ErrorResult();

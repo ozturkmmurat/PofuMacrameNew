@@ -16,79 +16,89 @@ using System.Text;
 
 namespace Business.Concrete
 {
-    public class ProductAttributeImageManager : IProductAttributeImageService
+    public class ProductImageManager : IProductImageService
     {
-        IProductAttributeImageDal _productAttributeImageDal;
+        IProductmageDal _productImageDal;
         IFileHelper _fileHelper;
-        public ProductAttributeImageManager(IProductAttributeImageDal productAttributeImageDal, IFileHelper fileHelper)
+        public ProductImageManager(IProductmageDal productImageDal, IFileHelper fileHelper)
         {
-            _productAttributeImageDal = productAttributeImageDal;
+            _productImageDal = productImageDal;
             _fileHelper = fileHelper;
         }
-        public IResult Add(ProductAttributeImage productAttributeImage, IFormFile formFile)
+        public IResult Add(ProductImage productAttributeImage, IFormFile formFile)
         {
             if (productAttributeImage != null)
             {
                 productAttributeImage.Path = _fileHelper.Upload(formFile, PathConstans.ImagesPath);
                 productAttributeImage.CreateDate = DateTime.Now;
-                _productAttributeImageDal.Add(productAttributeImage);
+                _productImageDal.Add(productAttributeImage);
                 return new SuccessResult();
             }
             return new ErrorResult();
         }
 
-        public IResult AddList(List<ProductAttributeImage> productAttributeImages, List<IFormFile> formFiles)
+        public IResult AddList(List<ProductImage> productAttributeImages, List<IFormFile> formFiles)
         {
             if (productAttributeImages != null)
             {
                 for (int i = 0; i < formFiles.Count; i++)
                 {
-                    ProductAttributeImage productAttributeImage = new ProductAttributeImage();
+                    ProductImage productAttributeImage = new ProductImage();
                     productAttributeImage.ProductAttributeId = productAttributeImages[i].ProductAttributeId;
                     productAttributeImage.Path = _fileHelper.Upload(formFiles[i], PathConstans.ImagesPath);
                     productAttributeImages.Add(productAttributeImage);
                 }
-                _productAttributeImageDal.AddRange(productAttributeImages);
+                _productImageDal.AddRange(productAttributeImages);
                 return new SuccessResult();
             }
             return new ErrorResult();
         }
 
-        public IResult Delete(ProductAttributeImage productAttributeImage)
+        public IResult Delete(ProductImage productAttributeImage)
         {
             if (productAttributeImage != null)
             {
-                _productAttributeImageDal.Delete(productAttributeImage);
+                _productImageDal.Delete(productAttributeImage);
                 return new SuccessResult();
             }
             return new ErrorResult();
         }
 
-        public IDataResult<List<ProductAttributeImage>> GetAll()
+        public IDataResult<List<ProductImage>> GetAll()
         {
-            var result = _productAttributeImageDal.GetAll();
+            var result = _productImageDal.GetAll();
             if (result != null)
             {
-                return new SuccessDataResult<List<ProductAttributeImage>>(result);
+                return new SuccessDataResult<List<ProductImage>>(result);
             }
-            return new ErrorDataResult<List<ProductAttributeImage>>();
+            return new ErrorDataResult<List<ProductImage>>();
         }
 
-        public IDataResult<ProductAttributeImage> GetById(int id)
+        public IDataResult<List<ProductImage>> GetAllByProductVariantId(int productVariantId)
         {
-            var result = _productAttributeImageDal.Get(x => x.Id == id);
+            var result = _productImageDal.GetAll(x => x.ProductVariantId == productVariantId);
             if (result != null)
             {
-                return new SuccessDataResult<ProductAttributeImage>(result);
+                return new SuccessDataResult<List<ProductImage>>(result);
             }
-            return new ErrorDataResult<ProductAttributeImage>();
+            return new ErrorDataResult<List<ProductImage>>();
         }
 
-        public IResult Update(ProductAttributeImage productAttributeImage)
+        public IDataResult<ProductImage> GetById(int id)
+        {
+            var result = _productImageDal.Get(x => x.Id == id);
+            if (result != null)
+            {
+                return new SuccessDataResult<ProductImage>(result);
+            }
+            return new ErrorDataResult<ProductImage>();
+        }
+
+        public IResult Update(ProductImage productAttributeImage)
         {
             if (productAttributeImage != null)
             {
-                _productAttributeImageDal.Update(productAttributeImage);
+                _productImageDal.Update(productAttributeImage);
                 return new SuccessResult();
             }
             return new ErrorResult();

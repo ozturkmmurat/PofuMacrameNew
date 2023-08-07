@@ -32,7 +32,7 @@ namespace DataAccess.Context
         public DbSet<ProductAttribute> ProductAttributes { get; set; }
         public DbSet<ProductStock> ProductStocks { get; set; }
         public DbSet<SubOrder> SubOrders { get; set; }
-        public DbSet<Variant> Variants { get; set; }
-        public DbSet<ProductAttributeImage> ProductAttributeImages { get; set; }
+        public DbSet<ProductVariant> ProductVariants { get; set; }
+        public DbSet<ProductImage> ProductImages { get; set; }
     }
 }

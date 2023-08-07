@@ -13,10 +13,10 @@ namespace WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class VariantsController : ControllerBase
+    public class ProductVariantsController : ControllerBase
     {
-        IVariantService _variantService;
-        public VariantsController(IVariantService variantService)
+        IProductVariantService _variantService;
+        public ProductVariantsController(IProductVariantService variantService)
         {
             _variantService = variantService;
         }
@@ -66,7 +66,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("Delete")]
-        public IActionResult TsaUpdate(Variant variant)
+        public IActionResult TsaUpdate(ProductVariant variant)
         {
             var result = _variantService.Delete(variant);
             if (result.Success)

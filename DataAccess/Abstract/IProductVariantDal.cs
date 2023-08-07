@@ -8,7 +8,7 @@ using System.Text;
 
 namespace DataAccess.Abstract
 {
-    public interface IVariantDal : IEntityRepository<Variant>
+    public interface IProductVariantDal : IEntityRepository<ProductVariant>
     {
         List<ViewVariantDto> GetAllFilterDto(Expression<Func<ViewVariantDto, bool>> filter = null);
     }

@@ -11,54 +11,45 @@ using System.Linq.Expressions;
 using Entities.Dtos.Variant.Select;
 using Microsoft.EntityFrameworkCore;
 using Core.Utilities.Result.Concrete;
+using System.IO;
+using System.Linq;
 
 namespace DataAccess.Concrete.EntityFramework
 {
     public class EfProductDal : EfEntityRepositoryBase<Product, PofuMacrameContext>, IProductDal
     {
-        public List<SelectProductDto> GetAllFilterDto()
+        public List<SelectListProductDto> GetAllFilterDto()
         {
             using (PofuMacrameContext context = new PofuMacrameContext())
             {
-
+                
                 var result = (from p in context.Products
-                              join c in context.Categories
-                              on p.CategoryId equals c.Id
-                              join ca in context.CategoryAttributes
-                              on c.Id equals ca.CategoryId
-                              join pa in context.ProductAttributes
-                              on p.Id equals pa.ProductId
-                              join pai in context.ProductAttributeImages
-                              on pa.Id equals pai.ProductAttributeId
-                              join v in context.Variants
-                              on p.Id equals v.ProductId
-                              join ps in context.ProductStocks
-                              on v.Id equals ps.VariantId
-                              where ca.Slicer == true
-                              select new SelectProductDto
-                              {
-                                  ProductId = p.Id,
-                                  CategoryId = c.Id,
-                                  VariantId = v.Id,
-                                  ProductAttributeId = pa.Id,
-                                  ProductStockId = ps.Id,
-                                  ProductName = p.ProductName,
-                                  Description = p.Description,
-                                  Price = v.Price,
-                                  StockCode = v.StockCode,
-                                  Quantity = ps.Quantity,
-                                  Paths = context.ProductAttributeImages
-                                      .Where(x => x.ProductAttributeId == pa.Id)
-                                      .Take(2)
-                                      .Select(vi => vi.Path)
-                                      .ToList()
+                               join pv in context.ProductVariants
+                               on p.Id equals pv.ProductId
+                               join pi in context.ProductImages
+                               on pv.Id equals pi.ProductVariantId
+                               join ps in context.ProductStocks
+                               on pv.ProductId equals ps.ProductId
+                               let productImages = context.ProductImages
+                                                         .Where(x => x.ProductVariantId == pv.Id)
+                               select new SelectListProductDto
+                               {
+                                   ProductId = p.Id,
+                                   ProductVariantId = pv.Id,
+                                   ParentId = pv.ParentId,
+                                   ProductName = p.ProductName,
+                                   Description = p.Description,
+                                   IsVariant = p.IsVariant,
+                                   PvStockCode = pv.StockCode,
+                                   Price = ps.Price,
+                                   ProductPaths = productImages.Take(2).Select(pi => pi.Path).ToList(),
+                                   VariantPaths = productImages.GroupBy(x => x.ProductVariantId).Select(x => x.FirstOrDefault().Path).AsEnumerable().ToList()
+                               }).AsEnumerable()
+                               .GroupBy(x => x.ProductId) // Ürün bazlı gruplama yap
+                .Select(group => group.First()) // Her üründen sadece birini seç
+                .ToList();
 
-                              }).AsEnumerable()
-                                .GroupBy(x => new { x.ProductId, x.VariantId, x.ProductAttributeId })
-              .Select(x => x.FirstOrDefault())
-              .ToList();
-
-                return result.ToList();
+                return result;
             }
         }
     }

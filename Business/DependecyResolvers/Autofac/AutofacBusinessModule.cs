@@ -49,11 +49,11 @@ namespace Business.DependecyResolvers.Autofac
             builder.RegisterType<EfSubOrderDal>().As<ISubOrderDal>().SingleInstance();
             builder.RegisterType<SubOrderManager>().As<ISubOrderService>().SingleInstance();
 
-            builder.RegisterType<EfVariantDal>().As<IVariantDal>().SingleInstance();
-            builder.RegisterType<VariantManager>().As<IVariantService>().SingleInstance();
+            builder.RegisterType<EfProductVariantDal>().As<IProductVariantDal>().SingleInstance();
+            builder.RegisterType<ProductVariantManager>().As<IProductVariantService>().SingleInstance();
 
-            builder.RegisterType<EfProductAttributeImageDal>().As<IProductAttributeImageDal>().SingleInstance();
-            builder.RegisterType<ProductAttributeImageManager>().As<IProductAttributeImageService>().SingleInstance();
+            builder.RegisterType<EfProductImageDal>().As<IProductmageDal>().SingleInstance();
+            builder.RegisterType<ProductImageManager>().As<IProductImageService>().SingleInstance();
 
             builder.RegisterType<FileHelperManager>().As<IFileHelper>().SingleInstance();
 
