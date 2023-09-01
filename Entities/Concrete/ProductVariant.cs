@@ -10,9 +10,8 @@ namespace Entities.Concrete
     {
         public int Id { get; set; }
         public int ProductId { get; set; }
-        public int AttributeId { get; set; }
-        public int AttributeValueId { get; set; }
+        public int? AttributeId { get; set; }
+        public int? AttributeValueId { get; set; }
         public int? ParentId { get; set; }
-        public string StockCode { get; set; }
     }
 }

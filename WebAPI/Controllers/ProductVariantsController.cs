@@ -1,7 +1,7 @@
 ﻿using Business.Abstract;
 using Entities.Concrete;
 using Entities.Dtos;
-using Entities.Dtos.Variant;
+using Entities.Dtos.ProductVariant;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -32,17 +32,6 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("GetAllDto")]
-        public IActionResult GetAllDto()
-        {
-            var result = _variantService.GetAllDto();
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-        }
-
         [HttpGet("GetAllByProductId")]
         public IActionResult GetAllByProductId(int productId)
         {
@@ -65,10 +54,21 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpPost("Delete")]
-        public IActionResult TsaUpdate(ProductVariant variant)
+        [HttpGet("GetAllMainProductVariant")]
+        public IActionResult GetProductVariantDetail(int productId)
         {
-            var result = _variantService.Delete(variant);
+            var result = _variantService.GetAllMainProductVariant(productId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        [HttpPost("Delete")]
+        public IActionResult Delete(ProductVariant productVariant)
+        {
+            var result = _variantService.Delete(productVariant);
             if (result.Success)
             {
                 return Ok(result);

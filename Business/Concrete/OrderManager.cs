@@ -39,7 +39,7 @@ namespace Business.Concrete
             if (order != null)
             {
                 var getAllResult = GetAll().Data.Count;
-                orderCode = CreateCodeTime.CreateTime() + "-" + "0" + orderCode + "-" + order.UserId;
+                orderCode = CreateCodeTime.CreateTime() + "-" + "0" + orderCode + "-" + order.UserId + getAllResult+1;
                 return new SuccessDataResult<string>(orderCode);
             }
             return new ErrorDataResult<string>();

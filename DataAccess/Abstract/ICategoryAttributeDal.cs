@@ -1,7 +1,6 @@
 ﻿using Core.DataAccess;
 using Entities.Concrete;
 using Entities.Dtos.CategoryAttribute.Select;
-using Entities.Dtos.Variant.Select;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;

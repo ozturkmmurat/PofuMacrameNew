@@ -7,25 +7,26 @@ using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.Dtos.Product;
 using Entities.Dtos.Product.Select;
+using Entities.Dtos.ProductVariant;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Text.Json;
 
 namespace Business.Concrete
 {
     public class ProductManager : IProductService
     {
         IProductDal _productDal;
-        IProductStockService _productStockService;
-        IProductVariantService _variantService;
+        IProductVariantService _productVariantService;
         public ProductManager(
             IProductDal productDal,
             IProductStockService productStockService,
-            IProductVariantService variantService)
+            IProductVariantService productVariantService)
         {
             _productDal = productDal;
-            _productStockService = productStockService;
-            _variantService = variantService;
+            _productVariantService = productVariantService;
         }
         public IResult Add(Product product)
         {
@@ -36,50 +37,7 @@ namespace Business.Concrete
             }
             return new ErrorResult();
         }
-        [TransactionScopeAspect]
-        public IResult TsaAdd(ProductDto addProductDto)
-        {
-            if (addProductDto != null)
-            {
-                Product product = new Product()
-                {
-                    CategoryId = addProductDto.CategoryId,
-                    ProductName = addProductDto.ProductName,
-                    Description = addProductDto.Description
-                };
-                _productDal.Add(product);
-                addProductDto.ProductId = product.Id;
 
-                var variantCreateStockCode = _variantService.CreateStockCode(addProductDto);
-                if (variantCreateStockCode == null)
-                {
-                    return new ErrorResult();
-                }
-                else
-                {
-                    if (variantCreateStockCode != null)
-                    {
-
-                        var result = _variantService.AddList(variantCreateStockCode.Data);
-                        for (int i = 0; i < addProductDto.AddVariantDtos.Count; i++)
-                        {
-                            addProductDto.AddVariantDtos[i].VariantId = variantCreateStockCode.Data[i].Id;
-                        }
-                        if (!result.Success)
-                        {
-                            return new ErrorResult();
-                        }
-                        else
-                        {
-                            var mapPrdStckResult = _productStockService.MappingProductStock(addProductDto);
-                            var addProductStock = _productStockService.AddList(mapPrdStckResult.Data);
-                        }
-                    }
-                }
-                return new SuccessResult();
-            }
-            return new ErrorResult();
-        }
 
         public IResult Delete(Product product)
         {
@@ -121,14 +79,77 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
-        public IDataResult<List<SelectListProductDto>> GetAllDto()
+        public IDataResult<List<SelectListProductVariantDto>> GetAllPvProductVariantDtoGroupProduct()
+        {
+            // Web sitesinde urunler listelenirken kullaniliyor
+            var result = _productDal.GetAllPvFilterDto().GroupBy(x => x.ProductId).Select(group => group.FirstOrDefault()).ToList();
+            if (result != null)
+            {
+                return new SuccessDataResult<List<SelectListProductVariantDto>>(result);
+            }
+            return new ErrorDataResult<List<SelectListProductVariantDto>>();
+        }
+
+        public IDataResult<List<SelectListProductVariantDto>> GetAllProductVariantDtoGroupVariant()
+        {
+            // Web sitesinde urune bağli urun varyantlari listelenirken kullanılıyor
+            var result = _productDal.GetAllPvFilterDto(x => x.ParentId == null).GroupBy(x => x.ProductVariantId).Select(group => group.FirstOrDefault()).ToList(); ;
+            if (result != null)
+            {
+                return new SuccessDataResult<List<SelectListProductVariantDto>>(result);
+            }
+            return new ErrorDataResult<List<SelectListProductVariantDto>>();
+        }
+
+        public IDataResult<List<SelectProductDto>> GetallProductDto()
         {
             var result = _productDal.GetAllFilterDto();
             if (result != null)
             {
-                return new SuccessDataResult<List<SelectListProductDto>>(result);
+                if (result.Count >= 0)
+                {
+                    return new SuccessDataResult<List<SelectProductDto>>(result);
+                }
             }
-            return new ErrorDataResult<List<SelectListProductDto>>();
+            return new ErrorDataResult<List<SelectProductDto>>(result);
+        }
+
+        public IResult TsaAdd(AddProductVariant addProductVariant)
+        {
+            if (GetById(addProductVariant.ProductId).Data != null)
+            {
+                var result = _productVariantService.AddTsaProductVariant(addProductVariant);
+                if (result.Success)
+                {
+                    return new SuccessResult();
+                }
+                return new ErrorResult();
+            }
+            else
+            {
+
+                if (addProductVariant != null)
+                {
+                    Product product = new Product()
+                    {
+                        CategoryId = addProductVariant.CategoryId,
+                        ProductName = addProductVariant.ProductName,
+                        Description = addProductVariant.Description,
+                    };
+                    var addProduct = Add(product);
+                    if (addProduct.Success)
+                    {
+                        addProductVariant.ProductId = product.Id;
+                        var result = _productVariantService.AddTsaProductVariant(addProductVariant);
+                        if (result.Success)
+                        {
+                            return new SuccessResult();
+                        }
+                        return new ErrorResult();
+                    }
+                }
+            }
+            return new ErrorResult();
         }
     }
 }

@@ -7,7 +7,7 @@ using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.Dtos;
 using Entities.Dtos.Product;
-using Entities.Dtos.Variant;
+using Entities.Dtos.ProductImage;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
 using System;
@@ -37,18 +37,34 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
-        public IResult AddList(List<ProductImage> productAttributeImages, List<IFormFile> formFiles)
+        public IResult AddList(List<AddProductImageDto> addProductImageDtos)
         {
-            if (productAttributeImages != null)
+            if (addProductImageDtos != null)
             {
-                for (int i = 0; i < formFiles.Count; i++)
+                List<ProductImage> productImages = new List<ProductImage>();
+                for (int i = 0; i < addProductImageDtos.Count; i++)
                 {
-                    ProductImage productAttributeImage = new ProductImage();
-                    productAttributeImage.ProductAttributeId = productAttributeImages[i].ProductAttributeId;
-                    productAttributeImage.Path = _fileHelper.Upload(formFiles[i], PathConstans.ImagesPath);
-                    productAttributeImages.Add(productAttributeImage);
+                    for (int j = 0; j < addProductImageDtos[i].Files.Count; j++)
+                    {
+                        ProductImage productImage = new ProductImage();
+                        productImage.ProductId = addProductImageDtos[0].ProductId;
+                        productImage.ProductVariantId = addProductImageDtos[0].ProductVariantId;
+                        if (j == 0 && GetByProductIdProductVariantId(productImage.ProductId, productImage.ProductVariantId).Success == false)
+                        {
+                            productImage.IsMain = true;
+                        }
+                        else
+                        {
+                            productImage.IsMain = false;
+                        }
+                        productImage.AttributeValueId = addProductImageDtos[0].AttributeValueId;
+                        productImage.CreateDate = DateTime.Now;
+                        productImage.Path = _fileHelper.Upload(addProductImageDtos[i].Files[j], PathConstans.ImagesPath);
+                        productImages.Add(productImage);
+                    }
                 }
-                _productImageDal.AddRange(productAttributeImages);
+               
+                _productImageDal.AddRange(productImages);
                 return new SuccessResult();
             }
             return new ErrorResult();
@@ -87,6 +103,16 @@ namespace Business.Concrete
         public IDataResult<ProductImage> GetById(int id)
         {
             var result = _productImageDal.Get(x => x.Id == id);
+            if (result != null)
+            {
+                return new SuccessDataResult<ProductImage>(result);
+            }
+            return new ErrorDataResult<ProductImage>();
+        }
+
+        public IDataResult<ProductImage> GetByProductIdProductVariantId(int productId, int productVariantId)
+        {
+            var result = _productImageDal.Get(x => x.ProductId == productId && x.ProductVariantId == productVariantId && x.IsMain == true);
             if (result != null)
             {
                 return new SuccessDataResult<ProductImage>(result);

@@ -15,8 +15,9 @@ namespace Entities.Concrete
         public int Id { get; set; }
         public int ProductId { get; set; }
         public int ProductVariantId { get; set; }
-        public int ProductAttributeId { get; set; }
+        public int? AttributeValueId { get; set; }
         public string Path { get; set; }
-        public DateTime CreateDate { get; set; }
+        public bool IsMain { get; set; }
+        public DateTime? CreateDate { get; set; }
     }
 }

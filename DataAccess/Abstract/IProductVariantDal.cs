@@ -1,6 +1,7 @@
 ﻿using Core.DataAccess;
 using Entities.Concrete;
-using Entities.Dtos.Variant.Select;
+using Entities.Dtos.Product.Select;
+using Entities.Dtos.ProductVariant.Select;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -10,6 +11,6 @@ namespace DataAccess.Abstract
 {
     public interface IProductVariantDal : IEntityRepository<ProductVariant>
     {
-        List<ViewVariantDto> GetAllFilterDto(Expression<Func<ViewVariantDto, bool>> filter = null);
+        List<SelectProductVariantDetailDto> GetAllFilterDto(Expression<Func<SelectProductVariantDetailDto, bool>> filter = null);
     }
 }

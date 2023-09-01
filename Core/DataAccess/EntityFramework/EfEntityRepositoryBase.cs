@@ -58,7 +58,7 @@ namespace Core.DataAccess.EntityFramework
         {
             using (TContext context = new TContext())
             {
-                return context.Set<TEntity>().SingleOrDefault(filter);
+                return context.Set<TEntity>().FirstOrDefault(filter);
             }
         }
 
@@ -77,6 +77,15 @@ namespace Core.DataAccess.EntityFramework
             using (TContext context = new TContext())
             {
                 context.UpdateRange(entity);
+                context.SaveChanges();
+            }
+        }
+
+        public void DeleteRange(List<TEntity> entity)
+        {
+            using (TContext context = new TContext())
+            {
+                context.RemoveRange(entity);
                 context.SaveChanges();
             }
         }

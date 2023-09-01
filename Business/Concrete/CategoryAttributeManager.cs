@@ -41,14 +41,24 @@ namespace Business.Concrete
         public IDataResult<List<CategoryAttribute>> GetAll()
         {
             var result = _categoryAttributeDal.GetAll();
-            if (result == null)
+            if (result != null)
             {
                 return new SuccessDataResult<List<CategoryAttribute>>(result);
             }
             return new ErrorDataResult<List<CategoryAttribute>>();
         }
 
-        public IDataResult<List<ViewCategoryAttributeDto>> GetAllDtoTrueSlicerAttribute(int categoryId)
+        public IDataResult<List<CategoryAttribute>> GetAllByCategoryId(int categoryId)
+        {
+            var result = _categoryAttributeDal.GetAll(x => x.CategoryId == categoryId);
+            if (result != null)
+            {
+                return new SuccessDataResult<List<CategoryAttribute>>(result);
+            }
+            return new ErrorDataResult<List<CategoryAttribute>>();
+        }
+
+        public IDataResult<List<ViewCategoryAttributeDto>> GetAllDtoTrueSlicer(int categoryId)
         {
             var result = _categoryAttributeDal.GetAllTrueSlicerAttribute(categoryId);
             if (result != null)
@@ -60,12 +70,24 @@ namespace Business.Concrete
 
         public IDataResult<List<ViewCategoryAttributeDto>> GetAllViewDtoTrueSlicerAttribute(int categoryId)
         {
-            var result = _categoryAttributeDal.GetAllFilterDto(x => x.CategoryId == categoryId && x.Slicer == true || x.Attribute == true);
+            var result = _categoryAttributeDal.GetAllFilterDto(x => x.CategoryId == categoryId && x.Slicer == true || x.Attribute == true)
+                .GroupBy(x => x.AttributeId).Select(x => x.FirstOrDefault()).ToList();
             if (result != null)
             {
                 return new SuccessDataResult<List<ViewCategoryAttributeDto>>(result);
             }
             return new ErrorDataResult<List<ViewCategoryAttributeDto>>();
+        }
+
+
+        public IDataResult<CategoryAttribute> GetByAttributeIdCategoryId(int attributeId, int categoryId)
+        {
+            var result = _categoryAttributeDal.Get(x => x.AttributeId == attributeId && x.CategoryId == categoryId);
+            if (result != null)
+            {
+                return new SuccessDataResult<CategoryAttribute>(result);
+            }
+            return new ErrorDataResult<CategoryAttribute>();
         }
 
         public IResult Update(CategoryAttribute categoryAttribute)

@@ -11,7 +11,9 @@ namespace Business.Abstract
     public interface ICategoryAttributeService
     {
         IDataResult<List<CategoryAttribute>> GetAll();
-        IDataResult<List<ViewCategoryAttributeDto>> GetAllDtoTrueSlicerAttribute(int categoryId);
+        IDataResult<List<CategoryAttribute>> GetAllByCategoryId(int categoryId);
+        IDataResult<CategoryAttribute> GetByAttributeIdCategoryId(int attributeId, int categoryId);
+        IDataResult<List<ViewCategoryAttributeDto>> GetAllDtoTrueSlicer(int categoryId);
         IDataResult<List<ViewCategoryAttributeDto>> GetAllViewDtoTrueSlicerAttribute(int categoryId);
         IResult Add(CategoryAttribute categoryAttribute);
         IResult Update(CategoryAttribute categoryAttribute);

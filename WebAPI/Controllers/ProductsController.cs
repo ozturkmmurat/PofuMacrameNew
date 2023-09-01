@@ -1,11 +1,16 @@
 ﻿using Business.Abstract;
 using Entities.Concrete;
 using Entities.Dtos.Product;
+using Entities.Dtos.ProductVariant;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace WebAPI.Controllers
@@ -31,16 +36,39 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("GetAllDto")]
-        public IActionResult GetAllDto()
+        [HttpGet("GetAllProductDto")]
+        public IActionResult GetAllProductDto()
         {
-            var result = _productService.GetAllDto();
+            var result = _productService.GetallProductDto();
             if (result.Success)
             {
                 return Ok(result);
             }
             return BadRequest(result);
         }
+
+        [HttpGet("GetAllProductVariantDtoGroupProduct")]
+        public IActionResult GetAllPvProductVariantDtoGroupProduct()
+        {
+            var result = _productService.GetAllPvProductVariantDtoGroupProduct();
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetAllProductVariantDtoGroupVariant")]
+        public IActionResult GetAllProductVariantDtoGroupVariant()
+        {
+            var result = _productService.GetAllProductVariantDtoGroupVariant();
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
 
         [HttpGet("GetById")]
         public IActionResult GetById(int id)
@@ -65,10 +93,10 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("TsaAdd")]
-        public IActionResult TsaAdd([FromForm] ProductDto addProductDto)
+        public IActionResult TsaAdd(AddProductVariant addProductVariant)
         {
             var req = Request;
-            var result = _productService.TsaAdd(addProductDto);
+            var result = _productService.TsaAdd(addProductVariant);
             if (result.Success)
             {
                 return Ok(result);

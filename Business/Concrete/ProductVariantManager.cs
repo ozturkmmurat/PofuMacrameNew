@@ -7,11 +7,13 @@ using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.Dtos;
 using Entities.Dtos.Product;
-using Entities.Dtos.Variant;
-using Entities.Dtos.Variant.Select;
+using Entities.Dtos.ProductVariant;
+using Entities.Dtos.ProductVariant.Select;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Text.Json;
 
 namespace Business.Concrete
 {
@@ -19,12 +21,18 @@ namespace Business.Concrete
     {
         IProductVariantDal _productVariantDal;
         IProductStockService _productStockService;
+        IProductAttributeService _productAttributeService;
+        ICategoryAttributeService _categoryAttributeService;
         public ProductVariantManager(
             IProductVariantDal productVariantDal,
-            IProductStockService productStockService)
+            IProductStockService productStockService,
+            IProductAttributeService productAttributeService,
+            ICategoryAttributeService categoryAttributeService)
         {
             _productVariantDal = productVariantDal;
             _productStockService = productStockService;
+            _productAttributeService=productAttributeService;
+            _categoryAttributeService=categoryAttributeService;
         }
         public IResult Add(ProductVariant variant)
         {
@@ -45,49 +53,174 @@ namespace Business.Concrete
             }
             return new ErrorResult();
         }
-
-        public IDataResult<List<ProductVariant>> CreateStockCode(ProductDto productDto)
+        [TransactionScopeAspect]
+        public IResult AddTsaProductVariant(AddProductVariant addProductVariant)
         {
-            if (productDto != null)
-            {
+            var properties = addProductVariant.JsonData.EnumerateObject();
+            List<ProductStock> productStocks = new List<ProductStock>();
+            addProductVariant.ProductVariants = new List<ProductVariant>();
 
-                List<ProductVariant> variants = new List<ProductVariant>();
-                for (int i = 0; i < productDto.AddVariantDtos.Count; i++)
+
+
+                if (addProductVariant.IsVariant)
                 {
-                    string variantStockCode = null;
-                    for (int j = 0; j < productDto.AddVariantDtos[i].AttrCode.Count; j++)
+                    if (addProductVariant.JsonData.ValueKind != JsonValueKind.Null || (addProductVariant.JsonData.EnumerateObject().Any()) ||
+                (addProductVariant.JsonData.ValueKind != JsonValueKind.Object && addProductVariant.JsonData.EnumerateObject().Any()))
                     {
-                        if (variantStockCode == null)
+
+                        addProductVariant.ProductAttributes = new List<ProductAttribute>();
+                        for (int q = 0; q < properties.Count(); q++)
                         {
-                            variantStockCode += productDto.ProductId + "-"  + productDto.AddVariantDtos[i].AttrCode[j] + "-";
+                            var property = properties.ElementAt(q);
+                            var propertyName = property.Name;
+                            var propertyValue = property.Value;
+
+                            if (propertyValue.ValueKind == JsonValueKind.Array)
+                            {
+                                var itemList = new List<Dictionary<string, string>>();
+
+                                var items = propertyValue.EnumerateArray();
+                                if (items.Count() <= 0)
+                                {
+                                    return new ErrorResult();
+                                }
+                                for (int j = 0; j < items.Count(); j++)
+                                {
+                                    var item = items.ElementAt(j);
+                                    var itemProperties = new Dictionary<string, int>();
+                                    ProductVariant productVariant = new ProductVariant();
+
+                                    var innerProperties = item.EnumerateObject();
+                                    for (int k = 0; k < innerProperties.Count(); k++)
+                                    {
+                                        var innerProperty = innerProperties.ElementAt(k);
+                                        var innerPropertyName = innerProperty.Name;
+                                        var innerPropertyValue = innerProperty.Value.GetInt32();
+
+
+                                        productVariant.ProductId = addProductVariant.ProductId;
+                                        productVariant.AttributeId = Convert.ToInt32(innerPropertyName);
+                                        productVariant.AttributeValueId = innerPropertyValue;
+
+                                    }
+                                    var categoryResult = _categoryAttributeService.GetAllByCategoryId(addProductVariant.CategoryId);
+                                    var categoryAttributeResult = categoryResult.Data.Where(x => x.AttributeId == productVariant.AttributeId).FirstOrDefault();
+                                    if (categoryAttributeResult.Slicer == true)
+                                    {
+                                        productVariant.ParentId = null;
+                                        Add(productVariant);
+                                        addProductVariant.ProductVariantId = productVariant.Id;
+                                    }
+                                    else if (categoryAttributeResult.Attribute == true)
+                                    {
+                                        if (j > 0)
+                                        {
+                                            var x = items.ElementAt(j-1).EnumerateObject().ElementAt(0).Value;
+                                            productVariant.ParentId = addProductVariant.ProductVariantId;
+                                            Add(productVariant);
+                                            addProductVariant.ProductVariantId = productVariant.Id;
+
+                                            if (j == items.Count() -1)
+                                            {
+                                                ProductStock productStock = new ProductStock();
+                                                productStock.ProductId = addProductVariant.ProductId;
+                                                productStock.ProductVariantId = productVariant.Id;
+                                                productStocks.Add(productStock);
+                                            }
+                                        }
+                                    }
+
+                                    ProductAttribute productAttribute = new ProductAttribute();
+                                    productAttribute.AttributeId = productVariant.AttributeId.Value;
+                                    productAttribute.AttributeValueId = productVariant.AttributeValueId.Value;
+                                    productAttribute.ProductId = addProductVariant.ProductId;
+                                    addProductVariant.ProductAttributes.Add(productAttribute);
+                                    itemProperties.Add(productAttribute.AttributeId.ToString(), productAttribute.AttributeValueId);
+                                }
+
+                            }
                         }
-                        else if (productDto.AddVariantDtos[i].AttrCode.Count == 1)
+                        if (addProductVariant.ProductStocks != null)
                         {
-                            variantStockCode += productDto.AddVariantDtos[i].AttrCode[j];
-                        }
-                        else if (productDto.AddVariantDtos[i].AttrCode[j] == productDto.AddVariantDtos[i].AttrCode[productDto.AddVariantDtos[i].AttrCode.Count - 1])
-                        {
-                            variantStockCode += productDto.AddVariantDtos[i].AttrCode[j] + "-" + CreateCodeTime.CreateTime();
+                            if (addProductVariant.ProductStocks.Count >= 0)
+                            {
+                                for (int l = 0; l < addProductVariant.ProductStocks.Count; l++)
+                                {
+                                    productStocks[l].Price =  addProductVariant.ProductStocks[l].Price;
+                                    productStocks[l].Quantity = addProductVariant.ProductStocks[l].Quantity;
+                                }
+                                _productStockService.AddList(productStocks);
+                            }
+                            else
+                            {
+                                return new ErrorResult();
+                            }
                         }
                         else
                         {
-                            variantStockCode += "-" + productDto.AddVariantDtos[i].AttrCode[j];
+                            return new ErrorResult();
                         }
+
+                        if (addProductVariant.ProductAttributes != null)
+                        {
+                            if (addProductVariant.ProductAttributes.Count >= 0)
+                            {
+                                _productAttributeService.AddList(addProductVariant.ProductAttributes);
+                            }
+                        }
+                        return new SuccessResult();
                     }
-                    ProductVariant variant = new ProductVariant();
-                    variant.StockCode = variantStockCode;
-                    variant.ProductId = productDto.ProductId;
-                    variants.Add(variant);
+                    else
+                    {
+                        return new ErrorResult();
+                    }
                 }
-                return new SuccessDataResult<List<ProductVariant>>(variants);
-            }
-            return null;
+                else if (!addProductVariant.IsVariant)
+                {
+                    ProductVariant productVariant = new ProductVariant()
+                    {
+                        ProductId = addProductVariant.ProductId
+                    };
+                    var result = Add(productVariant);
+
+                    if (result.Success)
+                    {
+                        ProductStock productStock = new ProductStock()
+                        {
+                            ProductId = productVariant.ProductId,
+                            ProductVariantId = productVariant.Id,
+                            Price = addProductVariant.ProductStocks[0].Price,
+                            Quantity = addProductVariant.ProductStocks[0].Quantity,
+                            StockCode = addProductVariant.ProductStocks[0].StockCode
+                        };
+                        var productStockResult = _productStockService.Add(productStock);
+                        if (!productStockResult.Success)
+                        {
+                            return new ErrorResult();
+                        }
+                        return new SuccessResult();
+                    }
+                    else
+                    {
+                        return new ErrorResult();
+                    }
+                }
+            return new ErrorResult();
         }
 
         public IResult Delete(ProductVariant variant)
         {
             if (variant != null)
             {
+                var getSubProductVariant = GetSubProductVariantById(variant.Id);
+                if (getSubProductVariant.Data != null)
+                {
+                    if (getSubProductVariant.Data.Count() >= 0)
+                    {
+                        _productVariantDal.DeleteRange(getSubProductVariant.Data);
+                        return new SuccessResult();
+                    }
+                }
                 _productVariantDal.Delete(variant);
                 return new SuccessResult();
             }
@@ -114,16 +247,6 @@ namespace Business.Concrete
             return new ErrorDataResult<List<ProductVariant>>();
         }
 
-        public IDataResult<List<ViewVariantDto>> GetAllDto()
-        {
-            var result = _productVariantDal.GetAllFilterDto();
-            if (result != null)
-            {
-                return new SuccessDataResult<List<ViewVariantDto>>(result);
-            }
-            return new ErrorDataResult<List<ViewVariantDto>>(result);
-        }
-
         public IDataResult<ProductVariant> GetById(int id)
         {
             var result = _productVariantDal.Get(x => x.Id == id);
@@ -132,6 +255,49 @@ namespace Business.Concrete
                 return new SuccessDataResult<ProductVariant>(result);
             }
             return new ErrorDataResult<ProductVariant>();
+        }
+
+        public IDataResult<ProductVariant> GetByProductId(int productId)
+        {
+            var result = _productVariantDal.Get(x => x.ProductId == productId);
+            if (result != null)
+            {
+                return new SuccessDataResult<ProductVariant>(result);
+            }
+            return new ErrorDataResult<ProductVariant>();
+        }
+
+        public IDataResult<List<SelectProductVariantDetailDto>> GetAllMainProductVariant(int productId)
+        {
+            var result = _productVariantDal.GetAllFilterDto(x => x.ProductId == productId && x.ParentId == null);
+            if (result != null)
+            {
+                return new SuccessDataResult<List<SelectProductVariantDetailDto>>(result);
+            }
+            return new ErrorDataResult<List<SelectProductVariantDetailDto>>();
+        }
+
+        public IDataResult<List<ProductVariant>> GetSubProductVariantById(int productVariantId)
+        {
+            List<ProductVariant> productVariants = new List<ProductVariant>();
+            var result = _productVariantDal.Get(x => x.Id == productVariantId && x.ParentId == null);
+            if (result != null)
+            {
+                productVariants.Add(result);
+                var productVariantAll = GetAllByProductId(result.ProductId).Data;
+                for (int i = 0; i < productVariantAll.Count(); i++)
+                {
+                    for (int j = 0; j < productVariants.Count(); j++)
+                    {
+                        if (productVariants[j].Id == productVariantAll[i].ParentId)
+                        {
+                            productVariants.Add(productVariantAll[i]);
+                        }
+                    } 
+                }
+                return new SuccessDataResult<List<ProductVariant>>(productVariants);
+            }
+            return new ErrorDataResult<List<ProductVariant>>();
         }
 
         public IResult Update(ProductVariant variant)

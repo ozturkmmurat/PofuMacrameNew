@@ -27,6 +27,19 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
+        public IResult AddList(List<ProductAttribute> productAttributes)
+        {
+            if (productAttributes != null)
+            {
+                if (productAttributes.Count >= 0)
+                {
+                    _productAttributeDal.AddRange(productAttributes);
+                    return new SuccessResult();
+                }
+            }
+            return new ErrorResult();
+        }
+
         public IResult Delete(ProductAttribute productAttribute)
         {
             if (productAttribute != null)

@@ -27,11 +27,10 @@ namespace DataAccess.Concrete.EntityFramework
 
                              select new ViewCategoryAttributeDto
                              {
-                                 CategoryId = ca.Id,
+                                 CategoryId = ca.CategoryId,
                                  AttributeId = a.Id,
-                                 AttributeValueId = av.Id,
                                  AttributeName = a.Name,
-                                 AttributeValue = av.Value,
+                                 AttributeValues = context.AttributeValues.Where(x => x.AttributeId == a.Id).ToList(),
                                  Slicer = ca.Slicer,
                                  Attribute = ca.Attribute
                              };

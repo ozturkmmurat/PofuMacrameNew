@@ -5,6 +5,7 @@ using Core.Utilities.Result.Concrete;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.Dtos.Product;
+using Entities.Dtos.ProductStock;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -58,6 +59,16 @@ namespace Business.Concrete
             return new ErrorDataResult<List<ProductStock>>();
         }
 
+        public IDataResult<List<SelectProductStockDto>> GetAllProductStockDto()
+        {
+            var result = _productStockDal.GetAllFilterDto();
+            if (result != null)
+            {
+                return new SuccessDataResult<List<SelectProductStockDto>>(result);
+            }
+            return new ErrorDataResult<List<SelectProductStockDto>>();
+        }
+
         public IDataResult<ProductStock> GetById(int id)
         {
             var result = _productStockDal.Get(x => x.Id == id);
@@ -86,26 +97,6 @@ namespace Business.Concrete
                 return new SuccessDataResult<ProductStock>(result);
             }
             return new ErrorDataResult<ProductStock>();
-        }
-
-        public IDataResult<List<ProductStock>> MappingProductStock(ProductDto productDto)
-        {
-            if (productDto != null)
-            {
-                List<ProductStock> productStocks = new List<ProductStock>();
-                for (int i = 0; i < productDto.ProductStocks.Count; i++)
-                {
-                    ProductStock productStock = new ProductStock()
-                    {
-                        ProductId = productDto.ProductId,
-                        ProductVariantId = productDto.AddVariantDtos[i].VariantId,
-                        Quantity = productDto.ProductStocks[i].Quantity
-                    };
-                    productStocks.Add(productStock);
-                }
-                return new SuccessDataResult<List<ProductStock>>(productStocks);
-            }
-            return new ErrorDataResult<List<ProductStock>>();
         }
 
         public IResult Update(ProductStock productStock)

@@ -14,9 +14,8 @@ namespace Business.Utilities
             string month = dateTime.Month.ToString();
             string year = dateTime.Year.ToString();
             year = year.Substring(year.Length - 3);
-            string hourMinute = dateTime.ToString("HH:mm");
 
-            return day + month + year + hourMinute;
+            return day + month + year + dateTime.Minute + dateTime.Second;
         }
     }
 }
