@@ -1,4 +1,6 @@
 ﻿using Business.Abstract;
+using Business.Constans;
+using Core.Business;
 using Core.Utilities.Result.Abstract;
 using Core.Utilities.Result.Concrete;
 using DataAccess.Abstract;
@@ -22,8 +24,15 @@ namespace Business.Concrete
         {
             if (categoryAttribute != null)
             {
+                var repeatedData = CheckRepeatedData(categoryAttribute);
+                var checkAttributeSlicer = CheckSliderAttribute(categoryAttribute);
+                IResult result = BusinessRules.Run(repeatedData, checkAttributeSlicer);
+                if (result  != null)
+                {
+                    return new ErrorResult(result.Message);
+                }
                 _categoryAttributeDal.Add(categoryAttribute);
-                return new SuccessResult();
+                return new SuccessResult(Messages.SuccessAdd);
             }
             return new ErrorResult();
         }
@@ -56,6 +65,16 @@ namespace Business.Concrete
                 return new SuccessDataResult<List<CategoryAttribute>>(result);
             }
             return new ErrorDataResult<List<CategoryAttribute>>();
+        }
+
+        public IDataResult<List<SelectCategoryAttributeDto>> GetAllSlctCategoryByCategoryId(int categoryId)
+        {
+            var result = _categoryAttributeDal.GetAllSelectFilterDto(x => x.CategoryId == categoryId);
+            if (result != null)
+            {
+                return new SuccessDataResult<List<SelectCategoryAttributeDto>>(result);
+            }
+            return new ErrorDataResult<List<SelectCategoryAttributeDto>>();
         }
 
         public IDataResult<List<ViewCategoryAttributeDto>> GetAllDtoTrueSlicer(int categoryId)
@@ -94,10 +113,53 @@ namespace Business.Concrete
         {
             if (categoryAttribute != null)
             {
+                var repeatedData = CheckRepeatedData(categoryAttribute);
+                var checkAttributeSlicer = CheckSliderAttribute(categoryAttribute);
+                IResult rulesResult = BusinessRules.Run(repeatedData, checkAttributeSlicer);
+                if (rulesResult  != null)
+                {
+                    return new ErrorResult(rulesResult.Message);
+                }
+
                 _categoryAttributeDal.Update(categoryAttribute);
                 return new SuccessResult();
             }
             return new ErrorResult();
         }
+
+        public IResult CheckRepeatedData(CategoryAttribute categoryAttribute)
+        {
+            var result = GetByAttributeIdCategoryId(categoryAttribute.AttributeId, categoryAttribute.CategoryId).Data;
+            if (result == null)
+            {
+                return new SuccessResult();
+            }else if (result.Required != categoryAttribute.Required && result.Attribute == categoryAttribute.Attribute && result.Slicer == categoryAttribute.Slicer)
+            {
+                return new SuccessResult();
+            }else if (result.Slicer != categoryAttribute.Slicer)
+            {
+                return new SuccessResult();
+            }
+            else if (result.Attribute != categoryAttribute.Attribute)
+            {
+                return new SuccessResult();
+            }
+
+            return new ErrorResult(Messages.RepeatedData);
+        }
+
+        public IResult CheckSliderAttribute(CategoryAttribute categoryAttribute)
+        {
+            if (categoryAttribute != null)
+            {
+                if (categoryAttribute.Attribute == true && categoryAttribute.Slicer == true)
+                {
+                    return new ErrorResult(Messages.CheckSliderAttribute);
+                }
+            }
+            return new SuccessResult();
+        }
+
+
     }
 }

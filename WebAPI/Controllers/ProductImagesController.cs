@@ -17,10 +17,10 @@ namespace WebAPI.Controllers
             _productImageService = productImageService;
         }
 
-        [HttpGet("GetAll")]
-        public IActionResult GetAll()
+        [HttpGet("GetAllByProductVariantId")]
+        public IActionResult GetAllByProductVariantId(int productVariantId)
         {
-            var result = _productImageService.GetAll();
+            var result = _productImageService.GetAllByProductVariantId(productVariantId);
             if (result.Success)
             {
                 return Ok(result);
@@ -39,10 +39,32 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpPost("AddList")]
-        public IActionResult AddList([FromForm] List<AddProductImageDto> addProductImageDtos)
+        [HttpPost("Update")]
+        public IActionResult Update([FromForm] ProductImage productImage, [FromForm] IFormFile file)
         {
-            var result = _productImageService.AddList(addProductImageDtos);
+            var result = _productImageService.Update(productImage, file);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        [HttpPost("Delete")]
+        public IActionResult Delete(ProductImage productImage)
+        {
+            var result = _productImageService.Delete(productImage);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        [HttpPost("AddList")]
+        public IActionResult AddList([FromForm] AddProductImageDto addProductImageDto)
+        {
+            var result = _productImageService.AddList(addProductImageDto);
             if (result.Success)
             {
                 return Ok(result);

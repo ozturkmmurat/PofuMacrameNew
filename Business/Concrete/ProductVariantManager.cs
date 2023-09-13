@@ -67,7 +67,6 @@ namespace Business.Concrete
                     if (addProductVariant.JsonData.ValueKind != JsonValueKind.Null || (addProductVariant.JsonData.EnumerateObject().Any()) ||
                 (addProductVariant.JsonData.ValueKind != JsonValueKind.Object && addProductVariant.JsonData.EnumerateObject().Any()))
                     {
-
                         addProductVariant.ProductAttributes = new List<ProductAttribute>();
                         for (int q = 0; q < properties.Count(); q++)
                         {
@@ -148,6 +147,7 @@ namespace Business.Concrete
                                 {
                                     productStocks[l].Price =  addProductVariant.ProductStocks[l].Price;
                                     productStocks[l].Quantity = addProductVariant.ProductStocks[l].Quantity;
+                                    productStocks[l].StockCode = addProductVariant.ProductStocks[l].StockCode; 
                                 }
                                 _productStockService.AddList(productStocks);
                             }
@@ -269,7 +269,7 @@ namespace Business.Concrete
 
         public IDataResult<List<SelectProductVariantDetailDto>> GetAllMainProductVariant(int productId)
         {
-            var result = _productVariantDal.GetAllFilterDto(x => x.ProductId == productId && x.ParentId == null);
+            var result = _productVariantDal.GetAllFilterDto(x => x.ProductId == productId);
             if (result != null)
             {
                 return new SuccessDataResult<List<SelectProductVariantDetailDto>>(result);

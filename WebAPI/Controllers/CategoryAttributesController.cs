@@ -37,6 +37,28 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
+        [HttpGet("GetAllByCategoryId")]
+        public IActionResult GetAllByCategoryId(int categoryId)
+        {
+            var result = _categoryAttributeService.GetAllByCategoryId(categoryId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetAllSlctCategoryByCategoryId")]
+        public IActionResult GetAllSlctCategoryByCategoryId(int categoryId)
+        {
+            var result = _categoryAttributeService.GetAllSlctCategoryByCategoryId(categoryId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
         [HttpGet("GetAllDtoTrueSlicerAttribute")]
         public IActionResult GetAllViewDtoTrueVariantAttribute(int categoryId)
         {

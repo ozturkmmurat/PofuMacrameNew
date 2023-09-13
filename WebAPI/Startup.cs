@@ -28,8 +28,8 @@ namespace WebAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors();
             services.AddControllers();
+            services.AddCors();
 
             services.AddDependencyResolvers(new ICoreModule[] {
              new CoreModule()
@@ -44,7 +44,7 @@ namespace WebAPI
                 app.UseDeveloperExceptionPage();
             }
 
-            app.ConfigureCustomExceptionMiddleware(); // MiddleWare yaþam döngüsünde hata yakalama middleware de çalýþtýr diyoruz.
+            //app.ConfigureCustomExceptionMiddleware(); // MiddleWare yaþam döngüsünde hata yakalama middleware de çalýþtýr diyoruz.
 
             app.UseCors(builder => builder.WithOrigins("http://localhost:4200").AllowAnyHeader());
 
@@ -57,6 +57,7 @@ namespace WebAPI
             app.UseAuthentication();
 
             app.UseAuthorization();
+
 
             app.UseEndpoints(endpoints =>
             {

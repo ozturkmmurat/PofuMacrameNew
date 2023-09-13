@@ -40,6 +40,30 @@ namespace DataAccess.Concrete.EntityFramework
             }
         }
 
+        public List<SelectCategoryAttributeDto> GetAllSelectFilterDto(Expression<Func<SelectCategoryAttributeDto, bool>> filter = null)
+        {
+            using (PofuMacrameContext context = new PofuMacrameContext())
+            {
+                var result = from ca in context.CategoryAttributes
+                             join c in context.Categories
+                             on ca.CategoryId equals c.Id
+                             join a in context.Attributes
+                             on ca.AttributeId equals a.Id
+
+                             select new SelectCategoryAttributeDto
+                             {
+                                 CategoryAttributeId = ca.Id,
+                                 CategoryId = c.Id,
+                                 AttributeId = a.Id,
+                                 VariableId = ca.VariableId,
+                                 Attribute = ca.Attribute,
+                                 Slicer = ca.Slicer,
+                                 Required = ca.Required,
+                             };
+                return filter == null ? result.ToList() : result.Where(filter).ToList();
+            }
+        }
+
         public List<ViewCategoryAttributeDto> GetAllTrueSlicerAttribute(int categoryId)
         {
             using (PofuMacrameContext context = new PofuMacrameContext())

@@ -11,7 +11,7 @@ namespace Business.Abstract
     public interface IProductStockService
     {
         IDataResult<List<ProductStock>> GetAll();
-        IDataResult<List<SelectProductStockDto>> GetAllProductStockDto();
+        IDataResult<List<SelectProductStockDto>> GetByAllDto(int productId);
         IDataResult<ProductStock> GetById(int id);
         IDataResult<ProductStock> GetByVariantId(int variantId);
         IDataResult<ProductStock> GetByProductId(int productId);

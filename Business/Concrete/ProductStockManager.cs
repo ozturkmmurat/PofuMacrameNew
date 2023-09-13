@@ -59,9 +59,9 @@ namespace Business.Concrete
             return new ErrorDataResult<List<ProductStock>>();
         }
 
-        public IDataResult<List<SelectProductStockDto>> GetAllProductStockDto()
+        public IDataResult<List<SelectProductStockDto>> GetByAllDto(int productId)
         {
-            var result = _productStockDal.GetAllFilterDto();
+            var result = _productStockDal.GetByDto(productId);
             if (result != null)
             {
                 return new SuccessDataResult<List<SelectProductStockDto>>(result);

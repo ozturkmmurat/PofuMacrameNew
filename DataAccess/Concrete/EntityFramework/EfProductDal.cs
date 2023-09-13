@@ -47,7 +47,7 @@ namespace DataAccess.Concrete.EntityFramework
                                                       .Select(pi => pi.Path)
                                                       .ToList(),
                                   VariantPaths = context.ProductImages
-                                                      .Where(x => x.ProductId == pv.ProductId && x.IsMain == true)
+                                                      .Where(x => x.ProductVariantId == pv.Id && x.IsMain == true)
                                                       .Select(x => x.Path)
                                                       .ToList()
                               }).ToList();
@@ -98,7 +98,8 @@ namespace DataAccess.Concrete.EntityFramework
                                 ProductId = p .Id,
                                 CategoryId = c.Id,
                                 ProductName = p.ProductName,
-                                CategoryName = c.CategoryName
+                                CategoryName = c.CategoryName,
+                                ProductCode = p.ProductCode
                               });
 
                 return filter == null ? result.ToList() : result.Where(filter).ToList();

@@ -1,5 +1,6 @@
 ﻿using Business.Abstract;
 using Business.Constans;
+using Core.Business;
 using Core.Helpers.FileHelper;
 using Core.Utilities.Result.Abstract;
 using Core.Utilities.Result.Concrete;
@@ -25,56 +26,83 @@ namespace Business.Concrete
             _productImageDal = productImageDal;
             _fileHelper = fileHelper;
         }
-        public IResult Add(ProductImage productAttributeImage, IFormFile formFile)
+        public IResult Add(ProductImage productImage, IFormFile formFile)
         {
-            if (productAttributeImage != null)
+            if (productImage != null)
             {
-                productAttributeImage.Path = _fileHelper.Upload(formFile, PathConstans.ImagesPath);
-                productAttributeImage.CreateDate = DateTime.Now;
-                _productImageDal.Add(productAttributeImage);
+                productImage.Path = _fileHelper.Upload(formFile, PathConstans.ImagesPath);
+                productImage.CreateDate = DateTime.Now;
+                _productImageDal.Add(productImage);
                 return new SuccessResult();
             }
             return new ErrorResult();
         }
 
-        public IResult AddList(List<AddProductImageDto> addProductImageDtos)
+        public IResult AddList(AddProductImageDto addProductImageDtos)
         {
             if (addProductImageDtos != null)
             {
                 List<ProductImage> productImages = new List<ProductImage>();
-                for (int i = 0; i < addProductImageDtos.Count; i++)
+                if (addProductImageDtos.Files != null)
                 {
-                    for (int j = 0; j < addProductImageDtos[i].Files.Count; j++)
+                    if(addProductImageDtos.Files.Count > 0)
                     {
-                        ProductImage productImage = new ProductImage();
-                        productImage.ProductId = addProductImageDtos[0].ProductId;
-                        productImage.ProductVariantId = addProductImageDtos[0].ProductVariantId;
-                        if (j == 0 && GetByProductIdProductVariantId(productImage.ProductId, productImage.ProductVariantId).Success == false)
+                        var checkImageLimit = CheckImageLimit(addProductImageDtos.ProductVariantId, addProductImageDtos.Files.Count);
+                        IResult result = BusinessRules.Run(checkImageLimit);
+                        if (result != null)
                         {
-                            productImage.IsMain = true;
+                            return new ErrorResult(checkImageLimit.Message);
                         }
-                        else
+                        for (int j = 0; j < addProductImageDtos.Files.Count; j++)
                         {
-                            productImage.IsMain = false;
+                            ProductImage productImage = new ProductImage();
+                            productImage.ProductVariantId = addProductImageDtos.ProductVariantId;
+                            if (j == 0 && GetByProductVariantId(productImage.ProductVariantId).Success == false)
+                            {
+                                productImage.IsMain = true;
+                            }
+                            else
+                            {
+                                productImage.IsMain = false;
+                            }
+                            productImage.CreateDate = DateTime.Now;
+                            productImage.Path = _fileHelper.Upload(addProductImageDtos.Files[j], PathConstans.ImagesPath);
+                            productImages.Add(productImage);
                         }
-                        productImage.AttributeValueId = addProductImageDtos[0].AttributeValueId;
-                        productImage.CreateDate = DateTime.Now;
-                        productImage.Path = _fileHelper.Upload(addProductImageDtos[i].Files[j], PathConstans.ImagesPath);
-                        productImages.Add(productImage);
+                        _productImageDal.AddRange(productImages);
+                        return new SuccessResult(Messages.SuccessAdd);
+                    }
+                }
+            }
+            return new ErrorResult(Messages.UnSuccessAdd);
+        }
+
+        public IResult CheckImageLimit(int productVariantId, int fileCount)
+        {
+            var imageCount = GetAllByProductVariantId(productVariantId).Data.Count;
+            var limit = imageCount + fileCount;
+            if (limit <= 5)
+            {
+                return new SuccessResult();
+            }
+            return new ErrorResult(Messages.ImageLimit + " " + imageCount);
+        }
+
+        public IResult Delete(ProductImage productImage)
+        {
+            if (productImage != null)
+            {
+                _productImageDal.Delete(productImage);
+                if (productImage.IsMain == true)
+                {
+                    var controlImage = GetByProductVariantId(productImage.ProductVariantId).Data;
+                    if (controlImage != null)
+                    {
+                        controlImage.IsMain = true;
+                        Update(controlImage, null);
                     }
                 }
                
-                _productImageDal.AddRange(productImages);
-                return new SuccessResult();
-            }
-            return new ErrorResult();
-        }
-
-        public IResult Delete(ProductImage productAttributeImage)
-        {
-            if (productAttributeImage != null)
-            {
-                _productImageDal.Delete(productAttributeImage);
                 return new SuccessResult();
             }
             return new ErrorResult();
@@ -110,9 +138,9 @@ namespace Business.Concrete
             return new ErrorDataResult<ProductImage>();
         }
 
-        public IDataResult<ProductImage> GetByProductIdProductVariantId(int productId, int productVariantId)
+        public IDataResult<ProductImage> GetByProductVariantId(int productVariantId)
         {
-            var result = _productImageDal.Get(x => x.ProductId == productId && x.ProductVariantId == productVariantId && x.IsMain == true);
+            var result = _productImageDal.Get(x => x.ProductVariantId == productVariantId && x.IsMain == true);
             if (result != null)
             {
                 return new SuccessDataResult<ProductImage>(result);
@@ -120,11 +148,22 @@ namespace Business.Concrete
             return new ErrorDataResult<ProductImage>();
         }
 
-        public IResult Update(ProductImage productAttributeImage)
+        public IResult Update(ProductImage productImage, IFormFile formFile)
         {
-            if (productAttributeImage != null)
+            if (productImage != null)
             {
-                _productImageDal.Update(productAttributeImage);
+                if (formFile != null)
+                {
+                    productImage.Path = _fileHelper.Upload(formFile, PathConstans.ImagesPath);
+
+                }
+                else
+                {
+                    productImage.Path = GetById(productImage.Id).Data.Path;
+                }
+
+                productImage.CreateDate = DateTime.Now;
+                _productImageDal.Update(productImage);
                 return new SuccessResult();
             }
             return new ErrorResult();

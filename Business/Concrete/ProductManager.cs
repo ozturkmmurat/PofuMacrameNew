@@ -135,6 +135,7 @@ namespace Business.Concrete
                         CategoryId = addProductVariant.CategoryId,
                         ProductName = addProductVariant.ProductName,
                         Description = addProductVariant.Description,
+                        ProductCode = addProductVariant.ProductCode,
                     };
                     var addProduct = Add(product);
                     if (addProduct.Success)

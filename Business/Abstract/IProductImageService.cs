@@ -15,10 +15,11 @@ namespace Business.Abstract
         IDataResult<List<ProductImage>> GetAll();
         IDataResult<List<ProductImage>> GetAllByProductVariantId(int productVariantId);
         IDataResult<ProductImage> GetById(int id);
-        IDataResult<ProductImage> GetByProductIdProductVariantId(int productId, int productVariantId);
-        IResult Add(ProductImage productAttributeImage, IFormFile formFile);
-        IResult AddList(List<AddProductImageDto> addProductImageDtos);
-        IResult Update(ProductImage productAttributeImage);
-        IResult Delete(ProductImage productAttributeImage);
+        IDataResult<ProductImage> GetByProductVariantId(int productVariantId);
+        IResult Add(ProductImage productImage, IFormFile formFile);
+        IResult AddList(AddProductImageDto addProductImageDtos);
+        IResult Update(ProductImage productImage, IFormFile formFile);
+        IResult Delete(ProductImage productImage);
+        IResult CheckImageLimit(int productVariantId, int fileCount);
     }
 }

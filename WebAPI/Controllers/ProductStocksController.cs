@@ -30,10 +30,10 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("GetAllDto")]
-        public IActionResult GetAllDto()
+        [HttpGet("GetByAllDto")]
+        public IActionResult GetAllDto(int productId)
         {
-            var result = _productStockService.GetAllProductStockDto();
+            var result = _productStockService.GetByAllDto(productId);
             if (result.Success)
             {
                 return Ok(result);

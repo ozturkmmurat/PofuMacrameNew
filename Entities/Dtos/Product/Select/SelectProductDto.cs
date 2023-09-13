@@ -10,5 +10,6 @@ namespace Entities.Dtos.Product.Select
         public int CategoryId { get; set; }
         public string ProductName { get; set; }
         public string CategoryName { get; set; }
+        public string ProductCode { get; set; }
     }
 }

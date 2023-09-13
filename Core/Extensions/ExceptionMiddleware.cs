@@ -34,28 +34,27 @@ namespace Core.Extensions
 
         private Task HandleExceptionAsync(HttpContext httpContext, Exception e)
         {
+
             httpContext.Response.ContentType = "application/json";
             httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
             string message = e.Message;
             IEnumerable<ValidationFailure> errors;
 
+            //validation
             if (e.GetType() == typeof(ValidationException))
             {
                 message = e.Message;
                 errors = ((ValidationException)e).Errors;
                 httpContext.Response.StatusCode = 400;
-
                 return httpContext.Response.WriteAsync(new ValidationErrorDetails
                 {
-                    StatusCode = 400,
+                    StatusCode = httpContext.Response.StatusCode,
                     Message = message,
                     Errors = errors
                 }.ToString());
-
             }
-
-
+            //secured operation
             if (e.GetType() == typeof(SecuredOperationException))
             {
                 if (e.Message == UserMessages.AuthorizationDenied)
@@ -63,12 +62,12 @@ namespace Core.Extensions
                     message = e.Message;
                     httpContext.Response.StatusCode = 401;
                 }
-                else if (e.Message == UserMessages.TokenExpired)
+                else if (e.Message==UserMessages.TokenExpired)
                 {
                     message = e.Message;
                     httpContext.Response.StatusCode = 403;
                 }
-                else if (e.Message == UserMessages.RefreshTokenExpired)
+                else if (e.Message==UserMessages.RefreshTokenExpired)
                 {
                     message = e.Message;
                     httpContext.Response.StatusCode = 410;
@@ -80,11 +79,11 @@ namespace Core.Extensions
                 }.ToString());
             }
 
-
+            //no custom error
             return httpContext.Response.WriteAsync(new ErrorDetails
             {
                 StatusCode = httpContext.Response.StatusCode,
-                Message = message,
+                Message = message
             }.ToString());
         }
     }

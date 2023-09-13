@@ -14,6 +14,7 @@ namespace Entities.Dtos.ProductVariant
         public int ProductVariantId { get; set; }
         public string ProductName { get; set; }
         public string Description { get; set; }
+        public string ProductCode { get; set; }
         public List<Entities.Concrete.ProductVariant> ProductVariants { get; set; }
         public List<Entities.Concrete.ProductStock> ProductStocks { get; set; }
         public List<ProductAttribute> ProductAttributes { get; set; }

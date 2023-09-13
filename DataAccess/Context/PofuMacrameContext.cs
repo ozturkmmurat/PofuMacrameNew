@@ -20,6 +20,15 @@ namespace DataAccess.Context
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Category>()
+              .HasKey(category => category.Id);
+
+            modelBuilder.Entity<Category>()
+           .HasOne<Category>()
+           .WithMany()
+           .HasForeignKey(c => c.ParentId) // ParentId, dış anahtar olarak kullanılıyor.
+           .IsRequired(false)// ParentId nullable olduğu için IsRequired(false) kullanılıyor.
+           .OnDelete(DeleteBehavior.Cascade);
         }
 
         public DbSet<Entities.Concrete.Attribute> Attributes { get; set; }

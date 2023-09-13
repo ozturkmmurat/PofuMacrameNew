@@ -28,10 +28,6 @@ namespace DataAccess.Concrete.EntityFramework
                                  ProductVariantId = pv.Id,
                                  ProductId = p.Id,
                                  ParentId = pv.ParentId,
-                                 AttributeId = a.Id,
-                                 AttributeValueId = av.Id,
-                                 AttributeKey = a.Name,
-                                 AttributeValue = av.Value,
                                  ProductPaths = context.ProductImages
                                                       .Where(x => x.ProductVariantId == pv.Id)
                                                       .Take(2)

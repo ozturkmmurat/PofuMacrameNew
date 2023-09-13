@@ -14,7 +14,7 @@ namespace DataAccess.Concrete.EntityFramework
 {
     public class EfProductStockDal : EfEntityRepositoryBase<ProductStock, PofuMacrameContext>, IProductStockDal
     {
-        public List<SelectProductStockDto> GetAllFilterDto(Expression<Func<SelectProductStockDto, bool>> filter = null)
+        public List<SelectProductStockDto> GetByDto(int productId)
         {
             using (PofuMacrameContext context = new PofuMacrameContext())
             {
@@ -22,6 +22,7 @@ namespace DataAccess.Concrete.EntityFramework
                              join pv in context.ProductVariants on ps.ProductVariantId equals pv.Id
                              join p in context.Products on pv.ProductId equals p.Id
                              join c in context.Categories on p.CategoryId equals c.Id
+                             where p.Id == productId
                              select new SelectProductStockDto
                              {
                                  ProductStockId = ps.Id,
@@ -29,8 +30,6 @@ namespace DataAccess.Concrete.EntityFramework
                                  ProductVariantId = pv.Id,
                                  AttributeValueId = pv.AttributeValueId,
                                  ParentId = pv.ParentId,
-                                 ProductName = p.ProductName,
-                                 CategoryName = c.CategoryName,
                                  Price = ps.Price,
                                  Quantity = ps.Quantity,
                                  StockCode = ps.StockCode,
@@ -38,7 +37,7 @@ namespace DataAccess.Concrete.EntityFramework
 
                 var productVariant = context.ProductVariants.ToList();
                 var attributeValue = context.AttributeValues.ToList();
-                var attributeIdList = new List<ProductVariant>();
+                var productVariantList = new List<ProductVariant>();
                 var x = result.ToList();
                 for (int i = 0; i < result.ToList().Count; i++)
                 {
@@ -47,20 +46,26 @@ namespace DataAccess.Concrete.EntityFramework
                         if (result[i].ParentId == productVariant[j].Id)
                         {
                            result[i].AttributeValue += attributeValue.FirstOrDefault(x => x.Id == result[i].AttributeValueId).Value + " ";
-                            attributeIdList.Add(productVariant.FirstOrDefault(x => x.Id == result[i].ParentId));
-                            for (int k = 0; k < attributeIdList.Count; k++)
+                            productVariantList.Add(productVariant.FirstOrDefault(x => x.Id == result[i].ParentId));
+                            for (int k = 0; k < productVariantList.Count; k++)
                             {
-                                result[i].AttributeValue += attributeValue.FirstOrDefault(x => x.Id == attributeIdList[k].AttributeValueId).Value + " "; 
-                                if (attributeIdList[k].ParentId != null)
+                                result[i].AttributeValue += attributeValue.FirstOrDefault(x => x.Id == productVariantList[k].AttributeValueId).Value + " "; 
+                                if (productVariantList[k].ParentId != null)
                                 {
-                                    attributeIdList.Add(productVariant.FirstOrDefault(x => x.Id == attributeIdList[k].ParentId));
+                                    productVariantList.Add(productVariant.FirstOrDefault(x => x.Id == productVariantList[k].ParentId));
+                                }else if (productVariantList[k].ParentId == null)
+                                {
+                                    result[i].ProductVariantId = productVariantList[k].Id;
+                                    result[i].AttributeId = productVariantList[k].AttributeId;
+                                    result[i].AttributeValueId = productVariantList[k].AttributeValueId;
+                                    result[i].ParentId = null;
                                 }
                             }
                         }
                     }
-                    attributeIdList.Clear();
+                    productVariantList.Clear();
                 }
-                return filter == null ? result.ToList() : result.Where(filter.Compile()).ToList();
+                return result;
             }
         }
     }

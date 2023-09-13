@@ -95,7 +95,6 @@ namespace WebAPI.Controllers
         [HttpPost("TsaAdd")]
         public IActionResult TsaAdd(AddProductVariant addProductVariant)
         {
-            var req = Request;
             var result = _productService.TsaAdd(addProductVariant);
             if (result.Success)
             {

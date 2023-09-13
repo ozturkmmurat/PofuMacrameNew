@@ -5,11 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Core\Core.csproj" />
+    <Folder Include="Dtos\Category\Select\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Dtos\Category\Select\" />
+    <ProjectReference Include="..\Core\Core.csproj" />
   </ItemGroup>
 
 </Project>
