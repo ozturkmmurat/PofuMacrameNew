@@ -152,5 +152,15 @@ namespace Business.Concrete
             }
             return new ErrorResult();
         }
+
+        public IDataResult<SelectProductDetailDto> GetProductDetailDtoByPvId(int productVariantId)
+        {
+            var result = _productDal.GetFilterDto(x => x.ProductVariantId == productVariantId);
+            if (result != null)
+            {
+                return new SuccessDataResult<SelectProductDetailDto>(result);
+            }
+            return new ErrorDataResult<SelectProductDetailDto>();
+        }
     }
 }

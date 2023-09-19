@@ -10,6 +10,5 @@ namespace DataAccess.Abstract
 {
     public interface IAttributeDal : IEntityRepository<Entities.Concrete.Attribute>
     {
-        List<AttributeDto> GetAllFilterDto(Expression<Func<AttributeDto, bool>> filter = null);
     }
 }

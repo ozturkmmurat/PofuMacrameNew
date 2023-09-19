@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Dtos\Attribute\" />
     <Folder Include="Dtos\Category\Select\" />
   </ItemGroup>
 

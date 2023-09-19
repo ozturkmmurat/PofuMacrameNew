@@ -65,6 +65,17 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
+        [HttpGet("GetPvAttributeByPvId")]
+        public IActionResult GetPvAttributeByPvId(int productVariantId)
+        {
+            var result = _variantService.GetTopPvAttributeByPvId(productVariantId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
         [HttpPost("Delete")]
         public IActionResult Delete(ProductVariant productVariant)
         {

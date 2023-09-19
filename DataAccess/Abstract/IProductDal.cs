@@ -15,6 +15,6 @@ namespace DataAccess.Abstract
     {
         List<SelectListProductVariantDto> GetAllPvFilterDto(Expression<Func<SelectListProductVariantDto, bool>> filter = null);
         List<SelectProductDto> GetAllFilterDto(Expression<Func<SelectProductDto, bool>> filter = null);
-        SelectListProductVariantDto GetFilterDto(Expression<Func<SelectListProductVariantDto, bool>> filter = null); 
+        SelectProductDetailDto GetFilterDto(Expression<Func<SelectProductDetailDto, bool>> filter = null); 
     }
 }

@@ -57,28 +57,32 @@ namespace DataAccess.Concrete.EntityFramework
             }
         }
 
-        public SelectListProductVariantDto GetFilterDto(Expression<Func<SelectListProductVariantDto, bool>> filter = null)
+        public SelectProductDetailDto GetFilterDto(Expression<Func<SelectProductDetailDto, bool>> filter = null)
         {
             using (PofuMacrameContext context = new PofuMacrameContext())
             {
                 var result = (from p in context.Products
                               join pv in context.ProductVariants on p.Id equals pv.ProductId
-                              join pi in context.ProductImages on pv.Id equals pi.ProductVariantId
                               join ps in context.ProductStocks on p.Id equals ps.ProductId
-                              join av in context.AttributeValues on pv.AttributeValueId equals av.Id
-                              select new SelectListProductVariantDto
+                              join pi in context.ProductImages on pv.Id equals pi.ProductVariantId
+                              where pi.IsMain == true
+                              select new SelectProductDetailDto
                               {
                                   ProductId = p.Id,
                                   ProductVariantId = pv.Id,
                                   ParentId = pv.ParentId,
-                                  AttributeValueId = av.Id,
                                   ProductName = p.ProductName,
                                   Description = p.Description,
-                                  AttributeValue = av.Value,
                                   StockCode = ps.StockCode,
                                   Price = ps.Price,
                                   Quantity = ps.Quantity,
-                                  ProductPaths = context.ProductImages.Select(x => x.Path).ToList()
+                                  MainImage = pi.Path,
+                                  ProductPaths = context.ProductImages
+                                                        .Where(x => x.ProductVariantId == pv.Id)
+                                                        .Select(x => x.Path).ToList(),
+                                  VariantPaths = context.ProductImages
+                                                        .Where(x => x.ProductId == p.Id && x.IsMain == true)
+                                                        .Select(x => x.Path).ToList()
                               });
 
 

@@ -89,7 +89,7 @@ namespace Business.Concrete
 
         public IDataResult<List<ViewCategoryAttributeDto>> GetAllViewDtoTrueSlicerAttribute(int categoryId)
         {
-            var result = _categoryAttributeDal.GetAllFilterDto(x => x.CategoryId == categoryId && x.Slicer == true || x.Attribute == true)
+            var result = _categoryAttributeDal.GetAllFilterDto(x => x.CategoryId == categoryId &&(x.Slicer == true || x.Attribute == true))
                 .GroupBy(x => x.AttributeId).Select(x => x.FirstOrDefault()).ToList();
             if (result != null)
             {

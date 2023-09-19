@@ -13,7 +13,7 @@ namespace DataAccess.Concrete.EntityFramework
 {
     public class EfProductAttributeDal : EfEntityRepositoryBase<ProductAttribute, PofuMacrameContext>, IProductAttributeDal
     {
-        public List<ProductAttributeDto> GetAllFilterDto(Expression<Func<ProductAttributeDto, bool>> filter = null)
+        public List<ProductAttributeDto> GetProductVariantAttribute(Expression<Func<ProductAttributeDto, bool>> filter = null)
         {
             using (PofuMacrameContext context = new PofuMacrameContext())
             {

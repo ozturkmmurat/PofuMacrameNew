@@ -10,8 +10,6 @@ namespace Business.Abstract
     {
         IDataResult<List<Entities.Concrete.Attribute>> GetAll();
         IDataResult<Entities.Concrete.Attribute> GetById(int id);
-        IDataResult<List<AttributeDto>> GetAllDto();
-        IDataResult<List<AttributeDto>> GetAllDtoByAttrId(int attributeId);
         IResult Add(Entities.Concrete.Attribute attribute);
         IResult Update(Entities.Concrete.Attribute attribute);
         IResult Delete(Entities.Concrete.Attribute attribute);

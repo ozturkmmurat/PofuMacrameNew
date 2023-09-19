@@ -27,7 +27,7 @@ namespace DataAccess.Concrete.EntityFramework
                              {
                                  ProductStockId = ps.Id,
                                  ProductId = p.Id,
-                                 ProductVariantId = pv.Id,
+                                 EndProductVariantId = ps.ProductVariantId,
                                  AttributeValueId = pv.AttributeValueId,
                                  ParentId = pv.ParentId,
                                  Price = ps.Price,
@@ -55,7 +55,7 @@ namespace DataAccess.Concrete.EntityFramework
                                     productVariantList.Add(productVariant.FirstOrDefault(x => x.Id == productVariantList[k].ParentId));
                                 }else if (productVariantList[k].ParentId == null)
                                 {
-                                    result[i].ProductVariantId = productVariantList[k].Id;
+                                    result[i].FirstProductVariantId = productVariantList[k].Id;
                                     result[i].AttributeId = productVariantList[k].AttributeId;
                                     result[i].AttributeValueId = productVariantList[k].AttributeValueId;
                                     result[i].ParentId = null;

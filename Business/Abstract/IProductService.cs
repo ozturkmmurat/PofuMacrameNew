@@ -14,6 +14,7 @@ namespace Business.Abstract
     {
         IDataResult<List<Product>> GetAll();
         IDataResult<List<SelectProductDto>> GetallProductDto();
+        IDataResult<SelectProductDetailDto> GetProductDetailDtoByPvId(int productVariantId);
         IDataResult<List<SelectListProductVariantDto>> GetAllPvProductVariantDtoGroupProduct();
         IDataResult<List<SelectListProductVariantDto>> GetAllProductVariantDtoGroupVariant();
         IDataResult<Product> GetById(int id);

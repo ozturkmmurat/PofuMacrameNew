@@ -46,26 +46,6 @@ namespace Business.Concrete
             return new ErrorDataResult<List<Entities.Concrete.Attribute>>();
         }
 
-        public IDataResult<List<AttributeDto>> GetAllDto()
-        {
-            var result = _attributeDal.GetAllFilterDto();
-            if (result != null)
-            {
-                return new SuccessDataResult<List<AttributeDto>>(result);
-            }
-            return new SuccessDataResult<List<AttributeDto>>();
-        }
-
-        public IDataResult<List<AttributeDto>> GetAllDtoByAttrId(int attributeId)
-        {
-            var result = _attributeDal.GetAllFilterDto(x => x.AttributeId == attributeId);
-            if (result != null)
-            {
-                return new SuccessDataResult<List<AttributeDto>>(result);
-            }
-            return new SuccessDataResult<List<AttributeDto>>();
-        }
-
         public IDataResult<Entities.Concrete.Attribute> GetById(int id)
         {
             var result = _attributeDal.Get(x => x.Id == id);

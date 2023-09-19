@@ -38,5 +38,57 @@ namespace DataAccess.Concrete.EntityFramework
                 return filter == null ? result.ToList() : result.Where(filter).ToList();
             }
         }
+
+        public TopProductVariantAttributeDto GetTopProductAttributeDto(Expression<Func<TopProductVariantAttributeDto, bool>> filter = null)
+        {
+            using (PofuMacrameContext context = new PofuMacrameContext())
+            {
+                var result = from pv in context.ProductVariants
+                             join av in context.AttributeValues
+                             on pv.AttributeValueId equals av.Id
+                             join a in context.Attributes
+                             on av.AttributeId equals a.Id
+
+                             select new TopProductVariantAttributeDto
+                             {
+                                 AttributeId = a.Id,
+                                 AttributeValueId = pv.AttributeValueId,
+                                 ProductVariantId = pv.Id,
+                                 ProductId = pv.ProductId,
+                                 ParentId = pv.ParentId,
+                                 AttributeName = a.Name,
+                                 AttributeValues = context.AttributeValues.Where(x => x.AttributeId == pv.AttributeId).ToList()
+
+                             };
+                return filter == null ? result.FirstOrDefault(): result.Where(filter).FirstOrDefault();
+            }
+        }
+
+        public TopProductVariantAttributeDto GetSubProductAttributeDto(Expression<Func<TopProductVariantAttributeDto, bool>> filter = null)
+        {
+            using (PofuMacrameContext context = new PofuMacrameContext())
+            {
+                var result = from pv in context.ProductVariants
+                             join av in context.AttributeValues
+                             on pv.AttributeValueId equals av.Id
+                             join a in context.Attributes
+                             on av.AttributeId equals a.Id
+
+                             let x = pv.AttributeValueId
+                             select new TopProductVariantAttributeDto
+                             {
+                                 AttributeId = a.Id,
+                                 AttributeValueId = pv.AttributeValueId,
+                                 ProductVariantId = pv.Id,
+                                 ProductId = pv.ProductId,
+                                 ParentId = pv.ParentId,
+                                 AttributeName = a.Name,
+                                 AttributeValues = context.AttributeValues.Where(av => av.Id == pv.AttributeValueId).ToList()
+
+                             };
+
+                return filter == null ? result.FirstOrDefault() : result.Where(filter).FirstOrDefault();
+            }
+        }
     }
 }

@@ -15,8 +15,13 @@ namespace Business.Abstract
         //Variant
         IDataResult<List<ProductVariant>> GetAll();
         IDataResult<List<ProductVariant>> GetAllByProductId(int productId);
+        IDataResult<List<ProductVariant>> GetAllByProductIdAttrId(int productId, int? attributeId);
         IDataResult<List<ProductVariant>> GetSubProductVariantById(int productVariantId);
+        IDataResult<List<ProductVariant>> GetSubProductVariantByProductId(int productId);
         IDataResult<List<SelectProductVariantDetailDto>> GetAllMainProductVariant(int productId);
+        IDataResult<List<TopProductVariantAttributeDto>> GetTopPvAttributeByPvId(int productId);
+        IDataResult<List<TopProductVariantAttributeDto>> GetSubPvAttributeByPvId(TopProductVariantAttributeDto topProductVariantAttributeDto);
+
         IDataResult<ProductVariant> GetById(int id);
         IDataResult<ProductVariant> GetByProductId(int productId);
         IResult Add(ProductVariant variant);

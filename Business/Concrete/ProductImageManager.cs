@@ -57,6 +57,7 @@ namespace Business.Concrete
                         {
                             ProductImage productImage = new ProductImage();
                             productImage.ProductVariantId = addProductImageDtos.ProductVariantId;
+                            productImage.ProductId = addProductImageDtos.ProductId;
                             if (j == 0 && GetByProductVariantId(productImage.ProductVariantId).Success == false)
                             {
                                 productImage.IsMain = true;

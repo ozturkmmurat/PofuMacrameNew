@@ -41,17 +41,6 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("GetAllDtoByProductId")]
-        public IActionResult GetAllDtoByProductId(int productId)
-        {
-            var result = _productAttributeService.GetAllDtoByProductId(productId);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-        }
-
         [HttpPost("Add")]
         public IActionResult Add(ProductAttribute productAttribute)
         {
