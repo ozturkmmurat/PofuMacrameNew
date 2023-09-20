@@ -15,6 +15,7 @@ namespace DataAccess.Context
 
                 optionsBuilder.UseSqlServer("Server=YAYIN01;Database=PofuMacrame; User ID=murat;Password=123456;Connect Timeout=30;MultiSubnetFailover=False;");
                 //optionsBuilder.UseSqlServer("Server=94.102.74.13;Database=WeighbridgeCalculator; User ID=websa;Password=v2qySqsu7MkXL5D;Connect Timeout=30;MultiSubnetFailover=False;");
+                
             }
         }
 

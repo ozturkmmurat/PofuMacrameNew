@@ -66,9 +66,9 @@ namespace WebAPI.Controllers
         }
 
         [HttpGet("GetPvAttributeByPvId")]
-        public IActionResult GetPvAttributeByPvId(int productVariantId)
+        public IActionResult GetPvAttributeByPvId(int productId)
         {
-            var result = _variantService.GetTopPvAttributeByPvId(productVariantId);
+            var result = _variantService.GetProductVariantAttribute(productId);
             if (result.Success)
             {
                 return Ok(result);

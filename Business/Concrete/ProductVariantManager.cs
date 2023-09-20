@@ -23,16 +23,22 @@ namespace Business.Concrete
         IProductStockService _productStockService;
         IProductAttributeService _productAttributeService;
         ICategoryAttributeService _categoryAttributeService;
+        IAttributeValueService _attributeValueService;
+        IAttributeService _attributeService;
         public ProductVariantManager(
             IProductVariantDal productVariantDal,
             IProductStockService productStockService,
             IProductAttributeService productAttributeService,
-            ICategoryAttributeService categoryAttributeService)
+            ICategoryAttributeService categoryAttributeService,
+            IAttributeValueService attributeValueService,
+            IAttributeService attributeService)
         {
             _productVariantDal = productVariantDal;
             _productStockService = productStockService;
             _productAttributeService=productAttributeService;
             _categoryAttributeService=categoryAttributeService;
+            _attributeValueService =attributeValueService;
+            _attributeService=attributeService;
         }
         public IResult Add(ProductVariant variant)
         {
@@ -125,10 +131,14 @@ namespace Business.Concrete
                                     {
                                         if (productVariant.AttributeId != keepAttributeId && j != 1)
                                         {
-                                            keepAttributeId = productVariant.AttributeId;
-                                            productVariant.ParentId = addProductVariant.ProductVariantId;
-                                            addProductVariant.ProductVariantId = productVariant.Id;
-                                            Add(productVariant);
+                                            if (GetByParentIdAttrValueId(addProductVariant.ProductVariantId, productVariant.AttributeValueId).Success == false)
+                                            {
+                                                keepAttributeId = productVariant.AttributeId;
+                                                productVariant.ParentId = addProductVariant.ProductVariantId;
+                                                addProductVariant.ProductVariantId = productVariant.Id;
+                                                Add(productVariant);
+                                            }
+                                            
                                         }
                                         else if(j == 1)
                                         {
@@ -285,14 +295,14 @@ namespace Business.Concrete
             return new ErrorDataResult<ProductVariant>();
         }
 
-        public IDataResult<List<SelectProductVariantDetailDto>> GetAllMainProductVariant(int productId)
+        public IDataResult<List<ProductVariantAttributeDto>> GetAllMainProductVariant(int productId)
         {
             var result = _productVariantDal.GetAllFilterDto(x => x.ProductId == productId);
             if (result != null)
             {
-                return new SuccessDataResult<List<SelectProductVariantDetailDto>>(result);
+                return new SuccessDataResult<List<ProductVariantAttributeDto>>(result);
             }
-            return new ErrorDataResult<List<SelectProductVariantDetailDto>>();
+            return new ErrorDataResult<List<ProductVariantAttributeDto>>();
         }
 
         public IDataResult<List<ProductVariant>> GetSubProductVariantById(int productVariantId)
@@ -328,78 +338,21 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
-        public IDataResult<List<TopProductVariantAttributeDto>> GetTopPvAttributeByPvId(int productId)
+        public IDataResult<List<MainProductVariantAttributeDto>> GetProductVariantAttribute(int productId)
         {
-            var result = _productVariantDal.GetTopProductAttributeDto(x => x.ProductId == productId && (x.ParentId == null || x.ParentId ==  0));
+            var result = _productVariantDal.GetProductVariantAttributes(productId);
             if (result != null)
             {
-                var getSubResult = GetSubPvAttributeByPvId(result);
-                return new SuccessDataResult<List<TopProductVariantAttributeDto>>(getSubResult.Data);
-            }
-            return new ErrorDataResult<List<TopProductVariantAttributeDto>>();
-        }
-
-        public IDataResult<List<TopProductVariantAttributeDto>> GetSubPvAttributeByPvId(TopProductVariantAttributeDto topProductVariantAttributeDto)
-        {
-            List<TopProductVariantAttributeDto> topProductVariantAttributeDtos = new List<TopProductVariantAttributeDto>();
-            var subProductVariants = GetSubProductVariantByProductId(topProductVariantAttributeDto.ProductId).Data;
-            if (subProductVariants != null && subProductVariants.Count > 0)
-            {
-                topProductVariantAttributeDtos.Add(topProductVariantAttributeDto);
-                for (int i = 0; i < subProductVariants.Count; i++)
+                for (int i = 0; i < result.Count(); i++)
                 {
-                    var result = _productVariantDal.GetSubProductAttributeDto(x => x.ProductVariantId == subProductVariants[i].Id);
-                    if (result != null)
-                    {
-                        topProductVariantAttributeDtos.Add(result);
-                    }
-                    var stock = _productStockService.GetByVariantId(result.ProductVariantId).Data;
-                    if (stock!= null)
-                    {
-                        if (stock.Quantity > 0)
-                        {
-                            topProductVariantAttributeDtos.Add(result);
-                        }
-                    }
+                        var mainAttributeValues = GetMainProductVariantAttrValue(result[i].ProductId, result[i].ParentId, result[i].AttributeId).Data;
+                        result[i].ProductVariantAttributeValueDtos  = mainAttributeValues;
+                        result[i].ProductVariantAttributeValueDtos = result[i].ProductVariantAttributeValueDtos.GroupBy(x => x.AttributeValue).FirstOrDefault().ToList();
                 }
-                return new SuccessDataResult<List<TopProductVariantAttributeDto>>(topProductVariantAttributeDtos);
+                return new SuccessDataResult<List<MainProductVariantAttributeDto>>(result);
             }
-            else
-            {
-                topProductVariantAttributeDtos.Add(topProductVariantAttributeDto);
-                return new SuccessDataResult<List<TopProductVariantAttributeDto>>(topProductVariantAttributeDtos);
-            }
+            return new ErrorDataResult<List<MainProductVariantAttributeDto>>();
         }
-
-        public IDataResult<List<ProductVariant>> GetSubProductVariantByProductId(int productId)
-        {
-            List<ProductVariant> productVariants = new List<ProductVariant>();
-            var result = _productVariantDal.Get(x => x.Id == x.Id);
-            if (result != null)
-            {
-                var productVariantAllByAttrId = GetAllByProductIdAttrId(result.ProductId, result.AttributeId).Data;
-                var productVariantList = GetAllByProductId(result.ProductId).Data;
-                if (productVariantAllByAttrId != null && productVariantList != null)
-                {
-                    if (productVariantAllByAttrId.Count > 0 && productVariantList.Count > 0)
-                    {
-                        for (int i = 0; i < productVariantList.Count; i++)
-                        {
-                            for (int k = 0; k < productVariantAllByAttrId.Count; k++)
-                            {
-                                if (productVariantAllByAttrId[k].Id == productVariantList[i].ParentId)
-                                {
-                                    productVariants.Add(productVariantList[i]);
-                                }
-                            }
-                        }
-                        return new SuccessDataResult<List<ProductVariant>>(productVariants);
-                    }
-                }
-            }
-            return new ErrorDataResult<List<ProductVariant>>();
-        }
-
         public IDataResult<List<ProductVariant>> GetAllByProductIdAttrId(int productId, int? attributeId)
         {
             var result = _productVariantDal.GetAll(x => x.ProductId == productId && x.AttributeId == attributeId);
@@ -408,6 +361,32 @@ namespace Business.Concrete
                 return new SuccessDataResult<List<ProductVariant>>(result);
             }
             return new ErrorDataResult<List<ProductVariant>>();
+        }
+
+        public IDataResult<List<ProductVariantAttributeValueDto>> GetMainProductVariantAttrValue(int productId, int? parentId, int attributeId)
+        {
+            var result = _productVariantDal.GetMainProductAttributeValue(productId, parentId, attributeId);
+            if (result != null)
+            {
+                if (result.Count() > 0)
+                {
+                    List<ProductVariantAttributeValueDto> list = new List<ProductVariantAttributeValueDto>();
+                    list = result;
+                    return new SuccessDataResult<List<ProductVariantAttributeValueDto>>(list);
+                }
+            }
+           
+            return new ErrorDataResult<List<ProductVariantAttributeValueDto>>();
+        }
+
+        public IDataResult<ProductVariant> GetByParentIdAttrValueId(int parentId, int? attributeValueId)
+        {
+            var result = _productVariantDal.Get(x => x.ParentId == parentId && x.AttributeValueId == attributeValueId);
+            if (result != null)
+            {
+                return new SuccessDataResult<ProductVariant>();
+            }
+            return new ErrorDataResult<ProductVariant>();
         }
     }
 }

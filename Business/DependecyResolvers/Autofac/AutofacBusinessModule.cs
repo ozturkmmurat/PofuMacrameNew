@@ -19,43 +19,44 @@ namespace Business.DependecyResolvers.Autofac
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<EfAttributeDal>().As<IAttributeDal>().SingleInstance();
-            builder.RegisterType<AttributeManager>().As<IAttributeService>().SingleInstance();
+            builder.RegisterType<EfAttributeDal>().As<IAttributeDal>().InstancePerLifetimeScope();
+            builder.RegisterType<AttributeManager>().As<IAttributeService>().InstancePerLifetimeScope();
 
-            builder.RegisterType<EfAttributeValueDal>().As<IAttributeValueDal>().SingleInstance();
-            builder.RegisterType<AttributeValueManager>().As<IAttributeValueService>().SingleInstance();
+            builder.RegisterType<EfAttributeValueDal>().As<IAttributeValueDal>().InstancePerLifetimeScope();
+            builder.RegisterType<AttributeValueManager>().As<IAttributeValueService>().InstancePerLifetimeScope();
 
-            builder.RegisterType<EfOrderDal>().As<IOrderDal>().SingleInstance();
-            builder.RegisterType<OrderManager>().As<IOrderService>().SingleInstance();
+            builder.RegisterType<EfOrderDal>().As<IOrderDal>().InstancePerLifetimeScope();
+            builder.RegisterType<OrderManager>().As<IOrderService>().InstancePerLifetimeScope();
 
-            builder.RegisterType<EfProductAttributeDal>().As<IProductAttributeDal>().SingleInstance();
-            builder.RegisterType<ProductAttributeManager>().As<IProductAttributeService>().SingleInstance();
+            builder.RegisterType<EfProductAttributeDal>().As<IProductAttributeDal>().InstancePerLifetimeScope();
+            builder.RegisterType<ProductAttributeManager>().As<IProductAttributeService>().InstancePerLifetimeScope();
 
-            builder.RegisterType<EfCategoryDal>().As<ICategoryDal>().SingleInstance();
-            builder.RegisterType<CategoryManager>().As<ICategoryService>().SingleInstance();
+            builder.RegisterType<EfCategoryDal>().As<ICategoryDal>().InstancePerLifetimeScope();
+            builder.RegisterType<CategoryManager>().As<ICategoryService>().InstancePerLifetimeScope();
 
-            builder.RegisterType<EfCategoryAttributeDal>().As<ICategoryAttributeDal>().SingleInstance();
-            builder.RegisterType<CategoryAttributeManager>().As<ICategoryAttributeService>().SingleInstance();
+            builder.RegisterType<EfCategoryAttributeDal>().As<ICategoryAttributeDal>().InstancePerLifetimeScope();
+            builder.RegisterType<CategoryAttributeManager>().As<ICategoryAttributeService>().InstancePerLifetimeScope();
 
-            builder.RegisterType<EfCategoryImageDal>().As<ICategoryImageDal>().SingleInstance();
-            builder.RegisterType<CategoryImageManager>().As<ICategoryImageService>().SingleInstance();
+            builder.RegisterType<EfCategoryImageDal>().As<ICategoryImageDal>().InstancePerLifetimeScope();
+            builder.RegisterType<CategoryImageManager>().As<ICategoryImageService>().InstancePerLifetimeScope();
 
-            builder.RegisterType<EfProductDal>().As<IProductDal>().SingleInstance();
-            builder.RegisterType<ProductManager>().As<IProductService>().SingleInstance();
+            builder.RegisterType<EfProductDal>().As<IProductDal>().InstancePerLifetimeScope();
+            builder.RegisterType<ProductManager>().As<IProductService>().InstancePerLifetimeScope();
 
-            builder.RegisterType<EfProductStockDal>().As<IProductStockDal>().SingleInstance();
-            builder.RegisterType<ProductStockManager>().As<IProductStockService>().SingleInstance();
+            builder.RegisterType<EfProductStockDal>().As<IProductStockDal>().InstancePerLifetimeScope();
+            builder.RegisterType<ProductStockManager>().As<IProductStockService>().InstancePerLifetimeScope();
 
-            builder.RegisterType<EfSubOrderDal>().As<ISubOrderDal>().SingleInstance();
-            builder.RegisterType<SubOrderManager>().As<ISubOrderService>().SingleInstance();
+            builder.RegisterType<EfSubOrderDal>().As<ISubOrderDal>().InstancePerLifetimeScope();
+            builder.RegisterType<SubOrderManager>().As<ISubOrderService>().InstancePerLifetimeScope();
 
-            builder.RegisterType<EfProductVariantDal>().As<IProductVariantDal>().SingleInstance();
-            builder.RegisterType<ProductVariantManager>().As<IProductVariantService>().SingleInstance();
+            builder.RegisterType<EfProductVariantDal>().As<IProductVariantDal>().InstancePerLifetimeScope();
+            builder.RegisterType<ProductVariantManager>().As<IProductVariantService>().InstancePerLifetimeScope();
 
-            builder.RegisterType<EfProductImageDal>().As<IProductmageDal>().SingleInstance();
-            builder.RegisterType<ProductImageManager>().As<IProductImageService>().SingleInstance();
+            builder.RegisterType<EfProductImageDal>().As<IProductmageDal>().InstancePerLifetimeScope();
+            builder.RegisterType<ProductImageManager>().As<IProductImageService>().InstancePerLifetimeScope();
 
-            builder.RegisterType<FileHelperManager>().As<IFileHelper>().SingleInstance();
+            builder.RegisterType<FileHelperManager>().As<IFileHelper>().InstancePerLifetimeScope();
+
 
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();
 

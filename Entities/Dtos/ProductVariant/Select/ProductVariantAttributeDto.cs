@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Entities.Dtos.ProductVariant.Select
 {
-    public class SelectProductVariantDetailDto : IDto
+    public class ProductVariantAttributeDto : IDto
     {
         public int ProductVariantId { get; set; }
         public int ProductId { get; set; }

@@ -10,12 +10,13 @@ using System.Linq;
 using Microsoft.EntityFrameworkCore.Internal;
 using Entities.Dtos.ProductVariant.Select;
 using Entities.Dtos.Product.Select;
+using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess.Concrete.EntityFramework
 {
     public class EfProductVariantDal : EfEntityRepositoryBase<ProductVariant, PofuMacrameContext>, IProductVariantDal
     {
-        public List<SelectProductVariantDetailDto> GetAllFilterDto(Expression<Func<SelectProductVariantDetailDto, bool>> filter = null)
+        public List<ProductVariantAttributeDto> GetAllFilterDto(Expression<Func<ProductVariantAttributeDto, bool>> filter = null)
         {
             using (PofuMacrameContext context = new PofuMacrameContext())
             {
@@ -23,7 +24,7 @@ namespace DataAccess.Concrete.EntityFramework
                              join p in context.Products on pv.ProductId equals p.Id
                              join av in context.AttributeValues on pv.AttributeValueId equals av.Id
                              join a in context.Attributes on av.AttributeId equals a.Id
-                             select new SelectProductVariantDetailDto
+                             select new ProductVariantAttributeDto
                              {
                                  ProductVariantId = pv.Id,
                                  ProductId = p.Id,
@@ -39,55 +40,64 @@ namespace DataAccess.Concrete.EntityFramework
             }
         }
 
-        public TopProductVariantAttributeDto GetTopProductAttributeDto(Expression<Func<TopProductVariantAttributeDto, bool>> filter = null)
+        public List<MainProductVariantAttributeDto> GetProductVariantAttributes(int productId)
         {
             using (PofuMacrameContext context = new PofuMacrameContext())
             {
-                var result = from pv in context.ProductVariants
-                             join av in context.AttributeValues
-                             on pv.AttributeValueId equals av.Id
-                             join a in context.Attributes
-                             on av.AttributeId equals a.Id
+                var result = (from pv in context.ProductVariants.Where(x => x.ProductId == productId)
+                              join a in context.Attributes
+                              on pv.AttributeId equals a.Id
 
-                             select new TopProductVariantAttributeDto
-                             {
-                                 AttributeId = a.Id,
-                                 AttributeValueId = pv.AttributeValueId,
-                                 ProductVariantId = pv.Id,
-                                 ProductId = pv.ProductId,
-                                 ParentId = pv.ParentId,
-                                 AttributeName = a.Name,
-                                 AttributeValues = context.AttributeValues.Where(x => x.AttributeId == pv.AttributeId).ToList()
+                              select new MainProductVariantAttributeDto
+                              {
+                                  ProductId = pv.ProductId,
+                                  ParentId = pv.ParentId,
+                                  AttributeName = a.Name,
+                                  AttributeId = a.Id,
+                                  ProductVariantAttributeValueDtos = new List<ProductVariantAttributeValueDto>()
+                              }).ToList().GroupBy(x => x.AttributeId).Select(group => group.First()).ToList();
 
-                             };
-                return filter == null ? result.FirstOrDefault(): result.Where(filter).FirstOrDefault();
+                return result;
             }
         }
 
-        public TopProductVariantAttributeDto GetSubProductAttributeDto(Expression<Func<TopProductVariantAttributeDto, bool>> filter = null)
+        public List<ProductVariantAttributeValueDto> GetMainProductAttributeValue(int productId, int? parentId, int attributeId)
         {
             using (PofuMacrameContext context = new PofuMacrameContext())
             {
-                var result = from pv in context.ProductVariants
-                             join av in context.AttributeValues
-                             on pv.AttributeValueId equals av.Id
-                             join a in context.Attributes
-                             on av.AttributeId equals a.Id
+                var result = (from pv in context.ProductVariants.Where(x => x.ProductId == productId && x.ParentId == parentId && x.AttributeId == attributeId)
+                              join av in context.AttributeValues
+                              on pv.AttributeValueId equals av.Id
 
-                             let x = pv.AttributeValueId
-                             select new TopProductVariantAttributeDto
-                             {
-                                 AttributeId = a.Id,
-                                 AttributeValueId = pv.AttributeValueId,
-                                 ProductVariantId = pv.Id,
-                                 ProductId = pv.ProductId,
-                                 ParentId = pv.ParentId,
-                                 AttributeName = a.Name,
-                                 AttributeValues = context.AttributeValues.Where(av => av.Id == pv.AttributeValueId).ToList()
+                              select new ProductVariantAttributeValueDto
+                              {
+                                  ProductVariantId = pv.Id,
+                                  ProductId = pv.ProductId,
+                                  ParentId = pv.ParentId,
+                                  AttributeValue =  av.Value,
+                              }).ToList();
 
-                             };
+                return result;
+            }
+        }
 
-                return filter == null ? result.FirstOrDefault() : result.Where(filter).FirstOrDefault();
+        public List<ProductVariantAttributeValueDto> GetSubProductAttributeDto(int productVariantId)
+        {
+            using (PofuMacrameContext context = new PofuMacrameContext())
+            {
+                var result = (from pv in context.ProductVariants.Where(x => x.Id == productVariantId)
+                              join av in context.AttributeValues
+                              on pv.AttributeValueId equals av.Id
+
+                              select new ProductVariantAttributeValueDto
+                              {
+                                  ProductVariantId = pv.Id,
+                                  ProductId = pv.ProductId,
+                                  ParentId = pv.ParentId,
+                                  AttributeValue =  av.Value
+                              }).ToList();
+
+                return result;
             }
         }
     }
