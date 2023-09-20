@@ -13,17 +13,15 @@ namespace DataAccess.Concrete.EntityFramework
 {
     public class EfCategoryAttributeDal : EfEntityRepositoryBase<CategoryAttribute, PofuMacrameContext>, ICategoryAttributeDal
     {
-        public List<ViewCategoryAttributeDto> GetAllFilterDto(Expression<Func<ViewCategoryAttributeDto, bool>> filter = null)
+        public List<ViewCategoryAttributeDto> GetCategorySlicerAttribute(int categoryId)
         {
             using (PofuMacrameContext context = new PofuMacrameContext())
             {
-                var result = from ca in context.CategoryAttributes
-                             join c in context.Categories
+                var result = from ca in context.CategoryAttributes.Where(x => x.CategoryId == categoryId && (x.Attribute == true || x.Slicer == true))
+                             join c in context.Categories.Where(x => x.Id == categoryId)
                              on ca.CategoryId equals c.Id
                              join a in context.Attributes
                              on ca.AttributeId equals a.Id
-                             join av in context.AttributeValues
-                             on a.Id equals av.AttributeId
 
                              select new ViewCategoryAttributeDto
                              {
@@ -35,8 +33,8 @@ namespace DataAccess.Concrete.EntityFramework
                                  Attribute = ca.Attribute
                              };
 
-             
-                return filter == null ? result.ToList() : result.Where(filter).ToList();
+
+                return result.ToList();
             }
         }
 

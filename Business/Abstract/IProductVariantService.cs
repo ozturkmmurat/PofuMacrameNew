@@ -22,7 +22,7 @@ namespace Business.Abstract
         IDataResult<List<ProductVariantAttributeValueDto>> GetMainProductVariantAttrValue(int productId, int? parentId, int attributeId);
         IDataResult<ProductVariant> GetById(int id);
         IDataResult<ProductVariant> GetByProductId(int productId);
-        IDataResult<ProductVariant> GetByParentIdAttrValueId(int parentId, int? attributeValueId);
+        IDataResult<ProductVariant> GetByParentIdAttrValueId(int productId ,int? parentId, int? attributeValueId);
         IResult Add(ProductVariant variant);
         IResult AddTsaProductVariant(AddProductVariant addProductVariant);
         IResult AddList(List<ProductVariant> variants);

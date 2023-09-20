@@ -9,6 +9,8 @@ using Entities.Dtos;
 using Entities.Dtos.Product;
 using Entities.Dtos.ProductVariant;
 using Entities.Dtos.ProductVariant.Select;
+using Microsoft.EntityFrameworkCore.Internal;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,178 +64,96 @@ namespace Business.Concrete
         [TransactionScopeAspect]
         public IResult AddTsaProductVariant(AddProductVariant addProductVariant)
         {
-            var properties = addProductVariant.JsonData.EnumerateObject();
+            // JsonElement'i bir string'e dönüştürün
+            string jsonDataString = addProductVariant.JsonData.ToString();
+
+            // Json verilerini çözümleyin
+            var jsonData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, List<Dictionary<string, int>>>>(jsonDataString);
+
             List<ProductStock> productStocks = new List<ProductStock>();
             addProductVariant.ProductVariants = new List<ProductVariant>();
 
-
-
-            if (addProductVariant.IsVariant)
+            foreach (var item in jsonData)
             {
-                if (addProductVariant.JsonData.ValueKind != JsonValueKind.Null || (addProductVariant.JsonData.EnumerateObject().Any()) ||
-            (addProductVariant.JsonData.ValueKind != JsonValueKind.Object && addProductVariant.JsonData.EnumerateObject().Any()))
+                var propertyName = item.Key;
+                var variants = item.Value;
+
+                if (variants != null && variants.Any())
                 {
-                    int? keepAttributValueId = 0;
-                    int? keepAttributeId = 0;
-                    int keepVariantId = 0;
-                    addProductVariant.ProductAttributes = new List<ProductAttribute>();
-                    var test2 = properties.Count();
-                    for (int q = 0; q < properties.Count(); q++)
+                    foreach (var variant in variants)
                     {
-                        var property = properties.ElementAt(q);
-                        var propertyName = property.Name;
-                        var propertyValue = property.Value;
-                        if (propertyValue.ValueKind == JsonValueKind.Array)
+                        ProductVariant productVariant = new ProductVariant();
+
+                        foreach (var attribute in variant)
                         {
-                            var itemList = new List<Dictionary<string, string>>();
+                            var attributeId = Convert.ToInt32(attribute.Key);
+                            var attributeValue = attribute.Value;
 
-                            var items = propertyValue.EnumerateArray();
-                            if (items.Count() <= 0)
+                            var categoryResult = _categoryAttributeService.GetAllByCategoryId(addProductVariant.CategoryId);
+                            var categoryAttributeResult = categoryResult.Data.Where(x => x.AttributeId == attributeId).FirstOrDefault();
+                            if (categoryAttributeResult.Slicer == true)
                             {
-                                return new ErrorResult();
-                            }
-                            var test = items.Count();
-                            for (int j = 0; j < items.Count(); j++)
-                            {
-                                var item = items.ElementAt(j);
-                                ProductVariant productVariant = new ProductVariant();
-
-                                var innerProperties = item.EnumerateObject();
-                                for (int k = 0; k < innerProperties.Count(); k++)
+                                productVariant.ParentId = 0;
+                                if (GetByParentIdAttrValueId(addProductVariant.ProductId, productVariant.ParentId, attributeValue).Success == false)
                                 {
-                                    var innerProperty = innerProperties.ElementAt(k);
-                                    var innerPropertyName = innerProperty.Name;
-                                    var innerPropertyValue = innerProperty.Value.GetInt32();
-
-
+                                    addProductVariant.ParentId = attributeValue;
                                     productVariant.ProductId = addProductVariant.ProductId;
-                                    productVariant.AttributeId = Convert.ToInt32(innerPropertyName);
-                                    productVariant.AttributeValueId = innerPropertyValue;
-
+                                    productVariant.AttributeId = attributeId;
+                                    productVariant.AttributeValueId = attributeValue;
+                                    Add(productVariant);
                                 }
-                                var categoryResult = _categoryAttributeService.GetAllByCategoryId(addProductVariant.CategoryId);
-                                var categoryAttributeResult = categoryResult.Data.Where(x => x.AttributeId == productVariant.AttributeId).FirstOrDefault();
-                                if (categoryAttributeResult.Slicer == true)
+                                else
                                 {
-                                    if (productVariant.AttributeValueId != keepAttributValueId)
-                                    {
-                                        productVariant.ParentId = null;
-                                        Add(productVariant);
-                                        addProductVariant.ProductVariantId = productVariant.Id;
-                                        keepAttributValueId = productVariant.AttributeValueId;
-                                        keepVariantId = productVariant.Id;
-                                    }
-                                   
+                                    addProductVariant.ParentId = attributeValue;
                                 }
-                                else if (categoryAttributeResult.Attribute == true)
-                                {
-                                    if (j > 0)
-                                    {
-                                        if (productVariant.AttributeId != keepAttributeId && j != 1)
-                                        {
-                                            if (GetByParentIdAttrValueId(addProductVariant.ProductVariantId, productVariant.AttributeValueId).Success == false)
-                                            {
-                                                keepAttributeId = productVariant.AttributeId;
-                                                productVariant.ParentId = addProductVariant.ProductVariantId;
-                                                addProductVariant.ProductVariantId = productVariant.Id;
-                                                Add(productVariant);
-                                            }
-                                            
-                                        }
-                                        else if(j == 1)
-                                        {
-                                            productVariant.ParentId = keepVariantId;
-                                            Add(productVariant);
-                                            addProductVariant.ProductVariantId = productVariant.Id;
-                                        }
-
-                                        if (j == items.Count() -1)
-                                        {
-                                            ProductStock productStock = new ProductStock();
-                                            productStock.ProductId = addProductVariant.ProductId;
-                                            productStock.ProductVariantId = productVariant.Id;
-                                            productStocks.Add(productStock);
-                                            keepAttributeId = 0;
-                                        }
-                                    }
-                                }
-
-                                ProductAttribute productAttribute = new ProductAttribute();
-                                productAttribute.AttributeId = productVariant.AttributeId.Value;
-                                productAttribute.AttributeValueId = productVariant.AttributeValueId.Value;
-                                productAttribute.ProductId = addProductVariant.ProductId;
-                                addProductVariant.ProductAttributes.Add(productAttribute);
                             }
 
-                        }
-                    }
-                    if (addProductVariant.ProductStocks != null)
-                    {
-                        if (addProductVariant.ProductStocks.Count >= 0)
-                        {
-                            for (int l = 0; l < addProductVariant.ProductStocks.Count; l++)
+                           
+                            // ProductVariant'ı veritabanına ekleyin
+                            if (categoryAttributeResult.Attribute == true)
                             {
-                                productStocks[l].Price =  addProductVariant.ProductStocks[l].Price;
-                                productStocks[l].Quantity = addProductVariant.ProductStocks[l].Quantity;
-                                productStocks[l].StockCode = addProductVariant.ProductStocks[l].StockCode;
+                                if (GetByParentIdAttrValueId(addProductVariant.ProductId, addProductVariant.ParentId, attributeValue).Success == false)
+                                {
+                                    productVariant.ProductId = addProductVariant.ProductId;
+                                    productVariant.AttributeId = attributeId;
+                                    productVariant.AttributeValueId = attributeValue;
+                                    productVariant.ParentId = addProductVariant.ParentId;
+                                    Add(productVariant);
+                                    addProductVariant.ParentId = attributeValue;
+                                }
+                                else
+                                {
+                                    addProductVariant.ParentId = attributeValue;
+                                }
                             }
-                            _productStockService.AddList(productStocks);
-                        }
-                        else
-                        {
-                            return new ErrorResult();
-                        }
-                    }
-                    else
-                    {
-                        return new ErrorResult();
-                    }
 
-                    if (addProductVariant.ProductAttributes != null)
-                    {
-                        if (addProductVariant.ProductAttributes.Count >= 0)
-                        {
-                            _productAttributeService.AddList(addProductVariant.ProductAttributes);
+                            if (variants.IndexOf(variant) == variants.Count -1)
+                            {
+                                // ProductStock nesnesini doldurun
+                                ProductStock productStock = new ProductStock()
+                                {
+                                    ProductId = addProductVariant.ProductId,
+                                    ProductVariantId = productVariant.Id,
+                                    Price = addProductVariant.ProductStocks[0].Price,
+                                    Quantity = addProductVariant.ProductStocks[0].Quantity,
+                                    StockCode = addProductVariant.ProductStocks[0].StockCode
+                                };
+
+                                // ProductStock'ı listeye ekleyin
+                                productStocks.Add(productStock);
+                            }
+                           
                         }
                     }
-                    return new SuccessResult();
-                }
-                else
-                {
-                    return new ErrorResult();
                 }
             }
-            else if (!addProductVariant.IsVariant)
-            {
-                ProductVariant productVariant = new ProductVariant()
-                {
-                    ProductId = addProductVariant.ProductId
-                };
-                var result = Add(productVariant);
 
-                if (result.Success)
-                {
-                    ProductStock productStock = new ProductStock()
-                    {
-                        ProductId = productVariant.ProductId,
-                        ProductVariantId = productVariant.Id,
-                        Price = addProductVariant.ProductStocks[0].Price,
-                        Quantity = addProductVariant.ProductStocks[0].Quantity,
-                        StockCode = addProductVariant.ProductStocks[0].StockCode
-                    };
-                    var productStockResult = _productStockService.Add(productStock);
-                    if (!productStockResult.Success)
-                    {
-                        return new ErrorResult();
-                    }
-                    return new SuccessResult();
-                }
-                else
-                {
-                    return new ErrorResult();
-                }
-            }
-            return new ErrorResult();
+            // ProductStock'ları veritabanına ekleyin
+            _productStockService.AddList(productStocks);
+
+            // Diğer işlemleri burada gerçekleştirin
+
+            return new SuccessResult();
         }
 
         public IResult Delete(ProductVariant variant)
@@ -345,9 +265,9 @@ namespace Business.Concrete
             {
                 for (int i = 0; i < result.Count(); i++)
                 {
-                        var mainAttributeValues = GetMainProductVariantAttrValue(result[i].ProductId, result[i].ParentId, result[i].AttributeId).Data;
-                        result[i].ProductVariantAttributeValueDtos  = mainAttributeValues;
-                        result[i].ProductVariantAttributeValueDtos = result[i].ProductVariantAttributeValueDtos.GroupBy(x => x.AttributeValue).FirstOrDefault().ToList();
+                    var mainAttributeValues = GetMainProductVariantAttrValue(result[i].ProductId, result[i].ParentId, result[i].AttributeId).Data;
+                    result[i].ProductVariantAttributeValueDtos  = mainAttributeValues;
+                    result[i].ProductVariantAttributeValueDtos = result[i].ProductVariantAttributeValueDtos.GroupBy(x => x.AttributeValue).FirstOrDefault().ToList();
                 }
                 return new SuccessDataResult<List<MainProductVariantAttributeDto>>(result);
             }
@@ -375,13 +295,13 @@ namespace Business.Concrete
                     return new SuccessDataResult<List<ProductVariantAttributeValueDto>>(list);
                 }
             }
-           
+
             return new ErrorDataResult<List<ProductVariantAttributeValueDto>>();
         }
 
-        public IDataResult<ProductVariant> GetByParentIdAttrValueId(int parentId, int? attributeValueId)
+        public IDataResult<ProductVariant> GetByParentIdAttrValueId(int productId, int? parentId, int? attributeValueId)
         {
-            var result = _productVariantDal.Get(x => x.ParentId == parentId && x.AttributeValueId == attributeValueId);
+            var result = _productVariantDal.Get(x => x.ProductId == productId &&  x.ParentId == parentId && x.AttributeValueId == attributeValueId);
             if (result != null)
             {
                 return new SuccessDataResult<ProductVariant>();

@@ -11,7 +11,7 @@ namespace DataAccess.Abstract
     public interface ICategoryAttributeDal : IEntityRepository<CategoryAttribute>
     {
         List<SelectCategoryAttributeDto> GetAllSelectFilterDto(Expression<Func<SelectCategoryAttributeDto, bool>> filter = null);
-        List<ViewCategoryAttributeDto> GetAllFilterDto(Expression<Func<ViewCategoryAttributeDto, bool>> filter = null);
+        List<ViewCategoryAttributeDto> GetCategorySlicerAttribute(int categoryId);
         List<ViewCategoryAttributeDto> GetAllTrueSlicerAttribute(int categoryId);
     }
 }
