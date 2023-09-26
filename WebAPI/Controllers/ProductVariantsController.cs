@@ -1,4 +1,4 @@
-﻿using Business.Abstract;
+﻿using Business.Abstract.ProductVariants;
 using Entities.Concrete;
 using Entities.Dtos;
 using Entities.Dtos.ProductVariant;
@@ -54,24 +54,45 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("GetAllMainProductVariant")]
-        public IActionResult GetProductVariantDetail(int productId)
+        [HttpGet("GetProductVariantDetailAttribute")]
+        public IActionResult GetProductVariantDetailAttribute(int productId, int productVariantId)
         {
-            var result = _variantService.GetAllMainProductVariant(productId);
+            var result = _variantService.GetProductVariantDetail(productId, productVariantId);
             if (result.Success)
             {
-                return Ok(result);
+                return Ok(result.Data);
             }
             return BadRequest(result);
         }
 
-        [HttpGet("GetPvAttributeByPvId")]
-        public IActionResult GetPvAttributeByPvId(int productId)
+        [HttpGet("CombinationData")]
+        public IActionResult CombinationData(int productId, int attributeValueId)
         {
-            var result = _variantService.GetProductVariantAttribute(productId);
+            var result = _variantService.GetProductVariantCombination(productId, attributeValueId);
             if (result.Success)
             {
-                return Ok(result);
+                return Ok(result.Data);
+            }
+            return BadRequest(result);
+        }
+        [HttpGet("AllCombinationData")]
+        public IActionResult CombinationData(int productId)
+        {
+            var result = _variantService.GetAllProductVariantCombination(productId);
+            if (result.Success)
+            {
+                return Ok(result.Data);
+            }
+            return BadRequest(result);
+        }
+
+        [HttpGet("EndCombinationData")]
+        public IActionResult AllCombinationData(int productId)
+        {
+            var result = _variantService.GetAllProductVariantCombination(productId);
+            if (result.Success)
+            {
+                return Ok(result.Data);
             }
             return BadRequest(result);
         }

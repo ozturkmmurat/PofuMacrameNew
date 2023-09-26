@@ -1,7 +1,9 @@
 ﻿using Autofac;
 using Autofac.Extras.DynamicProxy;
 using Business.Abstract;
+using Business.Abstract.ProductVariants;
 using Business.Concrete;
+using Business.Concrete.ProductVariants;
 using Castle.DynamicProxy;
 using Core.Helpers.FileHelper;
 using Core.Utilities.Helpers;
@@ -51,6 +53,8 @@ namespace Business.DependecyResolvers.Autofac
 
             builder.RegisterType<EfProductVariantDal>().As<IProductVariantDal>().InstancePerLifetimeScope();
             builder.RegisterType<ProductVariantManager>().As<IProductVariantService>().InstancePerLifetimeScope();
+            builder.RegisterType<ProductVariantAttributeCombinationManager>().As<IProductVariantAttributeCombinationService>().InstancePerLifetimeScope();
+            
 
             builder.RegisterType<EfProductImageDal>().As<IProductmageDal>().InstancePerLifetimeScope();
             builder.RegisterType<ProductImageManager>().As<IProductImageService>().InstancePerLifetimeScope();

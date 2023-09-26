@@ -70,6 +70,19 @@ namespace Business.Concrete
             return new ErrorDataResult<List<ProductAttribute>>();
         }
 
+        public IDataResult<ProductAttribute> MappingProductAttribute(ProductVariant productVariant)
+        {
+            if (productVariant != null)
+            {
+                ProductAttribute productAttribute = new ProductAttribute();
+                productAttribute.ProductId = productVariant.ProductId;
+                productAttribute.AttributeValueId = Convert.ToInt32(productVariant.AttributeValueId);
+                productAttribute.AttributeId = Convert.ToInt32(productVariant.AttributeId);
+                return new SuccessDataResult<ProductAttribute>(productAttribute);
+            }
+            return new ErrorDataResult<ProductAttribute>();
+        }
+
         public IResult Update(ProductAttribute productAttribute)
         {
             if (productAttribute != null)

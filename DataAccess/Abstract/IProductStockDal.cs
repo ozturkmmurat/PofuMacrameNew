@@ -11,7 +11,6 @@ namespace DataAccess.Abstract
 {
     public interface IProductStockDal : IEntityRepository<ProductStock>
     {
-        List<SelectProductStockDto> GetByDto(int productId);
 
     }
 }

@@ -11,8 +11,6 @@ namespace Entities.Dtos.ProductStock
         public int ProductId { get; set; }
         public int FirstProductVariantId { get; set; }
         public int EndProductVariantId { get; set; }
-        public int? AttributeId { get; set; }
-        public int? AttributeValueId { get; set; }
         public int? ParentId { get; set; }
         public int Quantity { get; set; }
         public decimal Price { get; set; }
