@@ -115,7 +115,8 @@ namespace Business.Concrete
                             // ProductVariant'ı veritabanına ekleyin
                             if (categoryAttributeResult.Attribute == true)
                             {
-                                if (GetByParentIdAttrValueId(addProductVariant.ProductId, addProductVariant.ParentId, attributeValue, attributeId).Success == false)
+                                var checkData = GetByParentIdAttrValueId(addProductVariant.ProductId, addProductVariant.ParentId, attributeValue, attributeId);
+                                if (checkData.Success == false)
                                 {
                                     productVariant.ProductId = addProductVariant.ProductId;
                                     productVariant.AttributeId = attributeId;
@@ -126,7 +127,7 @@ namespace Business.Concrete
                                 }
                                 else
                                 {
-                                    addProductVariant.ParentId =addProductVariant.ParentId;
+                                    addProductVariant.ParentId = checkData.Data.Id;
                                 }
                             }
 
