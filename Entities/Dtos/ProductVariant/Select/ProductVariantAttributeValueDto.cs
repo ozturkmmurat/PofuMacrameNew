@@ -16,5 +16,7 @@ namespace Entities.Dtos.ProductVariant.Select
         public int EndProductVariantId { get; set; }
         public string AttributeName { get; set; }
         public string AttributeValue { get; set; }
+        public string ImagePath { get; set; }
+
     }
 }

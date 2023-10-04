@@ -13,8 +13,10 @@ namespace DataAccess.Abstract
 {
     public interface IProductDal : IEntityRepository<Product>
     {
-        List<SelectListProductVariantDto> GetAllPvFilterDto(Expression<Func<SelectListProductVariantDto, bool>> filter = null);
+        List<SelectListProductVariantDto> GetAllPvFilterDto();
         List<SelectProductDto> GetAllFilterDto(Expression<Func<SelectProductDto, bool>> filter = null);
+        SelectProductDto GetProductFilterDto(Expression<Func<SelectProductDto, bool>> filter = null);
+
         SelectProductDetailDto GetFilterDto(Expression<Func<SelectProductDetailDto, bool>> filter = null); 
     }
 }

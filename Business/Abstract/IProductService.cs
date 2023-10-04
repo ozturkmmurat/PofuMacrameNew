@@ -18,6 +18,7 @@ namespace Business.Abstract
         IDataResult<List<SelectListProductVariantDto>> GetAllPvProductVariantDtoGroupProduct();
         IDataResult<List<SelectListProductVariantDto>> GetAllProductVariantDtoGroupVariant();
         IDataResult<Product> GetById(int id);
+        IDataResult<SelectProductDto> GetByProductDto(int productId);
         IResult Add(Product product);
         IResult TsaAdd(AddProductVariant addProductVariant);
         IResult Update(Product product);

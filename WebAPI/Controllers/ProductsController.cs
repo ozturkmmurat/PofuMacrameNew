@@ -81,6 +81,17 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
+        [HttpGet("GetByProductDto")]
+        public IActionResult GetByProductDto(int productId)
+        {
+            var result = _productService.GetByProductDto(productId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
         [HttpGet("GetProductDetailDtoByPvId")]
         public IActionResult GetProductDetailDtoByPvId(int productVariantId)
         {

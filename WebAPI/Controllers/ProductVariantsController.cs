@@ -2,6 +2,7 @@
 using Entities.Concrete;
 using Entities.Dtos;
 using Entities.Dtos.ProductVariant;
+using Entities.Dtos.ProductVariant.Select;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -54,45 +55,26 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("GetProductVariantDetailAttribute")]
-        public IActionResult GetProductVariantDetailAttribute(int productId, int productVariantId)
+        //Urun detay sayfasındaki varyant ozelliklerini listelemek için default olarak
+        [HttpGet("GetDefaultProductVariantDetail")]
+        public IActionResult GetDefaultProductVariantDetail(int productId, int parentId)
         {
-            var result = _variantService.GetProductVariantDetail(productId, productVariantId);
+            var result = _variantService.GetDefaultProductVariantDetail(productId, parentId);
             if (result.Success)
             {
-                return Ok(result.Data);
+                return Ok(result);
             }
             return BadRequest(result);
         }
 
-        [HttpGet("CombinationData")]
-        public IActionResult CombinationData(int productId, int attributeValueId)
+        //Secilen ana varyantların alt varyantlarını getirmek icin kullanilan yerler(urun detay sayfasi)
+        [HttpPost("GetSubProductVariantDetail")]
+        public IActionResult GetSubProductVariantDetail(List<ProductVariantGroupDetailDto> productVariantGroups, int productId, int parentId)
         {
-            var result = _variantService.GetProductVariantCombination(productId, attributeValueId);
+            var result = _variantService.GetSubProductVariantDetail(productVariantGroups, productId, parentId);
             if (result.Success)
             {
-                return Ok(result.Data);
-            }
-            return BadRequest(result);
-        }
-        [HttpGet("AllCombinationData")]
-        public IActionResult CombinationData(int productId)
-        {
-            var result = _variantService.GetAllProductVariantCombination(productId);
-            if (result.Success)
-            {
-                return Ok(result.Data);
-            }
-            return BadRequest(result);
-        }
-
-        [HttpGet("EndCombinationData")]
-        public IActionResult AllCombinationData(int productId)
-        {
-            var result = _variantService.GetAllProductVariantCombination(productId);
-            if (result.Success)
-            {
-                return Ok(result.Data);
+                return Ok(result);
             }
             return BadRequest(result);
         }

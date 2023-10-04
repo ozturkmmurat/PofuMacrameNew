@@ -19,41 +19,29 @@ namespace DataAccess.Concrete.EntityFramework
     public class EfProductDal : EfEntityRepositoryBase<Product, PofuMacrameContext>, IProductDal
     {
 
-        public List<SelectListProductVariantDto> GetAllPvFilterDto(Expression<Func<SelectListProductVariantDto, bool>> filter = null)
+        public List<SelectListProductVariantDto> GetAllPvFilterDto()
         {
             using (PofuMacrameContext context = new PofuMacrameContext())
             {
                 var result = (from p in context.Products
-                              join pv in context.ProductVariants on p.Id equals pv.ProductId
-                              join pi in context.ProductImages on pv.Id equals pi.ProductVariantId into piJoin
-                              from pi in piJoin.DefaultIfEmpty()
-                              join av in context.AttributeValues on pv.AttributeValueId equals av.Id
-                              join ps in context.ProductStocks on p.Id equals ps.ProductId
+                              join pv in context.ProductVariants.Where(x => x.ParentId == 0) on p.Id equals pv.ProductId
                               select new SelectListProductVariantDto
                               {
                                   ProductId = p.Id,
                                   ProductVariantId = pv.Id,
                                   ParentId = pv.ParentId,
-                                  AttributeValueId = av.Id,
                                   ProductName = p.ProductName,
                                   Description = p.Description,
-                                  AttributeValue = av.Value,
-                                  StockCode = ps.StockCode,
-                                  Price = ps.Price,
-                                  Quantity = ps.Quantity,
+                                  AttributeValues = context.AttributeValues.Where(x => x.Id == pv.AttributeValueId).ToList(),
                                   ProductPaths = context.ProductImages
                                                       .Where(x => x.ProductVariantId == pv.Id)
                                                       .Take(2)
                                                       .Select(pi => pi.Path)
                                                       .ToList(),
-                                  VariantPaths = context.ProductImages
-                                                      .Where(x => x.ProductVariantId == pv.Id && x.IsMain == true)
-                                                      .Select(x => x.Path)
-                                                      .ToList()
-                              }).ToList();
-                    
+                              });
 
-                return filter == null ? result.ToList() : result.Where(filter.Compile()).ToList();
+
+                return result.ToList();
             }
         }
 
@@ -107,6 +95,27 @@ namespace DataAccess.Concrete.EntityFramework
                               });
 
                 return filter == null ? result.ToList() : result.Where(filter).ToList();
+            }
+        }
+
+        public SelectProductDto GetProductFilterDto(Expression<Func<SelectProductDto, bool>> filter = null)
+        {
+            using (PofuMacrameContext context = new PofuMacrameContext())
+            {
+                var result = (from p in context.Products
+                              join c in context.Categories on p.CategoryId equals c.Id
+
+                              select new SelectProductDto
+                              {
+                                  ProductId = p.Id,
+                                  CategoryId = c.Id,
+                                  ProductName = p.ProductName,
+                                  CategoryName = c.CategoryName,
+                                  ProductCode = p.ProductCode,
+                                  Description = p.Description,
+                              });
+
+                return filter == null ? result.FirstOrDefault() : result.Where(filter).FirstOrDefault();
             }
         }
     }

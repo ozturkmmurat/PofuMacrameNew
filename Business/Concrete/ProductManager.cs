@@ -21,6 +21,7 @@ namespace Business.Concrete
     {
         IProductDal _productDal;
         IProductVariantService _productVariantService;
+        IProductStockService _productStockService;
         public ProductManager(
             IProductDal productDal,
             IProductStockService productStockService,
@@ -28,6 +29,7 @@ namespace Business.Concrete
         {
             _productDal = productDal;
             _productVariantService = productVariantService;
+            _productStockService = productStockService;
         }
         public IResult Add(Product product)
         {
@@ -94,9 +96,18 @@ namespace Business.Concrete
         public IDataResult<List<SelectListProductVariantDto>> GetAllProductVariantDtoGroupVariant()
         {
             // Web sitesinde urune bağli urun varyantlari listelenirken kullanılıyor
-            var result = _productDal.GetAllPvFilterDto(x => x.ParentId == null).GroupBy(x => x.ProductVariantId).Select(group => group.FirstOrDefault()).ToList(); ;
+            var result = _productDal.GetAllPvFilterDto().Where(x => x.ProductPaths.Count > 0).ToList();
             if (result != null)
             {
+                for (int i = 0; i < result.Count(); i++)
+                {
+                   var endVariant = _productVariantService.MainVariantEndVariant(result[i].ProductVariantId);
+                    result[i].EndProductVariantId = endVariant.Data.Id;
+                    var productVariantStock = _productStockService.GetByVariantId(result[i].EndProductVariantId.Value).Data;
+                    result[i].Price = productVariantStock.Price;
+                    result[i].Quantity = productVariantStock.Quantity;
+                    result[i].StockCode = productVariantStock.StockCode;
+                }
                 return new SuccessDataResult<List<SelectListProductVariantDto>>(result);
             }
             return new ErrorDataResult<List<SelectListProductVariantDto>>();
@@ -162,6 +173,16 @@ namespace Business.Concrete
                 return new SuccessDataResult<SelectProductDetailDto>(result);
             }
             return new ErrorDataResult<SelectProductDetailDto>();
+        }
+
+        public IDataResult<SelectProductDto> GetByProductDto(int productId)
+        {
+            var result = _productDal.GetProductFilterDto(x => x.ProductId == productId);
+            if (result != null)
+            {
+                return new SuccessDataResult<SelectProductDto>(result);
+            }
+            return new ErrorDataResult<SelectProductDto>();
         }
     }
 }

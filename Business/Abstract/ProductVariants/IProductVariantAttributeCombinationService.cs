@@ -10,11 +10,12 @@ namespace Business.Abstract.ProductVariants
     {
         IDataResult<List<List<ProductVariantAttributeValueDto>>> GetAllCombinationAttributeValue(int productId);
         IDataResult<List<ProductVariantAttributeValueDto>> GetAllEndCombinationAttributeValue(int productId);
-        IDataResult<List<ProductVariantAttributeValueDto>> GetEndCombinationAttributeValue(int productId, int attributeValueId);
+        IDataResult<List<ProductVariantAttributeValueDto>> GetEndCombinationAttributeValue(int productId, int productVariantId);
 
-        IDataResult<List<List<ProductVariantAttributeValueDto>>> GetCombinationAttributeValue(int productId, int attributeValueId);
+        IDataResult<List<ProductVariantAttributeValueDto>> GetCombinationAttributeValue(int productId, int productVariantId);
 
-        void GenerateSubCombinations(List<ProductVariantAttributeValueDto> variants, List<ProductVariantAttributeValueDto> combination, int parentAttributeValueId, List<List<ProductVariantAttributeValueDto>> combinations);
+        void GenerateManySubCombinations(List<ProductVariantAttributeValueDto> variants, List<ProductVariantAttributeValueDto> combination, int parentId, List<List<ProductVariantAttributeValueDto>> combinations);
+        void GenerateSubCombinations(List<ProductVariantAttributeValueDto> variants, List<ProductVariantAttributeValueDto> combination, int parentId);
 
     }
 }

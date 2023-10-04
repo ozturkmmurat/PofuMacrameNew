@@ -12,7 +12,12 @@ namespace DataAccess.Abstract
 {
     public interface IProductVariantDal : IEntityRepository<ProductVariant>
     {
-        List<ProductVariantDetailAttributeDto> GetProductDetailAttribute(int productId);
-        List<ProductVariantAttributeValueDto> GetSubProductAttributeDto(int productId);
+        List<ProductVariantDetailAttributeDto> GetAllProductDetailAttributeByProductId(int productId);
+        List<ProductVariantDetailAttributeDto> GetAllProductDetailAttributeByParentId(int parentId);
+        List<ProductVariantAttributeValueDto> GetAllProductDetailAttributeByProductIdParentId(int productId, int parentId);
+        List<ProductVariantAttributeValueDto> GetAllSubProductAttributeDtoProductId(int productId);
+        List<ProductVariantAttributeValueDto> GetAllSubProductAttributeDtoByParentId(int parentId);
+
+
     }
 }

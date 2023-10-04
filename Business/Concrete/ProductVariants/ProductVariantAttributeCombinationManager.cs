@@ -19,7 +19,7 @@ namespace Business.Concrete.ProductVariants
         }
         public IDataResult<List<List<ProductVariantAttributeValueDto>>> GetAllCombinationAttributeValue(int productId)
         {
-            var result = _productVariantDal.GetSubProductAttributeDto(productId);
+            var result = _productVariantDal.GetAllSubProductAttributeDtoProductId(productId);
             if (result != null && result.Any())
             {
                 List<List<ProductVariantAttributeValueDto>> allCombinations = new List<List<ProductVariantAttributeValueDto>>();
@@ -38,7 +38,7 @@ namespace Business.Concrete.ProductVariants
                     {
                         // Başlangıç üst grubu için kombinasyonları oluşturun
                         List<ProductVariantAttributeValueDto> combination = new List<ProductVariantAttributeValueDto> { startGroup };
-                        GenerateSubCombinations(result, combination, Convert.ToInt32(startGroup.AttributeValueId), combinations);
+                        GenerateManySubCombinations(result, combination, Convert.ToInt32(startGroup.ProductVariantId), combinations);
                     }
 
                     allCombinations.AddRange(combinations);
@@ -50,10 +50,10 @@ namespace Business.Concrete.ProductVariants
 
         }
 
-        public void GenerateSubCombinations(List<ProductVariantAttributeValueDto> variants, List<ProductVariantAttributeValueDto> combination, int parentAttributeValueId, List<List<ProductVariantAttributeValueDto>> combinations)
+        public void GenerateManySubCombinations(List<ProductVariantAttributeValueDto> variants, List<ProductVariantAttributeValueDto> combination, int parentId, List<List<ProductVariantAttributeValueDto>> combinations)
         {
             // Alt grupları bulun (Belirli bir ParentId'ye sahip olanlar)
-            var subGroups = variants.Where(v => v.ParentId == parentAttributeValueId).ToList();
+            var subGroups = variants.Where(v => v.ParentId == parentId).ToList();
 
             if (subGroups.Count == 0)
             {
@@ -66,31 +66,26 @@ namespace Business.Concrete.ProductVariants
             {
                 // Alt grup için kombinasyonları oluşturun
                 combination.Add(subGroup);
-                GenerateSubCombinations(variants, combination, Convert.ToInt32(subGroup.AttributeValueId), combinations);
+                GenerateManySubCombinations(variants, combination, Convert.ToInt32(subGroup.ProductVariantId), combinations);
                 combination.RemoveAt(combination.Count - 1); // Kombinasyonu geri al
             }
         }
-        public IDataResult<List<List<ProductVariantAttributeValueDto>>> GetCombinationAttributeValue(int productId, int attributeValueId)
+        public IDataResult<List<ProductVariantAttributeValueDto>> GetCombinationAttributeValue(int productId, int productVariantId)
         {
-            var result = _productVariantDal.GetSubProductAttributeDto(productId);
+            var result = _productVariantDal.GetAllSubProductAttributeDtoProductId(productId);
             if (result != null)
             {
-                List<List<ProductVariantAttributeValueDto>> combinations = new List<List<ProductVariantAttributeValueDto>>();
-                var mainGroups = result.Where(va => va.ParentId == 0 && va.AttributeValueId == attributeValueId).FirstOrDefault();
-
-                // Başlangıç üst grubunu bulun
-                var startGroup = result.FirstOrDefault(v => v.ParentId == mainGroups.ParentId && v.AttributeValueId == attributeValueId);
+                List<ProductVariantAttributeValueDto> combination = new List<ProductVariantAttributeValueDto>();
+                var startGroup = result.FirstOrDefault(va => va.ProductVariantId == productVariantId);
 
                 if (startGroup != null)
                 {
-                    // Başlangıç üst grubu için kombinasyonları oluşturun
-                    List<ProductVariantAttributeValueDto> combination = new List<ProductVariantAttributeValueDto> { startGroup };
-                    GenerateSubCombinations(result, combination, Convert.ToInt32(startGroup.AttributeValueId), combinations);
+                    GenerateSubCombinations(result, combination, startGroup.ParentId.Value);
                 }
 
-                return new SuccessDataResult<List<List<ProductVariantAttributeValueDto>>>(combinations);
+                return new SuccessDataResult<List<ProductVariantAttributeValueDto>>(combination);
             }
-            return new ErrorDataResult<List<List<ProductVariantAttributeValueDto>>>();
+            return new ErrorDataResult<List<ProductVariantAttributeValueDto>>("Belirtilen ürün için kombinasyonlar bulunamadı.");
         }
 
         public IDataResult<List<ProductVariantAttributeValueDto>> GetAllEndCombinationAttributeValue(int productId)
@@ -130,28 +125,27 @@ namespace Business.Concrete.ProductVariants
             return new ErrorDataResult<List<ProductVariantAttributeValueDto>>();
         }
 
-        public IDataResult<List<ProductVariantAttributeValueDto>> GetEndCombinationAttributeValue(int productId, int attributeValueId)
+        public IDataResult<List<ProductVariantAttributeValueDto>> GetEndCombinationAttributeValue(int productId, int productVariantId)
         {
-            var result = GetCombinationAttributeValue(productId, attributeValueId).Data;
+            var result = GetCombinationAttributeValue(productId, productVariantId).Data;
             if (result != null)
             {
                 if (result.Count() > 0)
                 {
                     List<ProductVariantAttributeValueDto> productVariantAttrList = new List<ProductVariantAttributeValueDto>();
-                    foreach (var items in result)
-                    {
-                        ProductVariantAttributeValueDto productVariantAttributeValueDto = new ProductVariantAttributeValueDto();
-                        foreach (var item in items)
+                        foreach (var item in result)
                         {
-                            if (item != items.Last())
+                            ProductVariantAttributeValueDto productVariantAttributeValueDto = new ProductVariantAttributeValueDto();
+
+                            if (item != result.Last())
                             {
                                 productVariantAttributeValueDto.AttributeValue += item.AttributeName + ": " + item.AttributeValue + " - ";
                             }
-                            if (item == items.First() && (item.ParentId == 0 || item.ParentId == null))
+                            if (item == result.First() && (item.ParentId == 0 || item.ParentId == null))
                             {
                                 productVariantAttributeValueDto.ProductVariantId = item.ProductVariantId;
                             }
-                            if (item == items.Last())
+                            if (item == result.Last())
                             {
                                 productVariantAttributeValueDto.EndProductVariantId = item.ProductVariantId;
                                 productVariantAttributeValueDto.ProductId = item.ProductId;
@@ -159,12 +153,31 @@ namespace Business.Concrete.ProductVariants
                                 productVariantAttributeValueDto.AttributeValue += item.AttributeName + ": " + item.AttributeValue;
                                 productVariantAttrList.Add(productVariantAttributeValueDto);
                             }
-                        }
                     }
                     return new SuccessDataResult<List<ProductVariantAttributeValueDto>>(productVariantAttrList);
                 }
             }
             return new ErrorDataResult<List<ProductVariantAttributeValueDto>>();
+        }
+
+        public void GenerateSubCombinations(List<ProductVariantAttributeValueDto> variants, List<ProductVariantAttributeValueDto> combination, int parentId)
+        {
+            // Alt grupları bulun (Belirli bir ParentId'ye sahip olanlar)
+            var subGroups = variants.Where(v => v.ParentId == parentId).ToList();
+
+            if (subGroups.Count == 0)
+            {
+                // Bu bir kombinasyonu tamamladık, listeye ekleyin
+                return;
+            }
+
+            foreach (var subGroup in subGroups)
+            {
+               
+                // Alt grup için kombinasyonları oluşturun
+                combination.Add(subGroup);
+                GenerateSubCombinations(variants, combination, Convert.ToInt32(subGroup.ProductVariantId));
+            }
         }
     }
 }

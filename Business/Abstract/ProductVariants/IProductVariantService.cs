@@ -17,12 +17,15 @@ namespace Business.Abstract.ProductVariants
         IDataResult<List<ProductVariant>> GetAll();
         IDataResult<List<ProductVariant>> GetAllByProductId(int productId);
         IDataResult<List<ProductVariant>> GetAllByProductIdAttrId(int productId, int? attributeId);
-        IDataResult<List<ProductVariantDetailAttributeDto>> GetProductVariantDetail(int productId, int productVariantId);
-        IDataResult<List<ProductVariant>> MapProductVariantCombination(int productId, int attributeValueId);
-        IDataResult<List<ProductVariantAttributeValueDto>> GetProductVariantCombination(int productId, int attributeValueId);
+        IDataResult<List<ProductVariantGroupDetailDto>> GetSubProductVariantDetail(List<ProductVariantGroupDetailDto>  productVariantGroups, int productId, int parentId);
+        IDataResult<List<ProductVariantGroupDetailDto>> GetDefaultProductVariantDetail(int productId, int parentId);
+        IDataResult<List<ProductVariant>> MapProductVariantCombination(int productId, int productVariantId);
+        IDataResult<List<ProductVariantAttributeValueDto>> GetProductVariantCombination(int productId, int productVariantId);
         IDataResult<List<List<ProductVariantAttributeValueDto>>> GetAllProductVariantCombination(int productId);
+        IDataResult<ProductVariant> GetProductVariantByParentId(int parentId);
         IDataResult<ProductVariant> GetById(int id);
         IDataResult<ProductVariant> GetByProductId(int productId);
+        IDataResult<ProductVariant> MainVariantEndVariant(int productVariantId);
         IDataResult<ProductVariant> GetByParentIdAttrValueId(int productId,int? parentId, int? attributeValueId, int? attributeId);
         IResult Add(ProductVariant variant);
         IResult AddTsaProductVariant(AddProductVariant addProductVariant);

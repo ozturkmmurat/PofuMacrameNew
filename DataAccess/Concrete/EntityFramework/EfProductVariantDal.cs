@@ -16,8 +16,28 @@ namespace DataAccess.Concrete.EntityFramework
 {
     public class EfProductVariantDal : EfEntityRepositoryBase<ProductVariant, PofuMacrameContext>, IProductVariantDal
     {
+        public List<ProductVariantDetailAttributeDto> GetAllProductDetailAttributeByParentId(int parentId)
+        {
+            using (PofuMacrameContext context = new PofuMacrameContext())
+            {
+                var result = (from pv in context.ProductVariants.Where(x => x.ParentId == parentId)
+                              join a in context.Attributes
+                              on pv.AttributeId equals a.Id
+
+                              select new ProductVariantDetailAttributeDto
+                              {
+                                  ParentId = pv.ParentId,
+                                  AttributeId = pv.AttributeId,
+                                  AttributeName =  a.Name,
+                                  AttributeValues = new List<AttributeValue>(),
+                              }).ToList();
+
+                return result;
+            }
+        }
+
         //Urun detay sayfasi icin kullaniliyor. Kullanilan yerler --> (Kullanicilarin girdigi urunlerin detay bolumu)
-        public List<ProductVariantDetailAttributeDto> GetProductDetailAttribute(int productId)
+        public List<ProductVariantDetailAttributeDto> GetAllProductDetailAttributeByProductId(int productId)
         {
             using (PofuMacrameContext context = new PofuMacrameContext())
             {
@@ -28,37 +48,80 @@ namespace DataAccess.Concrete.EntityFramework
                               select new ProductVariantDetailAttributeDto
                               {
                                   ParentId = pv.ParentId,
-                                  ProductVariantId = pv.Id,
                                   AttributeId = pv.AttributeId,
-                                  AttributeValueId = pv.AttributeValueId,
                                   AttributeName =  a.Name,
                                   AttributeValues = new List<AttributeValue>(),
-                                  ProductPaths = context.ProductImages
-                                                        .Where(x => x.ProductVariantId == pv.Id)
-                                                        .Select(x => x.Path).ToList()
                               }).ToList();
 
                 return result;
             }
         }
-        //İlgili urunun ana varyantlarinin kombinasyonunu yaparken kullaniliyor. Kullanilan yerler -->(Admin Panel ProductStock)
-        public List<ProductVariantAttributeValueDto> GetSubProductAttributeDto(int productId)
+
+        public List<ProductVariantAttributeValueDto> GetAllProductDetailAttributeByProductIdParentId(int productId, int parentId)
+        {
+            using (PofuMacrameContext context = new PofuMacrameContext())
+            {
+                var result = (from pv in context.ProductVariants.Where(x => x.ProductId == productId && x.ParentId == parentId)
+                              join av in context.AttributeValues 
+                              on pv.AttributeValueId equals av.Id
+                              select new ProductVariantAttributeValueDto
+                              {
+                                  ProductId = pv.ProductId,
+                                  ParentId = pv.ParentId,
+                                  ProductVariantId = pv.Id,
+                                  AttributeId = pv.AttributeId.Value,
+                                  AttributeValueId = av.Id,
+                                  AttributeValue = av.Value
+                              }).ToList();
+
+                return result;
+            }
+        }
+
+        public List<ProductVariantAttributeValueDto> GetAllSubProductAttributeDtoByParentId(int parentId)
+        {
+            using (PofuMacrameContext context = new PofuMacrameContext())
+            {
+                var result = (from pv in context.ProductVariants.Where(x => x.ParentId == parentId)
+                              join a in context.Attributes
+                              on pv.AttributeId equals a.Id
+                              join av in context.AttributeValues
+                              on pv.AttributeValueId equals av.Id
+                              select new ProductVariantAttributeValueDto
+                              {
+                                  ProductId = pv.ProductId,
+                                  ParentId = pv.ParentId,
+                                  ProductVariantId = pv.Id,
+                                  AttributeId = pv.AttributeId.Value,
+                                  AttributeValueId = av.Id,
+                                  AttributeName =  a.Name,
+                                  AttributeValue = av.Value,
+                              }).ToList();
+
+                return result;
+            }
+        }
+
+        //Panel de kullaniliyor. Kullanilan yerler --> (Stok alani)
+
+        public List<ProductVariantAttributeValueDto> GetAllSubProductAttributeDtoProductId(int productId)
         {
             using (PofuMacrameContext context = new PofuMacrameContext())
             {
                 var result = (from pv in context.ProductVariants.Where(x => x.ProductId == productId)
-                              join av in context.AttributeValues on pv.AttributeValueId equals av.Id
-                              join a in context.Attributes on av.AttributeId equals a.Id
-
+                              join a in context.Attributes 
+                              on pv.AttributeId equals a.Id
+                              join av in context.AttributeValues
+                              on pv.AttributeValueId equals av.Id
                               select new ProductVariantAttributeValueDto
                               {
-                                  ProductVariantId = pv.Id,
                                   ProductId = pv.ProductId,
-                                  AttributeId = a.Id,
-                                  AttributeValueId = pv.AttributeValueId,
                                   ParentId = pv.ParentId,
-                                  AttributeName = a.Name,
-                                  AttributeValue =  av.Value
+                                  ProductVariantId = pv.Id,
+                                  AttributeId = pv.AttributeId.Value,
+                                  AttributeValueId = av.Id,
+                                  AttributeName =  a.Name,
+                                  AttributeValue = av.Value
                               }).ToList();
 
                 return result;
@@ -66,3 +129,4 @@ namespace DataAccess.Concrete.EntityFramework
         }
     }
 }
+
