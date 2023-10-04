@@ -102,6 +102,7 @@ namespace Business.Concrete
                                     productVariant.AttributeId = attributeId;
                                     productVariant.AttributeValueId = attributeValue;
                                     Add(productVariant);
+                                    addProductVariant.ParentId = productVariant.Id;
                                 }
                                 else
                                 {
