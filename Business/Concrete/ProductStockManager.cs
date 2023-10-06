@@ -44,6 +44,20 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
+        public IResult CheckStock(int productVariantId)
+        {
+            var result = GetByProductVariantId(productVariantId);
+            if (result != null)
+            {
+                if (result.Data.Quantity > 0)
+                {
+                    return new SuccessResult();
+                }
+                return new ErrorResult();
+            }
+            return new ErrorResult();
+        }
+
         public IResult Delete(ProductStock productStock)
         {
             if (productStock != null)
@@ -125,7 +139,7 @@ namespace Business.Concrete
             return new ErrorDataResult<ProductStock>();
         }
 
-        public IDataResult<ProductStock> GetByVariantId(int variantId)
+        public IDataResult<ProductStock> GetByProductVariantId(int variantId)
         {
             var result = _productStockDal.Get(x => x.ProductVariantId == variantId);
             if (result != null)

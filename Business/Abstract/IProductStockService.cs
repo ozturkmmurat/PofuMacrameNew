@@ -13,9 +13,10 @@ namespace Business.Abstract
         IDataResult<List<ProductStock>> GetAll();
         IDataResult<List<ProductStock>> GetAllByProductId(int productId);
         IDataResult<ProductStock> GetById(int id);
-        IDataResult<ProductStock> GetByVariantId(int variantId);
+        IDataResult<ProductStock> GetByProductVariantId(int variantId);
         IDataResult<ProductStock> GetByProductId(int productId);
         IDataResult<List<SelectProductStockDto>> GetAllProductStockDto(int productId);
+        IResult CheckStock(int productVariantId);
         IResult Add(ProductStock productStock);
         IResult AddList(List<ProductStock> productStocks);
         IResult Update(ProductStock productStock);

@@ -17,6 +17,8 @@ namespace Entities.Dtos.ProductVariant.Select
         public string AttributeName { get; set; }
         public string AttributeValue { get; set; }
         public string ImagePath { get; set; }
+        public decimal Price { get; set; }
+        public int Quantity { get; set; }
 
     }
 }

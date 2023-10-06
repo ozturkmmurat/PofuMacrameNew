@@ -52,10 +52,10 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("GetByVariantId")]
-        public IActionResult GetByVariantId(int variantId)
+        [HttpGet("GetByProductVariantId")]
+        public IActionResult GetByProductVariantId(int productVariantId)
         {
-            var result = _productStockService.GetByVariantId(variantId);
+            var result = _productStockService.GetByProductVariantId(productVariantId);
             if (result.Success)
             {
                 return Ok(result);

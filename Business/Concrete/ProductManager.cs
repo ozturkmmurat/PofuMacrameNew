@@ -103,7 +103,7 @@ namespace Business.Concrete
                 {
                    var endVariant = _productVariantService.MainVariantEndVariant(result[i].ProductVariantId);
                     result[i].EndProductVariantId = endVariant.Data.Id;
-                    var productVariantStock = _productStockService.GetByVariantId(result[i].EndProductVariantId.Value).Data;
+                    var productVariantStock = _productStockService.GetByProductVariantId(result[i].EndProductVariantId.Value).Data;
                     result[i].Price = productVariantStock.Price;
                     result[i].Quantity = productVariantStock.Quantity;
                     result[i].StockCode = productVariantStock.StockCode;

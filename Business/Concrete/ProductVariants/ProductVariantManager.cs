@@ -24,7 +24,6 @@ namespace Business.Concrete
     {
         IProductVariantDal _productVariantDal;
         IProductStockService _productStockService;
-        IProductAttributeService _productAttributeService;
         ICategoryAttributeService _categoryAttributeService;
         IProductVariantAttributeCombinationService _productVariantAttributeCombinationService;
         IProductImageService _productImageService;
@@ -38,7 +37,6 @@ namespace Business.Concrete
         {
             _productVariantDal = productVariantDal;
             _productStockService = productStockService;
-            _productAttributeService=productAttributeService;
             _categoryAttributeService=categoryAttributeService;
             _productVariantAttributeCombinationService = productVariantAttributeCombinationService;
             _productImageService=productImageService;
@@ -329,22 +327,26 @@ namespace Business.Concrete
                         }
                     }
 
-                    //else if (i == 1)
-                    //{
-                    //    var data = _productVariantDal.GetAllProductDetailAttributeByProductIdParentId(productId, Convert.ToInt32(groupDetailList[i -1].ProductVariantAttributeValueDtos.FirstOrDefault().ProductVariantId));
-                    //    groupDetailList[i].ProductVariantAttributeValueDtos.AddRange(data);
-                    //}
-
                     if (i > 0)
                     {
                         var data = _productVariantDal.GetAllProductDetailAttributeByProductIdParentId(productId, Convert.ToInt32(groupDetailList[i -1].ProductVariantAttributeValueDtos.FirstOrDefault().ProductVariantId));
                         groupDetailList[i].ProductVariantAttributeValueDtos.AddRange(data);
                     }
 
-                    //if (i > 1 && i != groupDetailList.Count() -1)
-                    //{
+                    if (i == groupDetailList.Count() -1)
+                    {
+                        for (int j = 0; j < groupDetailList[i].ProductVariantAttributeValueDtos.Count(); j++)
+                        {
+                            var checkStock = _productStockService.GetByProductVariantId(groupDetailList[i].ProductVariantAttributeValueDtos[j].ProductVariantId);
+                            if (checkStock.Data != null)
+                            {
+                                groupDetailList[i].ProductVariantAttributeValueDtos[j].Price = checkStock.Data.Price;
+                                groupDetailList[i].ProductVariantAttributeValueDtos[j].Quantity = checkStock.Data.Quantity;
+                            }
+                        }
+                    }
 
-                    //}
+                    
                 }
                 return new SuccessDataResult<List<ProductVariantGroupDetailDto>>(groupDetailList);
 
@@ -362,14 +364,12 @@ namespace Business.Concrete
                 if (productVariantGroups.Count > 0)
                 {
                     ProductVariant productVariant = null;
-                    bool state = false;
                     int keepParentId = 0;
                     for (int i = 0; i < productVariantGroups.Count(); i++)
                     {
                         if (productVariantGroups[i].ProductVariantAttributeValueDtos.Any(x => x.ProductVariantId == parentId))
                         {
                             productVariant = GetProductVariantByParentId(parentId).Data;
-                            state = true;
                         }
                         if (productVariant != null)
                         {
@@ -411,9 +411,22 @@ namespace Business.Concrete
                                     parentId = data[0].ProductVariantId;
                                 }
                             }
+                            if (j == productVariantGroups.Count() -1)
+                            {
+                                for (int k = 0; k < productVariantGroups[j].ProductVariantAttributeValueDtos.Count(); k++)
+                                {
+                                    var checkStock = _productStockService.GetByProductVariantId(productVariantGroups[j].ProductVariantAttributeValueDtos[k].ProductVariantId);
+                                    if (checkStock.Data != null)
+                                    {
+                                        productVariantGroups[j].ProductVariantAttributeValueDtos[k].Price = checkStock.Data.Price;
+                                        productVariantGroups[j].ProductVariantAttributeValueDtos[k].Quantity = checkStock.Data.Quantity;
+                                    }
+                                }
+                            }
                         }
-
                     }
+
+                   
 
                 }
                 return new SuccessDataResult<List<ProductVariantGroupDetailDto>>(productVariantGroups);
