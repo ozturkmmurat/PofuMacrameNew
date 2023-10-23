@@ -2,6 +2,7 @@
 using Entities.Concrete;
 using Entities.Dtos.Product;
 using Entities.Dtos.ProductVariant;
+using Entities.EntitiyParameter.Product;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -47,21 +48,11 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("GetAllProductVariantDtoGroupProduct")]
-        public IActionResult GetAllPvProductVariantDtoGroupProduct()
+        //Ürünün Ana varyantlarını çekiyoruz.
+        [HttpPost("GetAllProductVariantDtoGroupVariant")]
+        public IActionResult GetAllProductVariantDtoGroupVariant(FilterProduct filterProduct)
         {
-            var result = _productService.GetAllPvProductVariantDtoGroupProduct();
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-        }
-
-        [HttpGet("GetAllProductVariantDtoGroupVariant")]
-        public IActionResult GetAllProductVariantDtoGroupVariant()
-        {
-            var result = _productService.GetAllProductVariantDtoGroupVariant();
+            var result = _productService.GetAllProductVariantDtoGroupVariant(filterProduct.CategoryId, filterProduct.Attributes);
             if (result.Success)
             {
                 return Ok(result);

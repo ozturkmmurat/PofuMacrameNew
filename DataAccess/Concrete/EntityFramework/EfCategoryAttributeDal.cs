@@ -83,5 +83,26 @@ namespace DataAccess.Concrete.EntityFramework
                 return result.ToList();
             }
         }
+
+        public List<FilterCategoryAttributeDto> GetAllCategoryAttributeFilter(int categoryId)
+        {
+            using (PofuMacrameContext context = new PofuMacrameContext())
+            {
+                var result = from ca in context.CategoryAttributes.Where(x => x.CategoryId == categoryId)
+                             join c in context.Categories
+                             on ca.CategoryId equals c.Id
+                             join a in context.Attributes
+                             on ca.AttributeId equals a.Id
+
+                             select new FilterCategoryAttributeDto
+                             {
+                                 AttributeId = ca.AttributeId,
+                                 AttributeName = a.Name,
+                                 CategoryName = c.CategoryName,
+                                 AttributeValues = context.AttributeValues.Where(x => x.AttributeId == ca.AttributeId).ToList()
+                             };
+                return result.ToList();
+            }
+        }
     }
 }

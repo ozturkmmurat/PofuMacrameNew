@@ -6,6 +6,7 @@ using System.Text;
 
 namespace Entities.Dtos.CategoryAttribute.Select
 {
+    //Admin panel de ilgili kategorinin ozelliklerini listelemek icin kullaniliyor.
     public class ViewCategoryAttributeDto : IDto
     {
         public int CategoryId { get; set; }

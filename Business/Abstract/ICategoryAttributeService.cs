@@ -16,6 +16,7 @@ namespace Business.Abstract
         IDataResult<CategoryAttribute> GetByAttributeIdCategoryId(int attributeId, int categoryId);
         IDataResult<List<ViewCategoryAttributeDto>> GetAllDtoTrueSlicer(int categoryId);
         IDataResult<List<ViewCategoryAttributeDto>> GetAllViewDtoTrueSlicerAttribute(int categoryId);
+        IDataResult<List<FilterCategoryAttributeDto>> GetAllCategoryAttributeFilter(int categoryId);
         IResult CheckRepeatedData(CategoryAttribute categoryAttribute);
         IResult CheckSliderAttribute(CategoryAttribute categoryAttribute);
         IResult Add(CategoryAttribute categoryAttribute);

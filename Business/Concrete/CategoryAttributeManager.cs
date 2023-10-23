@@ -159,6 +159,14 @@ namespace Business.Concrete
             return new SuccessResult();
         }
 
-
+        public IDataResult<List<FilterCategoryAttributeDto>> GetAllCategoryAttributeFilter(int categoryId)
+        {
+            var result = _categoryAttributeDal.GetAllCategoryAttributeFilter(categoryId);
+            if (result != null)
+            {
+                return new SuccessDataResult<List<FilterCategoryAttributeDto>>(result);
+            }
+            return new ErrorDataResult<List<FilterCategoryAttributeDto>>();
+        }
     }
 }

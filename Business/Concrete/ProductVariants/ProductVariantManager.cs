@@ -27,19 +27,22 @@ namespace Business.Concrete
         ICategoryAttributeService _categoryAttributeService;
         IProductVariantAttributeCombinationService _productVariantAttributeCombinationService;
         IProductImageService _productImageService;
+        IProductAttributeService _productAttributeService;
         public ProductVariantManager(
             IProductVariantDal productVariantDal,
             IProductStockService productStockService,
             IProductAttributeService productAttributeService,
             ICategoryAttributeService categoryAttributeService,
             IProductVariantAttributeCombinationService productVariantAttributeCombinationService,
-            IProductImageService productImageService)
+            IProductImageService productImageService
+            )
         {
             _productVariantDal = productVariantDal;
             _productStockService = productStockService;
             _categoryAttributeService=categoryAttributeService;
             _productVariantAttributeCombinationService = productVariantAttributeCombinationService;
             _productImageService=productImageService;
+            _productAttributeService = productAttributeService;
         }
         public IResult Add(ProductVariant variant)
         {
@@ -81,7 +84,7 @@ namespace Business.Concrete
                     foreach (var variant in variants)
                     {
                         ProductVariant productVariant = new ProductVariant();
-
+                        ProductAttribute productAttribute = new ProductAttribute();
                         foreach (var attribute in variant)
                         {
                             var attributeId = Convert.ToInt32(attribute.Key);
@@ -99,7 +102,12 @@ namespace Business.Concrete
                                     productVariant.ProductId = addProductVariant.ProductId;
                                     productVariant.AttributeId = attributeId;
                                     productVariant.AttributeValueId = attributeValue;
+                                    
                                     Add(productVariant);
+                                    productAttribute.ProductId = productVariant.ProductId;
+                                    productAttribute.AttributeId = attributeId;
+                                    productAttribute.AttributeValueId = attributeValue;
+                                    _productAttributeService.Add(productAttribute);
                                     addProductVariant.ParentId = productVariant.Id;
                                 }
                                 else
@@ -120,6 +128,10 @@ namespace Business.Concrete
                                     productVariant.AttributeValueId = attributeValue;
                                     productVariant.ParentId = addProductVariant.ParentId;
                                     Add(productVariant);
+                                    productAttribute.ProductId = productVariant.ProductId;
+                                    productAttribute.AttributeId = attributeId;
+                                    productAttribute.AttributeValueId = attributeValue;
+                                    _productAttributeService.Add(productAttribute);
                                     addProductVariant.ParentId =  productVariant.Id;
                                 }
                                 else

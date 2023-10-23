@@ -81,6 +81,18 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
+        //İlgili kategorinin sahip oldugu ozellik gruplarını ve ozellikleri listelemek icin kullaniliyor. Kullanildigi yerler(Urun filtreleem alani)
+        [HttpGet("GetAllCategoryAttributeFilter")]
+        public IActionResult GetAllCategoryAttributeFilter(int categoryId)
+        {
+            var result = _categoryAttributeService.GetAllCategoryAttributeFilter(categoryId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
         [HttpPost("Add")]
         public IActionResult Add(CategoryAttribute categoryAttribute)
         {

@@ -82,21 +82,10 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
-        public IDataResult<List<SelectListProductVariantDto>> GetAllPvProductVariantDtoGroupProduct()
-        {
-            // Web sitesinde urunler listelenirken kullaniliyor
-            var result = _productDal.GetAllPvFilterDto().GroupBy(x => x.ProductId).Select(group => group.FirstOrDefault()).ToList();
-            if (result != null)
-            {
-                return new SuccessDataResult<List<SelectListProductVariantDto>>(result);
-            }
-            return new ErrorDataResult<List<SelectListProductVariantDto>>();
-        }
-
-        public IDataResult<List<SelectListProductVariantDto>> GetAllProductVariantDtoGroupVariant()
+        public IDataResult<List<SelectListProductVariantDto>> GetAllProductVariantDtoGroupVariant(int categoryId, List<int> attributeValueIdList)
         {
             // Web sitesinde urune bağli urun varyantlari listelenirken kullanılıyor
-            var result = _productDal.GetAllPvFilterDto().Where(x => x.ProductPaths.Count > 0).ToList();
+            var result = _productDal.GetAllPvFilterDto(categoryId, attributeValueIdList).Where(x => x.ProductPaths.Count > 0).ToList();
             if (result != null)
             {
                 for (int i = 0; i < result.Count(); i++)
