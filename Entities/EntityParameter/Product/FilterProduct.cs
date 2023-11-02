@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Entities.EntityParameter.Attribute;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,6 +9,8 @@ namespace Entities.EntitiyParameter.Product
     public class FilterProduct
     {
         public int CategoryId { get; set; }
-        public List<int> Attributes { get; set; }
+        public int StartLength { get; set; }
+        public int EndLength { get; set; }
+        public List<FilterAttribute> Attributes { get; set; }
     }
 }

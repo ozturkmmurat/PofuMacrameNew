@@ -9,6 +9,8 @@ using Entities.Concrete;
 using Entities.Dtos.Product;
 using Entities.Dtos.Product.Select;
 using Entities.Dtos.ProductVariant;
+using Entities.EntitiyParameter.Product;
+using Entities.EntityParameter.Product;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -82,10 +84,9 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
-        public IDataResult<List<SelectListProductVariantDto>> GetAllProductVariantDtoGroupVariant(int categoryId, List<int> attributeValueIdList)
+        public IDataResult<List<SelectListProductVariantDto>> GetAllProductVariantDtoGroupVariant(FilterProduct filterProduct)
         {
-            // Web sitesinde urune bağli urun varyantlari listelenirken kullanılıyor
-            var result = _productDal.GetAllPvFilterDto(categoryId, attributeValueIdList).Where(x => x.ProductPaths.Count > 0).ToList();
+            var result = _productDal.GetAllPvFilterDto(filterProduct).Where(x => x.ProductPaths.Count > 0).ToList();
             if (result != null)
             {
                 for (int i = 0; i < result.Count(); i++)
@@ -172,6 +173,12 @@ namespace Business.Concrete
                 return new SuccessDataResult<SelectProductDto>(result);
             }
             return new ErrorDataResult<SelectProductDto>();
+        }
+
+        public IDataResult<int> GetTotalProduct(int categoryId)
+        {
+            var result = _productDal.GetTotalProduct(categoryId);
+            return new SuccessDataResult<int>(result);
         }
     }
 }

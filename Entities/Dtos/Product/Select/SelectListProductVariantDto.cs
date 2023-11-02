@@ -14,7 +14,7 @@ namespace Entities.Dtos.Product.Select
         public int? ParentId { get; set; }
         public string ProductName { get; set; }
         public string Description { get; set; }
-        public string StockCode { get; set; }  // Pv --> ProductVariant
+        public string StockCode { get; set; }  
         public List<AttributeValue> AttributeValues { get; set; }
         public List<string> ProductPaths { get; set; }
         public decimal? Price { get; set; }

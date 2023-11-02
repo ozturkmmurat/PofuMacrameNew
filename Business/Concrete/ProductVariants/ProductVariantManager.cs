@@ -335,7 +335,11 @@ namespace Business.Concrete
                         groupDetailList[i].ProductVariantAttributeValueDtos.AddRange(getAllProductVariant);
                         for (int j = 0; j < groupDetailList[i].ProductVariantAttributeValueDtos.Count(); j++)
                         {
-                            groupDetailList[i].ProductVariantAttributeValueDtos[j].ImagePath = _productImageService.GetByProductVariantId(groupDetailList[i].ProductVariantAttributeValueDtos[j].ProductVariantId).Data.Path;
+                            var imageResult = _productImageService.GetByProductVariantId(groupDetailList[i].ProductVariantAttributeValueDtos[j].ProductVariantId);
+                            if (imageResult.Success)
+                            {
+                                groupDetailList[i].ProductVariantAttributeValueDtos[j].ImagePath = imageResult.Data.Path;
+                            }
                         }
                     }
 
