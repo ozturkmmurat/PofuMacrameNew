@@ -96,7 +96,7 @@ namespace DataAccess.Concrete.EntityFramework
                     var categoryAttributes = context.CategoryAttributes.Where(x => x.CategoryId == filterProduct.CategoryId && x.Slicer == true);
                     if (categoryAttributes != null)
                     {
-                        if (categoryAttributes.Any()) // Count() yerine Any() kullanmak daha verimlidir
+                        if (categoryAttributes.Any())
                         {
                             var attributeIds = filterProduct.Attributes.Where(x => categoryAttributes.Any(a => a.AttributeId == x.Id)).Select(x => x.Id).ToList();
 
