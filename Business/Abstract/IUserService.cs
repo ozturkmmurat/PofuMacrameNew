@@ -15,6 +15,7 @@ namespace Business.Abstract
         IDataResult<List<UserDto>> GetAllUserDto();
         IDataResult<User> GetById(int id);
         IDataResult<User> GetByRefreshToken(string refreshToken);
+        IDataResult<UserDto> GetUserDtoByUserId(int id, int addressId);
         Core.Entities.Concrete.User GetByMail(string email);
         IResult UpdateRefreshToken(UserRefreshTokenDto userRefreshTokenDto);
         IResult CheckPassword(string email, string password);

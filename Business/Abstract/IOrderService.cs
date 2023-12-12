@@ -1,6 +1,7 @@
 ﻿using Core.Utilities.Result.Abstract;
 using Entities.Concrete;
-using Entities.Dtos;
+using Entities.Dtos.Order;
+using Entities.Dtos.Order.Select;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,6 +12,10 @@ namespace Business.Abstract
     {
         IDataResult<List<Order>> GetAll();
         IDataResult<List<Order>> GetAllByUserId(int userId);
+        IDataResult<List<SelectUserOrderDto>> GetAllUserOrderDto();
+        IDataResult<SelectUserOrderDto> GetUserOrderDtoDetail(int orderId);
+        IDataResult<Order> GetById(int id);
+        IDataResult<Order> GetByOrderIdUserId(int orderId, int userId);
         IDataResult<Order> OrderCode(string orderCode);
         IDataResult<string> CreateOrderCode(Order order);
         IDataResult<Order> MappingOrder(OrderDto orderDto);

@@ -87,6 +87,7 @@ namespace Business.Concrete
                     Email = userForUpdateDto.Email,
                     FirstName = userForUpdateDto.FirstName,
                     LastName = userForUpdateDto.LastName,
+                    PhoneNumber = userForUpdateDto.PhoneNumber,
                     PasswordHash = passwordHash,
                     PasswordSalt = passwordSalt,
                     Status = true
@@ -103,6 +104,7 @@ namespace Business.Concrete
                     Email = userForUpdateDto.Email,
                     FirstName = userForUpdateDto.FirstName,
                     LastName = userForUpdateDto.LastName,
+                    PhoneNumber = userForUpdateDto.PhoneNumber,
                     PasswordHash = result.Data.PasswordHash,
                     PasswordSalt = result.Data.PasswordSalt,
                     RefreshToken = result.Data.RefreshToken,
@@ -214,6 +216,17 @@ namespace Business.Concrete
                 return new SuccessResult();
             }
             return new ErrorResult();
+        }
+
+        [SecuredOperation("user,admin")]
+        public IDataResult<UserDto> GetUserDtoByUserId(int id, int addressId)
+        {
+            var result = _userDal.GetUserDtoByUserIdAddressId(id, addressId);
+            if (result != null)
+            {
+                return new SuccessDataResult<UserDto>(result);
+            }
+            return new ErrorDataResult<UserDto>();
         }
     }
 }

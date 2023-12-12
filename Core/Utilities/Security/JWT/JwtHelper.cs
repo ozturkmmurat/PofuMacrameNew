@@ -17,6 +17,7 @@ namespace Core.Utilities.Security.JWT
         public IConfiguration Configuration { get; } // WebApi deki Appsetings okumamızı sağlıyor.
         private TokenOptions _tokenOptions; // WebAppsetings de okuduğu verileri aktardığımız Nesne
         private DateTime _accessTokenExpiration; // Topken Options ne zaman geçersizleşecek 
+        private DateTime _refreshTokenExpiration;
         public JwtHelper(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -27,7 +28,9 @@ namespace Core.Utilities.Security.JWT
         }
         public AccessToken CreateToken(Entities.Concrete.User user, List<OperationClaim> operationClaims)
         {
-            _accessTokenExpiration = DateTime.Now.AddSeconds(_tokenOptions.AccessTokenExpiration); // Şimdiye 10 dk ekle 
+
+            _accessTokenExpiration = DateTime.Now.AddMinutes(_tokenOptions.AccessTokenExpiration); // Şimdiye 10 dk ekle 
+            _refreshTokenExpiration = DateTime.Now.AddMinutes(_tokenOptions.AccessTokenExpiration + (_tokenOptions.AccessTokenExpiration/2));
             var securityKey = SecurityKeyHelper.CreateSecurityKey(_tokenOptions.SecurityKey);  //Securitey oluşturuyoruz 
             var signingCredentials = SigningCredentialsHelper.CreateSigningCredentials(securityKey); // Hangi algoritmayı ve hangi anahtarı kullanayım diyor
                                                                                                      // Credentials kullanıcı bilgileri oluyor.
@@ -38,13 +41,13 @@ namespace Core.Utilities.Security.JWT
             {
                 Token = token,
                 Expiration = _accessTokenExpiration,
-                RefreshToken = CreateRefreshToken(user, operationClaims),
-                RefreshTokenEndDate = _accessTokenExpiration.AddSeconds(30)
+                RefreshToken = CreateRefreshToken(),
+                RefreshTokenEndDate = _refreshTokenExpiration
             };
 
         }
 
-        public string CreateRefreshToken(Entities.Concrete.User user, List<OperationClaim> operationClaims)
+        public string CreateRefreshToken()
         {
             string character = "0123456789ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZabcçdefgğhıijklmnoöprsştuüvyz=";
             Random rnd = new Random();
@@ -54,7 +57,9 @@ namespace Core.Utilities.Security.JWT
                 refreshToken += character[rnd.Next(character.Length)];
             }
             return (refreshToken);
+
         }
+
         public JwtSecurityToken CreateJwtSecurityToken(TokenOptions tokenOptions, Entities.Concrete.User user,
             SigningCredentials signingCredentials, List<OperationClaim> operationClaims)
         {

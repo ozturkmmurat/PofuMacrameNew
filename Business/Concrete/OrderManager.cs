@@ -1,13 +1,21 @@
 ﻿using Business.Abstract;
+using Business.Abstract.ProductVariants;
+using Business.BusinessAspects.Autofac;
 using Business.Utilities;
 using Core.Aspects.Autofac.Transaction;
+using Core.Utilities.IoC;
 using Core.Utilities.Result.Abstract;
 using Core.Utilities.Result.Concrete;
+using Core.Utilities.User;
 using DataAccess.Abstract;
 using Entities.Concrete;
-using Entities.Dtos;
+using Entities.Dtos.Order;
+using Entities.Dtos.Order.Select;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Business.Concrete
@@ -16,12 +24,21 @@ namespace Business.Concrete
     {
         IOrderDal _orderDal;
         ISubOrderDal _subOrderDal;
+        IProductVariantService _productVariantService;
+        IProductImageService _productImageService;
+        IAttributeValueService _attributeValueService;
+        private IHttpContextAccessor _httpContextAccessor;
         public OrderManager(
             IOrderDal orderDal,
-            ISubOrderDal subOrderDal)
+            ISubOrderDal subOrderDal,
+            IProductVariantService productVariantService,
+            IProductImageService productImageService)
         {
             _orderDal = orderDal;
             _subOrderDal = subOrderDal;
+            _productVariantService = productVariantService;
+            _httpContextAccessor = ServiceTool.ServiceProvider.GetService<IHttpContextAccessor>();
+            _productImageService=productImageService;
         }
         public IResult Add(Order order)
         {
@@ -75,6 +92,62 @@ namespace Business.Concrete
             return new ErrorDataResult<List<Order>>();
         }
 
+        [SecuredOperation("user,admin")]
+        public IDataResult<List<SelectUserOrderDto>> GetAllUserOrderDto()
+        {
+            var result = _orderDal.GetAllUserOrder(ClaimHelper.GetUserId(_httpContextAccessor.HttpContext));
+            if (result != null & result.Count > 0)
+            {
+                for (int i = 0; i < result.Count; i++)
+                {
+                    for (int j = 0; j < result[i].SelectSubOrderDtos.Count(); j++)
+                    {
+                        result[i].SelectSubOrderDtos[j].ImagePath = _productImageService.GetByProductVariantId(_productVariantService.EndVariantMainVariant(result[i].SelectSubOrderDtos[j].ParentId).Data.Id).Data.Path;
+                    }
+                }
+                return new SuccessDataResult<List<SelectUserOrderDto>>(result);
+            }
+            return new ErrorDataResult<List<SelectUserOrderDto>>();
+        }
+
+        [SecuredOperation("user,admin")]
+
+        public IDataResult<SelectUserOrderDto> GetUserOrderDtoDetail(int orderId)
+        {
+            var result = _orderDal.GetUserOrder(ClaimHelper.GetUserId(_httpContextAccessor.HttpContext), orderId);
+            if (result != null)
+            {
+                    for (int i = 0; i < result.SelectSubOrderDtos.Count(); i++)
+                    {
+                        var getProductVariantAttributeResult = _productVariantService.GetProductVariantAttribute(result.SelectSubOrderDtos[i].ParentId);
+                        result.SelectSubOrderDtos[i].ImagePath = _productImageService.GetByProductVariantId(getProductVariantAttributeResult.Data.VariantId).Data.Path;
+                        result.SelectSubOrderDtos[i].Attribute = _productVariantService.GetProductVariantAttribute(result.SelectSubOrderDtos[i].ParentId).Data.Attribute;
+                    }
+                return new SuccessDataResult<SelectUserOrderDto>(result);
+            }
+            return new ErrorDataResult<SelectUserOrderDto>();
+        }
+
+        public IDataResult<Order> GetById(int id)
+        {
+            var result = _orderDal.Get(x => x.Id == id);
+            if (result != null)
+            {
+                return new SuccessDataResult<Order>(result);
+            }
+            return new ErrorDataResult<Order>();
+        }
+
+        public IDataResult<Order> GetByOrderIdUserId(int orderId, int userId)
+        {
+            var result = _orderDal.Get(x => x.Id == orderId && x.UserId == userId);
+            if (result != null)
+            {
+                return new SuccessDataResult<Order>(result);
+            }
+            return new ErrorDataResult<Order>();
+        }
+
         public IDataResult<Order> MappingOrder(OrderDto orderDto)
         {
             if (orderDto != null)
@@ -116,7 +189,7 @@ namespace Business.Concrete
                     {
                         OrderId = mappingOrder.Data.Id,
                         Price = subOrder.Price,
-                        VariantId = subOrder.VariantId
+                        VariantId = subOrder.VariantId,
                     };
                     mappingOrder.Data.TotalPrice += subOrder.Price;
                 }

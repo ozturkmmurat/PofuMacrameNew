@@ -11,5 +11,7 @@ namespace Entities.Concrete
         public int OrderId { get; set; }
         public int VariantId { get; set; }
         public decimal Price { get; set; }
+        public string ReturnResultJson { get; set; }
+        public int? SubOrderStatus { get; set; }
     }
 }

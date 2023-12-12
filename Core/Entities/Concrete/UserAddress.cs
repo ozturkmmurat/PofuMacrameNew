@@ -8,7 +8,9 @@ namespace Core.Entities.Concrete
     {
         public int Id { get; set; }
         public int UserId { get; set; }
-        public int NeighbourhoodId { get; set; }
+        public int CityId { get; set; }
         public string AddressTitle { get; set; }
+        public string Address { get; set; }
+        public string PostCode { get; set; }
     }
 }

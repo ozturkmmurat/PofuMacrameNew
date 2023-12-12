@@ -58,6 +58,16 @@ namespace Business.Concrete
             return new ErrorDataResult<List<AttributeValue>>();
         }
 
+        public IDataResult<AttributeValue> GetByAttributeId(int attributeId)
+        {
+            var result = _attributeValueDal.Get(x => x.AttributeId == attributeId);
+            if (result != null)
+            {
+                return new SuccessDataResult<AttributeValue>(result);
+            }
+            return new ErrorDataResult<AttributeValue>();
+        }
+
         public IDataResult<AttributeValue> GetById(int id)
         {
             var result = _attributeValueDal.Get(x => x.Id == id);

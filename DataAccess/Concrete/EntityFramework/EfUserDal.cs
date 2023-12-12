@@ -36,8 +36,7 @@ namespace DataAccess.Concrete.EntityFramework
                                  LastName = u.LastName,
                                  Email = u.Email,
                                  Status = u.Status,
-                                 OperationClaimName = opct.Name
-                             };
+                                 OperationClaimName = opct.Name,                             };
 
                 return result.ToList();
             }
@@ -54,6 +53,36 @@ namespace DataAccess.Concrete.EntityFramework
                              select new OperationClaim { Id = operationClaim.Id, Name = operationClaim.Name };
 
                 return result.ToList();
+            }
+        }
+
+        public UserDto GetUserDtoByUserIdAddressId(int userId, int addressId)
+        {
+            using (var context = new PofuMacrameContext())
+            {
+                var result = from u in context.Users.Where(x => x.Id == userId)
+                             join a in context.UserAddresses.Where(x => x.Id == addressId)
+                             on u.Id equals a.UserId
+                             join c in context.Cities
+                             on a.CityId equals c.Id
+
+                             select new UserDto
+                             {
+                                UserId = u.Id,
+                                FirstName = u.FirstName,
+                                LastName= u.LastName,
+                                Email = u.Email,
+                                PhoneNumber = u.PhoneNumber,
+                                RegistrationDate = u.RegistrationDate.Value,
+                                LastLoginDate = u.LastLoginDate.Value,
+                                Status = u.Status,
+                                Country = "Türkiye",
+                                UserCity =  c.Name,
+                                AddressTitle = a.AddressTitle,
+                                Address = a.Address,
+                                PostCode = a.PostCode
+                             };
+                return result.FirstOrDefault();
             }
         }
     }

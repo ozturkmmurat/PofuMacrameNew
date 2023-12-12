@@ -48,7 +48,8 @@ namespace Business.Concrete
                 LastName = userForRegisterDto.LastName,
                 PasswordHash = passwordHash,
                 PasswordSalt = passwordSalt,
-                Status = false
+                Status = true,
+                RegistrationDate = DateTime.Now
             };
             _userService.Add(user);
             var newUser = _userService.GetByMail(userForRegisterDto.Email);
@@ -69,9 +70,9 @@ namespace Business.Concrete
             IResult result = BusinessRules.Run(_userService.CheckPassword(userForLoginDto.Email, userForLoginDto.Password), _userService.CheckEmail(userForLoginDto.Email), CheckStatus(userForLoginDto.Email));
             if (result == null)
             {
-                return new SuccessDataResult<User>(userToCheck, Messages.SuccessLogin);
+                return new SuccessDataResult<Core.Entities.Concrete.User>(userToCheck, "Başarılı giriş");
             }
-            return new ErrorDataResult<User>(Messages.LoginCheck);
+            return new ErrorDataResult<Core.Entities.Concrete.User>(result.Message);
 
         }
 
@@ -88,7 +89,7 @@ namespace Business.Concrete
         {
             var claims = _userService.GetClaims(user);
             var accessToken = _tokenHelper.CreateToken(user, claims.Data);
-            return new SuccessDataResult<AccessToken>(accessToken, Messages.SuccessCreateToken);
+            return new SuccessDataResult<AccessToken>(accessToken, "Token oluşturuldu.");
         }
 
         public IResult CheckStatus(string email)

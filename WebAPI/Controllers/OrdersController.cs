@@ -1,6 +1,6 @@
 ﻿using Business.Abstract;
 using Entities.Concrete;
-using Entities.Dtos;
+using Entities.Dtos.Order;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -35,6 +35,29 @@ namespace WebAPI.Controllers
         public IActionResult GetAllByUserId(int userId)
         {
             var result = _orderService.GetAllByUserId(userId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetAllUserOrderDto")]
+        public IActionResult GetAllUserOrderDto()
+        {
+            var result = _orderService.GetAllUserOrderDto();
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+
+        [HttpGet("GetUserOrderDtoDetail")]
+        public IActionResult GetUserOrderDtoDetail(int orderId)
+        {
+            var result = _orderService.GetUserOrderDtoDetail(orderId);
             if (result.Success)
             {
                 return Ok(result);

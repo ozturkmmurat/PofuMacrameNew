@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using Business.Constans;
 
 namespace Business.Concrete
 {
@@ -44,16 +45,30 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
-        public IResult CheckStock(int productVariantId)
+        public IResult CheckProductStock(ProductStock productStock)
         {
-            var result = GetByProductVariantId(productVariantId);
-            if (result != null)
+            if (productStock != null)
             {
-                if (result.Data.Quantity > 0)
+                var checkProducStock = _productStockDal.Get(x => x.ProductVariantId == productStock.ProductVariantId);
+                if (checkProducStock != null & checkProducStock.Quantity <= 0 && productStock.Quantity > checkProducStock.Quantity)
                 {
-                    return new SuccessResult();
+                    return new ErrorResult(Messages.UnSuccessProductStockCheck);
                 }
-                return new ErrorResult();
+                return new SuccessResult();
+            }
+            return new ErrorResult();
+        }
+
+        public IResult CheckProductStockPrice(ProductStock productStock)
+        {
+            if (productStock != null)
+            {
+                var checkProducStock = _productStockDal.Get(x => x.ProductVariantId == productStock.ProductVariantId);
+                if (checkProducStock != null & checkProducStock.Price != productStock.Price)
+                {
+                    return new ErrorResult(Messages.UnSuccessProductStockPrice);
+                }
+                return new SuccessResult();
             }
             return new ErrorResult();
         }
@@ -111,7 +126,7 @@ namespace Business.Concrete
                                          Quantity = stock.Quantity,
                                          AttributeValue = productVariantAttribute.AttributeValue
                                      };
-                   
+
 
                     return new SuccessDataResult<List<SelectProductStockDto>>(joinResult.ToList());
                 }

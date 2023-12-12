@@ -30,5 +30,11 @@ namespace Business.Constans
         public static string UserCheck = "Böyle bir kullanıcı bulunamadı.";
         public static string SuccessRegister = "Başarıyla Kayıt olundu";
         public static string SuccessCreateToken = "Token başarıyal oluşturuldu";
+        public static string UnSuccessProductStockCheck = "Sepetteki ürünlerin stoğunu kontrol ediniz.";
+        public static string UnSuccessProductStockPrice = "Sepetteki ürünlerin fiyatı eşleşmiyor.";
+        public static string failCheckOrder = "Böyle bir siparişiniz bulunmamaktadır.";
+        public static string failCancelOrderDate = "Ürün iadesini sipariş ile aynı gün içerisinde verebilirsiniz";
+        public static string checkSubOrder = "Sipar içerisinde ürün bulunamadı.";
+        public static string PaymentMappingBuyerFail = "Adres işlenirken sorun oluştu";
     }
 }

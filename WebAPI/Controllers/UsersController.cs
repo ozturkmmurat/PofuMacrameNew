@@ -20,7 +20,7 @@ namespace WebAPI.Controllers
         [HttpGet("GetAllUser")]
         public IActionResult GetAll()
         {
-            var result = _userService.GetAllUser();
+            var result = _userService.GetAllUserDto();
 
             if (result.Success)
             {
@@ -52,6 +52,7 @@ namespace WebAPI.Controllers
             }
             return BadRequest(result);
         }
+
         [HttpPost("Add")]
         public IActionResult Add(User user)
         {

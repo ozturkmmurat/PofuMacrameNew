@@ -48,5 +48,7 @@ namespace DataAccess.Context
         public DbSet<User> Users { get; set; }
         public DbSet<UserOperationClaim> UserOperationClaims { get; set; }
         public DbSet<OperationClaim> OperationClaims { get; set; }
+        public DbSet<UserAddress> UserAddresses { get; set; }
+        public DbSet<City> Cities { get; set; }
     }
 }

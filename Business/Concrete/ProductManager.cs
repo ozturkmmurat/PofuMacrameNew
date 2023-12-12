@@ -1,5 +1,6 @@
 ﻿using Business.Abstract;
 using Business.Abstract.ProductVariants;
+using Business.BusinessAspects.Autofac;
 using Business.Utilities;
 using Core.Aspects.Autofac.Transaction;
 using Core.Utilities.Result.Abstract;

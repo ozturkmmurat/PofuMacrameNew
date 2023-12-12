@@ -8,6 +8,7 @@ using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.Dtos;
 using Entities.Dtos.Product;
+using Entities.Dtos.Product.Select;
 using Entities.Dtos.ProductVariant;
 using Entities.Dtos.ProductVariant.Select;
 using Microsoft.EntityFrameworkCore.Internal;
@@ -28,13 +29,17 @@ namespace Business.Concrete
         IProductVariantAttributeCombinationService _productVariantAttributeCombinationService;
         IProductImageService _productImageService;
         IProductAttributeService _productAttributeService;
+        IAttributeService _attributeService;
+        IAttributeValueService _attributeValueService;
         public ProductVariantManager(
             IProductVariantDal productVariantDal,
             IProductStockService productStockService,
             IProductAttributeService productAttributeService,
             ICategoryAttributeService categoryAttributeService,
             IProductVariantAttributeCombinationService productVariantAttributeCombinationService,
-            IProductImageService productImageService
+            IProductImageService productImageService,
+            IAttributeService attributeService,
+            IAttributeValueService attributeValueService
             )
         {
             _productVariantDal = productVariantDal;
@@ -43,6 +48,8 @@ namespace Business.Concrete
             _productVariantAttributeCombinationService = productVariantAttributeCombinationService;
             _productImageService=productImageService;
             _productAttributeService = productAttributeService;
+            _attributeService = attributeService;
+            _attributeValueService = attributeValueService;
         }
         public IResult Add(ProductVariant variant)
         {
@@ -102,7 +109,7 @@ namespace Business.Concrete
                                     productVariant.ProductId = addProductVariant.ProductId;
                                     productVariant.AttributeId = attributeId;
                                     productVariant.AttributeValueId = attributeValue;
-                                    
+
                                     Add(productVariant);
                                     productAttribute.ProductId = productVariant.ProductId;
                                     productAttribute.AttributeId = attributeId;
@@ -362,7 +369,7 @@ namespace Business.Concrete
                         }
                     }
 
-                    
+
                 }
                 return new SuccessDataResult<List<ProductVariantGroupDetailDto>>(groupDetailList);
 
@@ -442,7 +449,7 @@ namespace Business.Concrete
                         }
                     }
 
-                   
+
 
                 }
                 return new SuccessDataResult<List<ProductVariantGroupDetailDto>>(productVariantGroups);
@@ -460,6 +467,7 @@ namespace Business.Concrete
             return new ErrorDataResult<ProductVariant>();
         }
 
+        //Bir ana varyantın id bilgisine göre o varyantın en sonuncu varyantını buluyor.
         public IDataResult<ProductVariant> MainVariantEndVariant(int productVariantId)
         {
             var result = GetProductVariantByParentId(productVariantId);
@@ -485,6 +493,63 @@ namespace Business.Concrete
             return new ErrorDataResult<ProductVariant>();
 
         }
+        //Sonuncu varyanttan ana varyantı buluyor
+        public IDataResult<ProductVariant> EndVariantMainVariant(int parentId)
+        {
+            var result = GetProductVariantByParentId(parentId);
+            if (result.Data != null)
+            {
+                List<ProductVariant> productVariants = new List<ProductVariant>();
+
+                productVariants.Add(result.Data);
+                for (int i = 0; i < productVariants.Count; i++)
+                {
+                    var productVariant = GetById(productVariants[i].ParentId.Value).Data;
+                    if (productVariant != null)
+                    {
+                        productVariants.Add(productVariant);
+                    }
+                    else
+                    {
+                        return new SuccessDataResult<ProductVariant>(productVariants[i]);
+                    }
+
+                }
+            }
+            return new ErrorDataResult<ProductVariant>();
+        }
+
+        //ParentId den baslayıp ilgili varyantın ozelliklerini buluyor.
+        public IDataResult<ProductVariantAttributeDto> GetProductVariantAttribute(int parentId)
+        {
+            var result = GetProductVariantByParentId(parentId);
+            if (result.Data != null)
+            {
+                List<ProductVariant> productVariants = new List<ProductVariant>();
+                ProductVariantAttributeDto productVariantAttributeDto = new ProductVariantAttributeDto();
+
+                productVariants.Add(result.Data);
+
+                for (int i = 0; i < productVariants.Count; i++)
+                {
+                    var productVariant = GetById(productVariants[i].ParentId.Value).Data;
+                    if (productVariant != null)
+                    {
+                        productVariantAttributeDto.Attribute +=  _attributeService.GetById(productVariants[i].AttributeId.Value).Data.Name  + ": " +  _attributeValueService.GetById(productVariants[i].AttributeValueId.Value).Data.Value;
+                        productVariants.Add(productVariant);
+                    }
+                    else
+                    {
+                        productVariantAttributeDto.VariantId = productVariants[i].Id;
+                        return new SuccessDataResult<ProductVariantAttributeDto>(productVariantAttributeDto);
+                    }
+
+                }
+            }
+            return new ErrorDataResult<ProductVariantAttributeDto>();
+
+        }
     }
 }
+
 
