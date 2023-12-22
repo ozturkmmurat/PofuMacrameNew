@@ -36,5 +36,14 @@ namespace Business.Constans
         public static string failCancelOrderDate = "Ürün iadesini sipariş ile aynı gün içerisinde verebilirsiniz";
         public static string checkSubOrder = "Sipar içerisinde ürün bulunamadı.";
         public static string PaymentMappingBuyerFail = "Adres işlenirken sorun oluştu";
+        public static string PasswordResetCode = "Şifre sıfırlama kodu email adresinize gönderilmiştir";
+        public static string FailedPasswordResetCode = "Şifre sıfırlama kodu yanlış.";
+        public static string FailedEmailCheck = "Böyle bir mail adresi bulunmamaktadır.";
+        public static string CheckStatusError = "Çok fazla hatalı kod girişi yaptınız.";
+        public static string ResetPasswordLink = "Şifre sıfırlama linki mail adresinize gönderilmiştir.";
+        public static string FindFailedUser = "Kullanıcı bulunamadı";
+        public static string SuccessUserPasswordReset = "Şifreniz başarıyla güncellendi";
+        public static string UnSuccessUserPasswordReset = "Şifreniz güncellenemedi";
+        public static string CodeHasExpired = "Kodun süresi dolmuş. Lütfen tekrardan işlemleri gerçekleştiriniz";
     }
 }

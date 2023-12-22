@@ -228,5 +228,28 @@ namespace Business.Concrete
             }
             return new ErrorDataResult<UserDto>();
         }
+
+        public IResult PasswordReset(UserForUpdateDto userForUpdateDto)
+        {
+            if (userForUpdateDto != null)
+            {
+                byte[] passwordHash, passwordSalt;
+                HashingHelper.CreatePasswordHash(userForUpdateDto.NewPassword, out passwordHash, out passwordSalt);
+                User user = new User()
+                {
+                    Id = userForUpdateDto.UserId,
+                    Email = userForUpdateDto.Email,
+                    FirstName = userForUpdateDto.FirstName,
+                    LastName = userForUpdateDto.LastName,
+                    PhoneNumber = userForUpdateDto.PhoneNumber,
+                    PasswordHash = passwordHash,
+                    PasswordSalt = passwordSalt,
+                    Status = userForUpdateDto.Status
+                };
+                _userDal.Update(user);
+                return new SuccessResult(Messages.SuccessUserPasswordReset);
+            }
+            return new ErrorResult(Messages.UnSuccessUserPasswordReset);
+        }
     }
 }

@@ -12,8 +12,9 @@ namespace Business.Abstract
     {
         IDataResult<User> Register(UserForRegisterDto userForRegisterDto, string password);
         IDataResult<User> Login(UserForLoginDto userForLoginDto);
+
+        IDataResult<AccessToken> CreateAccessToken(User user);
         IResult UserExists(string email);
         IResult CheckStatus(string email);
-        IDataResult<AccessToken> CreateAccessToken(User user);
     }
 }

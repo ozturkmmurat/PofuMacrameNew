@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Core.Extensions;
 
 namespace Business.Concrete
 {
@@ -26,7 +27,6 @@ namespace Business.Concrete
         ISubOrderDal _subOrderDal;
         IProductVariantService _productVariantService;
         IProductImageService _productImageService;
-        IAttributeValueService _attributeValueService;
         private IHttpContextAccessor _httpContextAccessor;
         public OrderManager(
             IOrderDal orderDal,
@@ -111,18 +111,26 @@ namespace Business.Concrete
         }
 
         [SecuredOperation("user,admin")]
-
-        public IDataResult<SelectUserOrderDto> GetUserOrderDtoDetail(int orderId)
+        public IDataResult<SelectUserOrderDto> GetUserOrderDtoDetail(int orderId, int userId)
         {
-            var result = _orderDal.GetUserOrder(ClaimHelper.GetUserId(_httpContextAccessor.HttpContext), orderId);
+            var roleClaims = _httpContextAccessor.HttpContext.User.ClaimRoles();
+            var result = (SelectUserOrderDto)null;
+            if (roleClaims.Contains("admin"))
+            {
+                result = _orderDal.GetUserOrder(userId, orderId);
+            }
+            else
+            {
+                result = _orderDal.GetUserOrder(ClaimHelper.GetUserId(_httpContextAccessor.HttpContext), orderId);
+            }
             if (result != null)
             {
-                    for (int i = 0; i < result.SelectSubOrderDtos.Count(); i++)
-                    {
-                        var getProductVariantAttributeResult = _productVariantService.GetProductVariantAttribute(result.SelectSubOrderDtos[i].ParentId);
-                        result.SelectSubOrderDtos[i].ImagePath = _productImageService.GetByProductVariantId(getProductVariantAttributeResult.Data.VariantId).Data.Path;
-                        result.SelectSubOrderDtos[i].Attribute = _productVariantService.GetProductVariantAttribute(result.SelectSubOrderDtos[i].ParentId).Data.Attribute;
-                    }
+                for (int i = 0; i < result.SelectSubOrderDtos.Count(); i++)
+                {
+                    var getProductVariantAttributeResult = _productVariantService.GetProductVariantAttribute(result.SelectSubOrderDtos[i].ParentId);
+                    result.SelectSubOrderDtos[i].ImagePath = _productImageService.GetByProductVariantId(getProductVariantAttributeResult.Data.VariantId).Data.Path;
+                    result.SelectSubOrderDtos[i].Attribute = _productVariantService.GetProductVariantAttribute(result.SelectSubOrderDtos[i].ParentId).Data.Attribute;
+                }
                 return new SuccessDataResult<SelectUserOrderDto>(result);
             }
             return new ErrorDataResult<SelectUserOrderDto>();

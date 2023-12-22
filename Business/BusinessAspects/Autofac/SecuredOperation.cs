@@ -44,7 +44,7 @@ namespace Business.BusinessAspects.Autofac
             //UserId bazen 0 geliyor bu sebepten dolayı bu kontrol oluşturuldu Frontend tarafında interceptor da buna göre bir kod yazdım durum devam ederse  bu kod aktif edilmeli.
             // Hatanın oluştuğunu şuradan anlayabilirsiniz diyelim ki giriş yaptınız. 40 45 dakika işlem yapmadınız sonra işlem yapmaya çalıştınız ama  işlem yapamıyorsunuz örneğin kayıt işlemi ama sizi hesaptan da atmadı yani token süresi dolmadı
             // O zaman bu kod aktif edilmeli ilgili sorun devam ediyor demektir.
-
+            
             var userId = ClaimHelper.GetUserId(_httpContextAccessor.HttpContext);
             if (_cacheManager.Get<IEnumerable<string>>($"{CacheKeys.UserIdForClaim}={userId}") == null)
             {

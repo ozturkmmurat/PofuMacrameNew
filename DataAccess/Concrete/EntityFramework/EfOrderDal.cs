@@ -1,4 +1,5 @@
 ﻿using Core.DataAccess.EntityFramework;
+using Core.Entities.Concrete;
 using DataAccess.Abstract;
 using DataAccess.Context;
 using Entities.Concrete;
@@ -46,17 +47,54 @@ namespace DataAccess.Concrete.EntityFramework
             }
         }
 
-        public SelectUserOrderDto GetUserOrder(int userId, int orderId)
+        public List<SelectUserOrderDto> GetAllUserOrderAdmin()
         {
             using (PofuMacrameContext context = new PofuMacrameContext())
             {
-                var result = from o in context.Orders.Where(x => x.UserId == userId && x.Id == orderId)
+                var result = from o in context.Orders
                              select new SelectUserOrderDto
                              {
                                  OrderId = o.Id,
                                  OrderDate = o.OrderDate,
                                  TotalPrice = o.TotalPrice,
+                                 SelectSubOrderDtos = (from so in context.SubOrders
+                                                       join pv in context.ProductVariants
+                                                       on so.VariantId equals pv.Id
+                                                       join p in context.Products
+                                                       on pv.ProductId equals p.Id
+                                                       where so.OrderId == o.Id
+                                                       select new SelectSubOrderDto
+                                                       {
+                                                           SubOrderId = so.Id,
+                                                           VariantId = so.VariantId, // Burada ProductVariant'ın Id'sini alıyoruz
+                                                           ParentId = pv.ParentId.Value,
+                                                           Price = so.Price,
+                                                           SubOrderStatus = so.SubOrderStatus,
+                                                           ProductName = p.ProductName
+                                                       })
+                                                      .ToList()
+                             };
+
+                return result.ToList();
+            }
+        }
+
+        public SelectUserOrderDto GetUserOrder(int userId, int orderId)
+        {
+            using (PofuMacrameContext context = new PofuMacrameContext())
+            {
+                var result = from o in context.Orders.Where(x => x.UserId == userId && x.Id == orderId)
+                             join u in context.Users.Where(x => x.Id == userId)
+                             on o.UserId equals u.Id
+                             select new SelectUserOrderDto
+                             {
+                                 OrderId = o.Id,
+                                 FirstName = u.FirstName,
+                                 LastName = u.LastName,
+                                 PhoneNumber = u.PhoneNumber,
                                  Address = o.Address,
+                                 OrderDate = o.OrderDate,
+                                 TotalPrice = o.TotalPrice,
                                  SelectSubOrderDtos = (from so in context.SubOrders
                                                        join pv in context.ProductVariants
                                                        on so.VariantId equals pv.Id

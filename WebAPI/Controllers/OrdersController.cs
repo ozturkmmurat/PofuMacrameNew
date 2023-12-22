@@ -55,9 +55,9 @@ namespace WebAPI.Controllers
 
 
         [HttpGet("GetUserOrderDtoDetail")]
-        public IActionResult GetUserOrderDtoDetail(int orderId)
+        public IActionResult GetUserOrderDtoDetail(int orderId, int userId)
         {
-            var result = _orderService.GetUserOrderDtoDetail(orderId);
+            var result = _orderService.GetUserOrderDtoDetail(orderId, userId);
             if (result.Success)
             {
                 return Ok(result);

@@ -21,7 +21,8 @@ namespace Business.Abstract
         IResult CheckPassword(string email, string password);
         IResult CheckEmail(string email);
         IResult Add(User user);
-        IResult Update(UserForUpdateDto userForRegisterDto);
+        IResult Update(UserForUpdateDto userForUpdateDto);
+        IResult PasswordReset(UserForUpdateDto userForUpdateDto);
         IResult UpdateUser(UserDto userDto);
         IResult Delete(User user);
     }

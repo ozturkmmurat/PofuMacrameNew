@@ -23,9 +23,9 @@ namespace Business.VirtualPos.Iyzico.Abstract
         IResult Test2(string x, string y);
         IDataResult<Object> TsaPayment(TsaPaymentParameter tsaPaymentParameter);
         IDataResult<CheckoutForm> PaymentResult(PaymentResultPostParameter paymentResultPostParameter);
-        IDataResult<Refund> RefundProduct(SubOrder subOrder);
-        IDataResult<ReturningProduct> ShredJsonData(SubOrder subOrder);
-        IDataResult<Cancel> CancelOrder(Order order);
-        IDataResult<CancelOrder> ShredJsonData(Order order);
+        IDataResult<Refund> RefundProduct(ReturningProduct returningProduct);
+        IDataResult<ReturningProduct> ShredJsonData(ReturningProduct returningProduct);
+        IDataResult<Cancel> CancelOrder(CancelOrder cancelOrder);
+        IDataResult<CancelOrder> ShredJsonData(CancelOrder cancelOrder);
     }
 }

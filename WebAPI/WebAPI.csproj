@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Business\Business.csproj" />
+    <ProjectReference Include="..\WorkerService\WorkerService.csproj" />
   </ItemGroup>
 
   <ItemGroup>

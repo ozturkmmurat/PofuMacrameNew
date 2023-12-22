@@ -12,8 +12,8 @@ namespace Business.Abstract
     {
         IDataResult<List<Order>> GetAll();
         IDataResult<List<Order>> GetAllByUserId(int userId);
-        IDataResult<List<SelectUserOrderDto>> GetAllUserOrderDto();
-        IDataResult<SelectUserOrderDto> GetUserOrderDtoDetail(int orderId);
+        IDataResult<List<SelectUserOrderDto>> GetAllUserOrderDto(); //Kullaniciin kendi siparislerini gormesi icin
+        IDataResult<SelectUserOrderDto> GetUserOrderDtoDetail(int orderId, int userId);
         IDataResult<Order> GetById(int id);
         IDataResult<Order> GetByOrderIdUserId(int orderId, int userId);
         IDataResult<Order> OrderCode(string orderCode);

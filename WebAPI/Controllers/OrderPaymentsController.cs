@@ -4,6 +4,7 @@ using Entities.Concrete;
 using Entities.Dtos.User;
 using Entities.EntityParameter.CartItem;
 using Entities.EntityParameter.Iyzico;
+using Entities.LibraryEntities.Iyzico;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
@@ -65,9 +66,9 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("RefundProduct")]
-        public IActionResult RefundProduct(SubOrder subOrder)
+        public IActionResult RefundProduct(ReturningProduct returningProduct)
         {
-            var result = _iyzicoPaymentService.RefundProduct(subOrder);
+            var result = _iyzicoPaymentService.RefundProduct(returningProduct);
             if (result.Success)
             {
                 return Ok(result);
@@ -76,9 +77,9 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("CancelOrder")]
-        public IActionResult CancelOrder(Order order)
+        public IActionResult CancelOrder(CancelOrder cancelOrder)
         {
-            var result = _iyzicoPaymentService.CancelOrder(order);
+            var result = _iyzicoPaymentService.CancelOrder(cancelOrder);
             if (result.Success)
             {
                 return Ok(result);

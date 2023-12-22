@@ -21,9 +21,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using Core.Extensions;
 
 namespace Business.VirtualPos.Iyzico.Concrete
 {
@@ -34,32 +36,53 @@ namespace Business.VirtualPos.Iyzico.Concrete
         ISubOrderService _subOrderService;
         IUserService _userService;
         private IHttpContextAccessor _httpContextAccessor;
+        IMailService _mailService;
 
         public IyzicoPaymentManager(
             IProductStockService productStockService,
             IOrderService orderService,
             ISubOrderService subOrderService,
-            IUserService userService)
+            IUserService userService,
+            IMailService mailService)
         {
             _productStockService = productStockService;
             _orderService = orderService;
             _subOrderService = subOrderService;
             _httpContextAccessor = ServiceTool.ServiceProvider.GetService<IHttpContextAccessor>();
             _userService = userService;
-
+            _mailService=mailService;
         }
 
-        public IDataResult<Cancel> CancelOrder(Order order)
+        [SecuredOperation("user,admin")]
+        public IDataResult<Cancel> CancelOrder(CancelOrder cancelOrder)
         {
-            var orderResult = _orderService.GetById(order.Id).Data;
-            var subOrders = _subOrderService.GetAllByOrderId(order.Id);
+
+            var roleClaims = _httpContextAccessor.HttpContext.User.ClaimRoles();
+            var orderResult = (Order)null;
+            if (roleClaims.Contains("user"))
+            {
+                var getOrder = _orderService.GetByOrderIdUserId(cancelOrder.OrderId, ClaimHelper.GetUserId(_httpContextAccessor.HttpContext));
+                if (!getOrder.Success)
+                {
+                    return new ErrorDataResult<Cancel>();
+                }
+                orderResult = getOrder.Data;
+
+            }
+            else if (roleClaims.Contains("admin"))
+            {
+                orderResult = _orderService.GetById(cancelOrder.OrderId).Data;
+
+            }
+
+            var subOrders = _subOrderService.GetAllByOrderId(cancelOrder.OrderId);
             if (orderResult != null & orderResult.OrderDate.Date == DateTime.Now.Date)
             {
-                if (subOrders.Data == null || subOrders.Data.Count !> 0)
+                if (subOrders.Data == null || subOrders.Data.Count <= 0)
                 {
                     return new ErrorDataResult<Cancel>(message: Messages.checkSubOrder);
                 }
-                var shrodJsonResult = ShredJsonData(order).Data;
+                var shrodJsonResult = ShredJsonData(cancelOrder).Data;
                 CreateCancelRequest request = new CreateCancelRequest();
                 request.Locale = Locale.TR.ToString();
                 request.PaymentId = shrodJsonResult.PaymentId;
@@ -80,7 +103,7 @@ namespace Business.VirtualPos.Iyzico.Concrete
                         PaymentToken = ""
                     };
                     var orderUpdateResult = _orderService.Update(updateOrder);
-                    
+
                     if (!orderUpdateResult.Success)
                     {
                         return new ErrorDataResult<Cancel>();
@@ -91,6 +114,17 @@ namespace Business.VirtualPos.Iyzico.Concrete
                     {
                         return new ErrorDataResult<Cancel>();
                     }
+
+
+                    if (roleClaims.Contains("user"))
+                    {
+                        _mailService.CancelOrder(ClaimHelper.GetUserName(_httpContextAccessor.HttpContext), ClaimHelper.GetUserLastName(_httpContextAccessor.HttpContext), updateOrder.Id);
+
+                    }
+                    else if (roleClaims.Contains("admin"))
+                    {
+                        _mailService.AdminCancelOrder();
+                    }
                     return new SuccessDataResult<Cancel>(data: cancel);
                 }
                 else
@@ -98,8 +132,8 @@ namespace Business.VirtualPos.Iyzico.Concrete
                     return new ErrorDataResult<Cancel>(message: cancel.ErrorMessage);
                 }
             }
-            return new ErrorDataResult<Cancel>(message:Messages.failCancelOrderDate);
-            
+            return new ErrorDataResult<Cancel>(message: Messages.failCancelOrderDate);
+
         }
 
         [SecuredOperation("user,admin")]
@@ -206,6 +240,7 @@ namespace Business.VirtualPos.Iyzico.Concrete
                             {
                                 return new ErrorDataResult<CheckoutForm>();
                             }
+                            _mailService.CreateOrder();
                             return new SuccessDataResult<CheckoutForm>(data: checkoutForm);
                         }
                         else
@@ -218,69 +253,94 @@ namespace Business.VirtualPos.Iyzico.Concrete
             return new ErrorDataResult<CheckoutForm>(Messages.failCheckOrder);
         }
 
-        public IDataResult<Refund> RefundProduct(SubOrder subOrder)
+        [SecuredOperation("user,admin")]
+        public IDataResult<Refund> RefundProduct(ReturningProduct returningProduct)
         {
-            CreateRefundRequest request = new CreateRefundRequest();
-
-            var sharedJsonResult = ShredJsonData(subOrder).Data;
-            request.Locale = Locale.TR.ToString();
-            request.PaymentTransactionId = sharedJsonResult.PaymentTransactionId;
-            request.Price = sharedJsonResult.PaidPrice.ToString();
-            request.Currency = Currency.TRY.ToString();
-
-            Refund refund = Refund.Create(request, GetOptions().Data);
-
-            if (refund.Status == "success")
+            if (returningProduct.SubOrderId  > 0)
             {
-                var subOrderResult = _subOrderService.GetById(subOrder.Id);
-                SubOrder updateSubOrder = new SubOrder
+                var roleClaims = _httpContextAccessor.HttpContext.User.ClaimRoles();
+                if (roleClaims.Contains("user"))
                 {
-                    Id = subOrderResult.Data.Id,
-                    OrderId = subOrderResult.Data.OrderId,
-                    VariantId = subOrderResult.Data.VariantId,
-                    Price = subOrderResult.Data.Price,
-                    ReturnResultJson = JsonSerializer.Serialize(refund),
-                    SubOrderStatus = 5 // Urun iade edildi ise => 5 
-                };
-            }
-            else
-            {
-                return new ErrorDataResult<Refund>(message: refund.ErrorMessage);
-            }
+                    if (!_subOrderService.CheckSubOrder(returningProduct.OrderId, returningProduct.SubOrderId, ClaimHelper.GetUserId(_httpContextAccessor.HttpContext)))
+                    {
+                        return new ErrorDataResult<Refund>();
+                    }
+                }
 
-            return new SuccessDataResult<Refund>(refund);
+
+                SubOrder subOrder = new SubOrder();
+                subOrder.OrderId = returningProduct.OrderId;
+
+                CreateRefundRequest request = new CreateRefundRequest();
+                CultureInfo turkishCulture = new CultureInfo("tr-TR");
+
+                var sharedJsonResult = ShredJsonData(returningProduct).Data;
+                request.Locale = Locale.TR.ToString();
+                request.PaymentTransactionId = sharedJsonResult.PaymentTransactionId;
+                request.Price = sharedJsonResult.PaidPrice;
+                request.Currency = Currency.TRY.ToString();
+
+                Refund refund = Refund.Create(request, GetOptions().Data);
+
+                if (refund.Status == "success")
+                {
+                    var subOrderResult = _subOrderService.GetById(returningProduct.SubOrderId);
+
+                    subOrder.Id = subOrderResult.Data.Id;
+                    subOrder.OrderId = subOrderResult.Data.OrderId;
+                    subOrder.VariantId = subOrderResult.Data.VariantId;
+                    subOrder.Price = subOrderResult.Data.Price;
+                    subOrder.ReturnResultJson = JsonSerializer.Serialize(refund);
+                    subOrder.SubOrderStatus = 5; // Urun iade edildi ise => 5 
+                    _subOrderService.Update(subOrder);
+                }
+                else
+                {
+                    return new ErrorDataResult<Refund>(message: refund.ErrorMessage);
+                }
+
+                if (roleClaims.Contains("user"))
+                {
+                    _mailService.RefundingProduct(ClaimHelper.GetUserName(_httpContextAccessor.HttpContext), ClaimHelper.GetUserLastName(_httpContextAccessor.HttpContext), subOrder.Id);
+                }
+                else if (roleClaims.Contains("admin"))
+                {
+                    _mailService.AdminRefundingProduct();
+                }
+
+                return new SuccessDataResult<Refund>(refund);
+            }
+            return new ErrorDataResult<Refund>();
         }
 
-        public IDataResult<ReturningProduct> ShredJsonData(SubOrder subOrder)
+        public IDataResult<ReturningProduct> ShredJsonData(ReturningProduct returningProduct)
         {
-            var order = _orderService.GetById(subOrder.OrderId).Data.PaymentResultJson;
+            var order = _orderService.GetById(returningProduct.OrderId).Data.PaymentResultJson;
             JObject jsonObject = JObject.Parse(order);
 
             var paymentItem = jsonObject["PaymentItems"]
-                .FirstOrDefault(item => item["ItemId"]?.ToString() == subOrder.VariantId.ToString());
+                .FirstOrDefault(item => item["ItemId"]?.ToString() == returningProduct.SubOrderId.ToString());
 
             if (paymentItem != null)
             {
                 string paymentTransactionId = paymentItem["PaymentTransactionId"]?.ToString();
-                string paidPrice = paymentItem["PaidPrice"]?.ToString();
 
-                ReturningProduct returningProduct = new ReturningProduct();
+                var subOrder = _subOrderService.GetById(returningProduct.SubOrderId);
                 returningProduct.PaymentTransactionId = paymentTransactionId;
-                returningProduct.PaidPrice = subOrder.Price.ToString();
+                returningProduct.PaidPrice = subOrder.Data.Price.ToString().Replace(",", ".");
                 return new SuccessDataResult<ReturningProduct>(returningProduct);
             }
             return new ErrorDataResult<ReturningProduct>();
         }
 
-        public IDataResult<CancelOrder> ShredJsonData(Order order)
+        public IDataResult<CancelOrder> ShredJsonData(CancelOrder cancelOrder)
         {
-            var orderResult = _orderService.GetById(order.Id).Data.PaymentResultJson;
+            var orderResult = _orderService.GetById(cancelOrder.OrderId).Data.PaymentResultJson;
             JObject jsonObject = JObject.Parse(orderResult);
 
-            if (jsonObject["BasketId"].ToString() == order.Id.ToString())
+            if (jsonObject["BasketId"].ToString() == cancelOrder.OrderId.ToString())
             {
                 string paymentId = jsonObject["PaymentId"].ToString();
-                CancelOrder cancelOrder = new CancelOrder();
                 cancelOrder.PaymentId = paymentId;
                 return new SuccessDataResult<CancelOrder>(cancelOrder);
             }
@@ -416,7 +476,7 @@ namespace Business.VirtualPos.Iyzico.Concrete
                     {
                         return new ErrorDataResult<Object>(message: Messages.PaymentMappingBuyerFail);
                     }
-                    
+
                     MappingAddress(userDto, request);
 
                     if (tsaPaymentParameter.CartItems != null & tsaPaymentParameter.CartItems.Count > 0)
@@ -431,7 +491,6 @@ namespace Business.VirtualPos.Iyzico.Concrete
                         if (addOrder.Success)
                         {
                             List<BasketItem> basketItems = new List<BasketItem>();
-                            List<SubOrder> subOrders = new List<SubOrder>();
                             for (int i = 0; i < tsaPaymentParameter.CartItems.Count; i++)
                             {
                                 ProductStock productStock = new ProductStock();
@@ -448,44 +507,39 @@ namespace Business.VirtualPos.Iyzico.Concrete
                                         subOrder.VariantId = tsaPaymentParameter.CartItems[i].product.EndProductVariantId;
                                         subOrder.Price = tsaPaymentParameter.CartItems[i].product.Price;
                                         subOrder.SubOrderStatus = 0;
-
+                                        var subOrderAddResult = _subOrderService.Add(subOrder);
+                                        if (!subOrderAddResult.Success)
+                                        {
+                                            return new ErrorDataResult<object>();
+                                        }
                                         BasketItem basketItem = new BasketItem();
-                                        basketItem.Id = tsaPaymentParameter.CartItems[i].product.EndProductVariantId.ToString();
+                                        basketItem.Id = subOrder.Id.ToString();
                                         basketItem.Name = tsaPaymentParameter.CartItems[i].product.ProductName;
                                         basketItem.Category1 = tsaPaymentParameter.CartItems[i].product.CategoryName;
                                         basketItem.ItemType = BasketItemType.PHYSICAL.ToString();
                                         basketItem.Price = tsaPaymentParameter.CartItems[i].product.Price.ToString();
                                         basketItems.Add(basketItem);
-                                        subOrders.Add(subOrder);
                                         if (i == tsaPaymentParameter.CartItems.Count -1)
                                         {
                                             if (j == tsaPaymentParameter.CartItems[i].Quantity -1)
                                             {
-                                                var subOrdersResult = _subOrderService.AddList(subOrders);
-                                                if (subOrdersResult.Success)
-                                                {
-                                                    request.Locale = Locale.TR.ToString();
-                                                    request.ConversationId = order.Id.ToString();
-                                                    request.Price = order.TotalPrice.ToString();
-                                                    request.PaidPrice = order.TotalPrice.ToString();
-                                                    request.Currency = Currency.TRY.ToString();
-                                                    request.BasketId = order.Id.ToString();
-                                                    request.PaymentGroup = PaymentGroup.PRODUCT.ToString();
-                                                    request.CallbackUrl = "http://localhost:4200/payment/paymentStatus/"+ order.Id;
-                                                    request.BasketItems = basketItems;
+                                                request.Locale = Locale.TR.ToString();
+                                                request.ConversationId = order.Id.ToString();
+                                                request.Price = order.TotalPrice.ToString();
+                                                request.PaidPrice = order.TotalPrice.ToString();
+                                                request.Currency = Currency.TRY.ToString();
+                                                request.BasketId = order.Id.ToString();
+                                                request.PaymentGroup = PaymentGroup.PRODUCT.ToString();
+                                                request.CallbackUrl = "http://localhost:4200/payment/paymentStatus/"+ order.Id;
+                                                request.BasketItems = basketItems;
 
-                                                    var options = GetOptions().Data;
-                                                    CheckoutFormInitialize checkoutFormInitialize = CheckoutFormInitialize.Create(request, options);
-                                                    if (checkoutFormInitialize.Status == "success")
-                                                    {
-                                                        order.PaymentToken = checkoutFormInitialize.Token;
-                                                        _orderService.Update(order);
-                                                        return new SuccessDataResult<Object>(data: checkoutFormInitialize.PaymentPageUrl);
-                                                    }
-                                                    else
-                                                    {
-                                                        return new ErrorDataResult<Object>();
-                                                    }
+                                                var options = GetOptions().Data;
+                                                CheckoutFormInitialize checkoutFormInitialize = CheckoutFormInitialize.Create(request, options);
+                                                if (checkoutFormInitialize.Status == "success")
+                                                {
+                                                    order.PaymentToken = checkoutFormInitialize.Token;
+                                                    _orderService.Update(order);
+                                                    return new SuccessDataResult<Object>(data: checkoutFormInitialize.PaymentPageUrl);
                                                 }
                                                 else
                                                 {

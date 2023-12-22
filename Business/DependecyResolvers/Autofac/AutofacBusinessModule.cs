@@ -13,6 +13,7 @@ using Core.Utilities.Helpers.MailHelper;
 using Core.Utilities.Interceptors;
 using Core.Utilities.Security.JWT;
 using DataAccess.Abstract;
+using DataAccess.Concrete;
 using DataAccess.Concrete.EntityFramework;
 using System;
 using System.Collections.Generic;
@@ -58,7 +59,7 @@ namespace Business.DependecyResolvers.Autofac
             builder.RegisterType<EfProductVariantDal>().As<IProductVariantDal>().SingleInstance();
             builder.RegisterType<ProductVariantManager>().As<IProductVariantService>().SingleInstance();
             builder.RegisterType<ProductVariantAttributeCombinationManager>().As<IProductVariantAttributeCombinationService>().SingleInstance();
-            
+
 
             builder.RegisterType<EfProductImageDal>().As<IProductmageDal>().SingleInstance();
             builder.RegisterType<ProductImageManager>().As<IProductImageService>().SingleInstance();
@@ -78,15 +79,20 @@ namespace Business.DependecyResolvers.Autofac
             builder.RegisterType<CityManager>().As<ICityService>().SingleInstance();
             builder.RegisterType<EfCityDal>().As<ICityDal>().SingleInstance();
 
+            builder.RegisterType<PasswordResetManager>().As<IPasswordResetService>().SingleInstance();
+            builder.RegisterType<EfPasswordResetDal>().As<IPasswordResetDal>().SingleInstance();
+
             builder.RegisterType<AuthManager>().As<IAuthService>().SingleInstance();
             builder.RegisterType<JwtHelper>().As<ITokenHelper>().SingleInstance();
 
-           
+
 
             builder.RegisterType<IyzicoPaymentManager>().As<IIyzicoPaymentService>().SingleInstance();
 
             builder.RegisterType<FileHelperManager>().As<IFileHelper>().SingleInstance();
 
+            builder.RegisterType<MailManager>().As<IMailService>().SingleInstance();
+            builder.RegisterType<MailHelper>().As<IMailHelper>().SingleInstance();
 
 
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();

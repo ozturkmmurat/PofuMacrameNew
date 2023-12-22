@@ -16,7 +16,7 @@ namespace DataAccess.Context
                 //optionsBuilder.UseSqlServer("Server=DESKTOP-K1G3PAC;Database=PofuMacrame;Trusted_Connection=True;");
                 optionsBuilder.UseSqlServer("Server=YAYIN01;Database=PofuMacrame; User ID=murat;Password=123456;Connect Timeout=30;MultiSubnetFailover=False;");
                 //optionsBuilder.UseSqlServer("Server=94.102.74.13;Database=WeighbridgeCalculator; User ID=websa;Password=v2qySqsu7MkXL5D;Connect Timeout=30;MultiSubnetFailover=False;");
-                
+
             }
         }
 
@@ -24,6 +24,10 @@ namespace DataAccess.Context
         {
             modelBuilder.Entity<Category>()
               .HasKey(category => category.Id);
+
+            modelBuilder.Entity<PasswordReset>()
+              .HasKey(pr => pr.UserId); // Birebir ilişki için UserId'yi anahtar olarak belirle
+
 
             modelBuilder.Entity<Category>()
            .HasOne<Category>()
@@ -50,5 +54,6 @@ namespace DataAccess.Context
         public DbSet<OperationClaim> OperationClaims { get; set; }
         public DbSet<UserAddress> UserAddresses { get; set; }
         public DbSet<City> Cities { get; set; }
+        public DbSet<PasswordReset> PasswordResets { get; set; }
     }
 }

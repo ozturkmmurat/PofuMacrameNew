@@ -8,6 +8,7 @@ using Core.Utilities.Result.Abstract;
 using Core.Utilities.Result.Concrete;
 using Core.Utilities.Security.Hashing;
 using Core.Utilities.Security.JWT;
+using Core.Utilities.Security.Link;
 using Entities.Dtos.User;
 using System;
 using System.Collections.Generic;
@@ -20,15 +21,20 @@ namespace Business.Concrete
         private IUserService _userService;
         private ITokenHelper _tokenHelper;
         private IUserOperationClaimService _userOperationClaimService;
-
+        private IMailService _mailService;
+        private IPasswordResetService _passwordResetService;
         public AuthManager(
             IUserService userService,
             ITokenHelper tokenHelper,
-            IUserOperationClaimService userOperationClaimService)
+            IUserOperationClaimService userOperationClaimService,
+            IMailService mailService,
+            IPasswordResetService passwordResetService)
         {
             _userService = userService;
             _tokenHelper = tokenHelper;
             _userOperationClaimService = userOperationClaimService;
+            _mailService = mailService;
+            _passwordResetService = passwordResetService;
         }
         [ValidationAspect(typeof(UserForRegisterDtoValidator))]
         public IDataResult<User> Register(UserForRegisterDto userForRegisterDto, string password)
@@ -60,6 +66,7 @@ namespace Business.Concrete
                 OperationClaimId = 3
             };
             _userOperationClaimService.Add(userOperationClaim);
+            _mailService.Register(user.FirstName, user.LastName, user.Email);
             return new SuccessDataResult<User>(user, Messages.SuccessRegister);
         }
 

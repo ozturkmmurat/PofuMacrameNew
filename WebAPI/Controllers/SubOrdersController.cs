@@ -31,6 +31,17 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
+        [HttpGet("GetAllOrderedProduct")]
+        public IActionResult GetAllOrderedProduct()
+        {
+            var result = _subOrderService.GetAllOrderedProduct();
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
         [HttpGet("OrderId")]
         public IActionResult OrderId(int orderId)
         {
