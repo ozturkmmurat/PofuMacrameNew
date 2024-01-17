@@ -11,5 +11,10 @@ namespace DataAccess.Concrete.EntityFramework
 {
     public class EfUserAddressDal : EfEntityRepositoryBase<UserAddress, PofuMacrameContext>, IUserAddressDal
     {
+        private readonly PofuMacrameContext _context;
+        public EfUserAddressDal(PofuMacrameContext context) : base(context)
+        {
+            _context = context;
+        }
     }
 }

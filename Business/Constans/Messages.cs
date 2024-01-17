@@ -45,5 +45,6 @@ namespace Business.Constans
         public static string SuccessUserPasswordReset = "Şifreniz başarıyla güncellendi";
         public static string UnSuccessUserPasswordReset = "Şifreniz güncellenemedi";
         public static string CodeHasExpired = "Kodun süresi dolmuş. Lütfen tekrardan işlemleri gerçekleştiriniz";
+        public static string CheckSlicer = "Bir slicer mevcut.";
     }
 }

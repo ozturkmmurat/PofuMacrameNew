@@ -13,11 +13,13 @@ namespace Business.Abstract
         IDataResult<List<CategoryAttribute>> GetAll();
         IDataResult<List<CategoryAttribute>> GetAllByCategoryId(int categoryId);
         IDataResult<List<SelectCategoryAttributeDto>> GetAllSlctCategoryByCategoryId(int categoryId);
-        IDataResult<CategoryAttribute> GetByAttributeIdCategoryId(int attributeId, int categoryId);
         IDataResult<List<ViewCategoryAttributeDto>> GetAllDtoTrueSlicer(int categoryId);
         IDataResult<List<ViewCategoryAttributeDto>> GetAllViewDtoTrueSlicerAttribute(int categoryId);
         IDataResult<List<FilterCategoryAttributeDto>> GetAllCategoryAttributeFilter(int categoryId);
+        IDataResult<CategoryAttribute> GetByAttributeIdCategoryId(int attributeId, int categoryId);
+        IDataResult<CategoryAttribute> GetByCategoryIdSlicer(int categoryId, bool slicer);
         IResult CheckRepeatedData(CategoryAttribute categoryAttribute);
+        IResult CheckSlicer(CategoryAttribute categoryAttribute);
         IResult CheckSliderAttribute(CategoryAttribute categoryAttribute);
         IResult Add(CategoryAttribute categoryAttribute);
         IResult Update(CategoryAttribute categoryAttribute);

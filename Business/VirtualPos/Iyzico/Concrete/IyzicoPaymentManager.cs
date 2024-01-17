@@ -90,19 +90,11 @@ namespace Business.VirtualPos.Iyzico.Concrete
                 Cancel cancel = Cancel.Create(request, GetOptions().Data);
                 if (cancel.Status == "success")
                 {
-                    Order updateOrder = new Order()
-                    {
-                        Id = orderResult.Id,
-                        UserId = orderResult.UserId,
-                        TotalPrice = orderResult.TotalPrice,
-                        OrderCode = orderResult.OrderCode,
-                        OrderDate = orderResult.OrderDate,
-                        OrderStatus = 4, // Sipariş iptal edildi ise status 4,
-                        PaymentResultJson = orderResult.PaymentResultJson,
-                        CancelResultJson = JsonSerializer.Serialize(cancel),
-                        PaymentToken = ""
-                    };
-                    var orderUpdateResult = _orderService.Update(updateOrder);
+                    orderResult.OrderStatus = 4; // Siparis iptal edildi ise status 4
+                    orderResult.PaymentResultJson = JsonSerializer.Serialize(cancel);
+                    orderResult.PaymentToken = "";
+
+                    var orderUpdateResult = _orderService.Update(orderResult);
 
                     if (!orderUpdateResult.Success)
                     {
@@ -118,7 +110,7 @@ namespace Business.VirtualPos.Iyzico.Concrete
 
                     if (roleClaims.Contains("user"))
                     {
-                        _mailService.CancelOrder(ClaimHelper.GetUserName(_httpContextAccessor.HttpContext), ClaimHelper.GetUserLastName(_httpContextAccessor.HttpContext), updateOrder.Id);
+                        _mailService.CancelOrder(ClaimHelper.GetUserName(_httpContextAccessor.HttpContext), ClaimHelper.GetUserLastName(_httpContextAccessor.HttpContext), orderResult.Id);
 
                     }
                     else if (roleClaims.Contains("admin"))
@@ -217,19 +209,11 @@ namespace Business.VirtualPos.Iyzico.Concrete
                         CheckoutForm checkoutForm = CheckoutForm.Retrieve(request, GetOptions().Data);
                         if (checkoutForm.Status == "success")
                         {
-                            Order order = new Order()
-                            {
-                                Id = paymentResultPostParameter.OrderId,
-                                UserId = getOrder.Data.UserId,
-                                TotalPrice = getOrder.Data.TotalPrice,
-                                OrderCode = getOrder.Data.OrderCode,
-                                OrderDate = getOrder.Data.OrderDate,
-                                OrderStatus = 1, // Siparis alindi ise 1
-                                PaymentResultJson = JsonSerializer.Serialize(checkoutForm),
-                                PaymentToken = getOrder.Data.PaymentToken,
-                                Address = getOrder.Data.Address
-                            };
-                            var orderUpdateResult = _orderService.Update(order);
+                            getOrder.Data.Id = paymentResultPostParameter.OrderId;
+                            getOrder.Data.OrderStatus = 1;
+                            getOrder.Data.PaymentResultJson = JsonSerializer.Serialize(checkoutForm);
+
+                            var orderUpdateResult = _orderService.Update(getOrder.Data);
                             if (!orderUpdateResult.Success)
                             {
                                 return new ErrorDataResult<CheckoutForm>();
@@ -267,12 +251,8 @@ namespace Business.VirtualPos.Iyzico.Concrete
                     }
                 }
 
-
-                SubOrder subOrder = new SubOrder();
-                subOrder.OrderId = returningProduct.OrderId;
-
+                var subOrderResult = _subOrderService.GetById(returningProduct.SubOrderId);
                 CreateRefundRequest request = new CreateRefundRequest();
-                CultureInfo turkishCulture = new CultureInfo("tr-TR");
 
                 var sharedJsonResult = ShredJsonData(returningProduct).Data;
                 request.Locale = Locale.TR.ToString();
@@ -284,15 +264,13 @@ namespace Business.VirtualPos.Iyzico.Concrete
 
                 if (refund.Status == "success")
                 {
-                    var subOrderResult = _subOrderService.GetById(returningProduct.SubOrderId);
-
-                    subOrder.Id = subOrderResult.Data.Id;
-                    subOrder.OrderId = subOrderResult.Data.OrderId;
-                    subOrder.VariantId = subOrderResult.Data.VariantId;
-                    subOrder.Price = subOrderResult.Data.Price;
-                    subOrder.ReturnResultJson = JsonSerializer.Serialize(refund);
-                    subOrder.SubOrderStatus = 5; // Urun iade edildi ise => 5 
-                    _subOrderService.Update(subOrder);
+                    subOrderResult.Data.Id = subOrderResult.Data.Id;
+                    subOrderResult.Data.OrderId = subOrderResult.Data.OrderId;
+                    subOrderResult.Data.VariantId = subOrderResult.Data.VariantId;
+                    subOrderResult.Data.Price = subOrderResult.Data.Price;
+                    subOrderResult.Data.ReturnResultJson = JsonSerializer.Serialize(refund);
+                    subOrderResult.Data.SubOrderStatus = 5; // Urun iade edildi ise => 5 
+                    _subOrderService.Update(subOrderResult.Data);
                 }
                 else
                 {
@@ -301,7 +279,7 @@ namespace Business.VirtualPos.Iyzico.Concrete
 
                 if (roleClaims.Contains("user"))
                 {
-                    _mailService.RefundingProduct(ClaimHelper.GetUserName(_httpContextAccessor.HttpContext), ClaimHelper.GetUserLastName(_httpContextAccessor.HttpContext), subOrder.Id);
+                    _mailService.RefundingProduct(ClaimHelper.GetUserName(_httpContextAccessor.HttpContext), ClaimHelper.GetUserLastName(_httpContextAccessor.HttpContext), subOrderResult.Data.Id);
                 }
                 else if (roleClaims.Contains("admin"))
                 {
@@ -327,7 +305,7 @@ namespace Business.VirtualPos.Iyzico.Concrete
 
                 var subOrder = _subOrderService.GetById(returningProduct.SubOrderId);
                 returningProduct.PaymentTransactionId = paymentTransactionId;
-                returningProduct.PaidPrice = subOrder.Data.Price.ToString().Replace(",", ".");
+                returningProduct.PaidPrice = subOrder.Data.NetPrice.ToString().Replace(",", ".");
                 return new SuccessDataResult<ReturningProduct>(returningProduct);
             }
             return new ErrorDataResult<ReturningProduct>();
@@ -486,7 +464,7 @@ namespace Business.VirtualPos.Iyzico.Concrete
                         order.UserId = userDto.UserId;
                         order.OrderStatus = 0;
                         order.Address = $"Adres Başlığı : {userDto.AddressTitle} Şehir : {userDto.UserCity}  Posta Kodu : {userDto.PostCode} Adres: {userDto.Address} Telefon Numarası: {userDto.PhoneNumber}";
-                        order.TotalPrice = tsaPaymentParameter.CartItems.Sum(x => x.product.Price * x.Quantity);
+                        order.TotalPrice = tsaPaymentParameter.CartItems.Sum(x => x.product.NetPrice * x.Quantity);
                         var addOrder = _orderService.Add(order);
                         if (addOrder.Success)
                         {
@@ -497,6 +475,8 @@ namespace Business.VirtualPos.Iyzico.Concrete
                                 productStock.ProductVariantId = tsaPaymentParameter.CartItems[i].product.EndProductVariantId;
                                 productStock.Price = tsaPaymentParameter.CartItems[i].product.Price;
                                 productStock.Quantity = tsaPaymentParameter.CartItems[i].Quantity;
+                                productStock.Kdv = tsaPaymentParameter.CartItems[i].product.Kdv;
+                                productStock.NetPrice = tsaPaymentParameter.CartItems[i].product.NetPrice;
                                 IResult rulesResult = BusinessRules.Run(_productStockService.CheckProductStock(productStock), _productStockService.CheckProductStockPrice(productStock));
                                 if (rulesResult == null)
                                 {
@@ -506,6 +486,8 @@ namespace Business.VirtualPos.Iyzico.Concrete
                                         subOrder.OrderId = order.Id;
                                         subOrder.VariantId = tsaPaymentParameter.CartItems[i].product.EndProductVariantId;
                                         subOrder.Price = tsaPaymentParameter.CartItems[i].product.Price;
+                                        subOrder.Kdv = tsaPaymentParameter.CartItems[i].product.Kdv;
+                                        subOrder.NetPrice = tsaPaymentParameter.CartItems[i].product.NetPrice;
                                         subOrder.SubOrderStatus = 0;
                                         var subOrderAddResult = _subOrderService.Add(subOrder);
                                         if (!subOrderAddResult.Success)
@@ -525,7 +507,7 @@ namespace Business.VirtualPos.Iyzico.Concrete
                                             {
                                                 request.Locale = Locale.TR.ToString();
                                                 request.ConversationId = order.Id.ToString();
-                                                request.Price = order.TotalPrice.ToString();
+                                                request.Price = tsaPaymentParameter.CartItems.Sum(x => x.product.Price * x.Quantity).ToString();
                                                 request.PaidPrice = order.TotalPrice.ToString();
                                                 request.Currency = Currency.TRY.ToString();
                                                 request.BasketId = order.Id.ToString();

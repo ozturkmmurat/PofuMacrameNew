@@ -15,6 +15,8 @@ namespace Entities.Dtos.SubOrder.Select
         public string Attribute { get; set; }
         public string ImagePath { get; set; }
         public decimal Price { get; set; }
+        public decimal Kdv { get; set; }
+        public decimal NetPrice { get; set; }
         public int? SubOrderStatus { get; set; }
     }
 }

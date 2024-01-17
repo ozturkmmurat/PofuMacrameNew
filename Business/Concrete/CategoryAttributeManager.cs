@@ -26,7 +26,8 @@ namespace Business.Concrete
             {
                 var repeatedData = CheckRepeatedData(categoryAttribute);
                 var checkAttributeSlicer = CheckSliderAttribute(categoryAttribute);
-                IResult result = BusinessRules.Run(repeatedData, checkAttributeSlicer);
+                var checkSlicer = CheckSlicer(categoryAttribute);
+                IResult result = BusinessRules.Run(repeatedData, checkAttributeSlicer, checkSlicer);
                 if (result  != null)
                 {
                     return new ErrorResult(result.Message);
@@ -114,7 +115,8 @@ namespace Business.Concrete
             {
                 var repeatedData = CheckRepeatedData(categoryAttribute);
                 var checkAttributeSlicer = CheckSliderAttribute(categoryAttribute);
-                IResult rulesResult = BusinessRules.Run(repeatedData, checkAttributeSlicer);
+                var checkSlicer = CheckSlicer(categoryAttribute);
+                IResult rulesResult = BusinessRules.Run(repeatedData, checkAttributeSlicer, checkSlicer);
                 if (rulesResult  != null)
                 {
                     return new ErrorResult(rulesResult.Message);
@@ -167,6 +169,26 @@ namespace Business.Concrete
                 return new SuccessDataResult<List<FilterCategoryAttributeDto>>(result);
             }
             return new ErrorDataResult<List<FilterCategoryAttributeDto>>();
+        }
+
+        public IResult CheckSlicer(CategoryAttribute categoryAttribute)
+        {
+            var result = GetByCategoryIdSlicer(categoryAttribute.CategoryId, categoryAttribute.Slicer).Data;
+            if (result != null)
+            {
+                return new ErrorResult(Messages.CheckSlicer);
+            }
+            return new SuccessResult();
+        }
+
+        public IDataResult<CategoryAttribute> GetByCategoryIdSlicer(int categoryId, bool slicer)
+        {
+            var result = _categoryAttributeDal.Get(x => x.CategoryId == categoryId && x.Slicer == slicer);
+            if (result != null)
+            {
+                return new SuccessDataResult<CategoryAttribute>(result);
+            }
+            return new ErrorDataResult<CategoryAttribute>();
         }
     }
 }

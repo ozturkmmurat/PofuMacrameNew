@@ -15,36 +15,40 @@ namespace DataAccess.Concrete.EntityFramework
 {
     public class EfOrderDal : EfEntityRepositoryBase<Order, PofuMacrameContext>, IOrderDal
     {
+        private readonly PofuMacrameContext _context;
+        public EfOrderDal(PofuMacrameContext context) : base(context)
+        {
+            _context = context;
+        }
         public List<SelectUserOrderDto> GetAllUserOrder(int userId)
         {
-            using (PofuMacrameContext context = new PofuMacrameContext())
-            {
-                var result = from o in context.Orders.Where(x => x.UserId == userId)
-                             select new SelectUserOrderDto
-                             {
-                                 OrderId = o.Id,
-                                 OrderDate = o.OrderDate,
-                                 TotalPrice = o.TotalPrice,
-                                 SelectSubOrderDtos = (from so in context.SubOrders
-                                                       join pv in context.ProductVariants
-                                                       on so.VariantId equals pv.Id
-                                                       join p in context.Products
-                                                       on pv.ProductId equals p.Id
-                                                       where so.OrderId == o.Id
-                                                       select new SelectSubOrderDto
-                                                       {
-                                                           SubOrderId = so.Id,
-                                                           VariantId = so.VariantId, // Burada ProductVariant'ın Id'sini alıyoruz
-                                                           ParentId = pv.ParentId.Value,
-                                                           Price = so.Price,
-                                                           SubOrderStatus = so.SubOrderStatus,
-                                                           ProductName = p.ProductName
-                                                       })
-                                                      .ToList()
-                             };
+            var result = from o in _context.Orders.Where(x => x.UserId == userId)
+                         select new SelectUserOrderDto
+                         {
+                             OrderId = o.Id,
+                             OrderDate = o.OrderDate,
+                             TotalPrice = o.TotalPrice,
+                             SelectSubOrderDtos = (from so in _context.SubOrders
+                                                   join pv in _context.ProductVariants
+                                                   on so.VariantId equals pv.Id
+                                                   join p in _context.Products
+                                                   on pv.ProductId equals p.Id
+                                                   where so.OrderId == o.Id
+                                                   select new SelectSubOrderDto
+                                                   {
+                                                       SubOrderId = so.Id,
+                                                       VariantId = so.VariantId, // Burada ProductVariant'ın Id'sini alıyoruz
+                                                       ParentId = pv.ParentId.Value,
+                                                       Price = so.Price,
+                                                       Kdv = so.Kdv,
+                                                       NetPrice = so.NetPrice,
+                                                       SubOrderStatus = so.SubOrderStatus,
+                                                       ProductName = p.ProductName
+                                                   })
+                                                  .ToList()
+                         };
 
-                return result.ToList();
-            }
+            return result.ToList();
         }
 
         public List<SelectUserOrderDto> GetAllUserOrderAdmin()
@@ -69,6 +73,8 @@ namespace DataAccess.Concrete.EntityFramework
                                                            VariantId = so.VariantId, // Burada ProductVariant'ın Id'sini alıyoruz
                                                            ParentId = pv.ParentId.Value,
                                                            Price = so.Price,
+                                                           Kdv = so.Kdv,
+                                                           NetPrice = so.NetPrice,
                                                            SubOrderStatus = so.SubOrderStatus,
                                                            ProductName = p.ProductName
                                                        })
@@ -95,6 +101,7 @@ namespace DataAccess.Concrete.EntityFramework
                                  Address = o.Address,
                                  OrderDate = o.OrderDate,
                                  TotalPrice = o.TotalPrice,
+                                 OrderStatus = o.OrderStatus,
                                  SelectSubOrderDtos = (from so in context.SubOrders
                                                        join pv in context.ProductVariants
                                                        on so.VariantId equals pv.Id
@@ -107,6 +114,8 @@ namespace DataAccess.Concrete.EntityFramework
                                                            VariantId = so.VariantId, // Burada ProductVariant'ın Id'sini alıyoruz
                                                            ParentId = pv.ParentId.Value,
                                                            Price = so.Price,
+                                                           Kdv = so.Kdv,
+                                                           NetPrice = so.NetPrice,
                                                            SubOrderStatus = so.SubOrderStatus
                                                        })
                                                       .ToList()

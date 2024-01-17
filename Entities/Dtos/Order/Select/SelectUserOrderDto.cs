@@ -15,6 +15,7 @@ namespace Entities.Dtos.Order.Select
         public string Address { get; set; }
         public decimal TotalPrice { get; set; }
         public DateTime OrderDate { get; set; }
+        public int OrderStatus { get; set; }
         public List<SelectSubOrderDto> SelectSubOrderDtos { get; set; } 
     }
 }

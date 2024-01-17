@@ -10,5 +10,10 @@ namespace DataAccess.Concrete.EntityFramework
 {
     public class EfOperationClaimDal : EfEntityRepositoryBase<OperationClaim, PofuMacrameContext>, IOperationClaimDal
     {
+        private readonly PofuMacrameContext _context;
+        public EfOperationClaimDal(PofuMacrameContext context) : base(context)
+        {
+            _context = context;
+        }
     }
 }

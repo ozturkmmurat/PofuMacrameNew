@@ -10,5 +10,10 @@ namespace DataAccess.Concrete.EntityFramework
 {
     public class EfAttributeValueDal : EfEntityRepositoryBase<AttributeValue, PofuMacrameContext>, IAttributeValueDal
     {
+        private readonly PofuMacrameContext _context;
+        public EfAttributeValueDal(PofuMacrameContext context) : base(context)
+        {
+            _context = context;
+        }
     }
 }

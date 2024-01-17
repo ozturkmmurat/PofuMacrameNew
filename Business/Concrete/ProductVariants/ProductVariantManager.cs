@@ -79,101 +79,143 @@ namespace Business.Concrete
             // Json verilerini çözümleyin
             var jsonData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, List<Dictionary<string, int>>>>(jsonDataString);
 
-            List<ProductStock> productStocks = new List<ProductStock>();
-            addProductVariant.ProductVariants = new List<ProductVariant>();
-            foreach (var item in jsonData)
+            if (jsonData.Count > 0 && addProductVariant.IsVariant)
             {
-                var propertyName = item.Key;
-                var variants = item.Value;
-
-                if (variants != null && variants.Any())
+                List<ProductStock> productStocks = new List<ProductStock>();
+                int productStockIndex = 0;
+                addProductVariant.ProductVariants = new List<ProductVariant>();
+                foreach (var item in jsonData)
                 {
-                    foreach (var variant in variants)
+                    var propertyName = item.Key;
+                    var variants = item.Value;
+
+                    if (variants != null && variants.Any())
                     {
-                        ProductVariant productVariant = new ProductVariant();
-                        ProductAttribute productAttribute = new ProductAttribute();
-                        foreach (var attribute in variant)
+                        foreach (var variant in variants)
                         {
-                            var attributeId = Convert.ToInt32(attribute.Key);
-                            var attributeValue = attribute.Value;
-
-                            var categoryResult = _categoryAttributeService.GetAllByCategoryId(addProductVariant.CategoryId);
-                            var categoryAttributeResult = categoryResult.Data.Where(x => x.AttributeId == attributeId).FirstOrDefault();
-                            if (categoryAttributeResult.Slicer == true)
+                            ProductVariant productVariant = new ProductVariant();
+                            ProductAttribute productAttribute = new ProductAttribute();
+                            foreach (var attribute in variant)
                             {
-                                productVariant.ParentId = 0;
-                                var checkData = GetByParentIdAttrValueId(addProductVariant.ProductId, productVariant.ParentId, attributeValue, attributeId);
-                                if (checkData.Success == false)
-                                {
-                                    addProductVariant.ParentId = 0;
-                                    productVariant.ProductId = addProductVariant.ProductId;
-                                    productVariant.AttributeId = attributeId;
-                                    productVariant.AttributeValueId = attributeValue;
+                                var attributeId = Convert.ToInt32(attribute.Key);
+                                var attributeValue = attribute.Value;
 
-                                    Add(productVariant);
-                                    productAttribute.ProductId = productVariant.ProductId;
-                                    productAttribute.AttributeId = attributeId;
-                                    productAttribute.AttributeValueId = attributeValue;
-                                    _productAttributeService.Add(productAttribute);
-                                    addProductVariant.ParentId = productVariant.Id;
-                                }
-                                else
+                                var categoryResult = _categoryAttributeService.GetAllByCategoryId(addProductVariant.CategoryId);
+                                var categoryAttributeResult = categoryResult.Data.Where(x => x.AttributeId == attributeId).FirstOrDefault();
+                                if (categoryAttributeResult.Slicer == true)
                                 {
-                                    addProductVariant.ParentId = checkData.Data.Id;
+                                    productVariant.ParentId = 0;
+                                    var checkData = GetByParentIdAttrValueId(addProductVariant.ProductId, productVariant.ParentId, attributeValue, attributeId);
+                                    if (checkData.Success == false)
+                                    {
+                                        addProductVariant.ParentId = 0;
+                                        productVariant.ProductId = addProductVariant.ProductId;
+                                        productVariant.AttributeId = attributeId;
+                                        productVariant.AttributeValueId = attributeValue;
+
+                                        Add(productVariant);
+                                        productAttribute.ProductId = productVariant.ProductId;
+                                        productAttribute.AttributeId = attributeId;
+                                        productAttribute.AttributeValueId = attributeValue;
+                                        _productAttributeService.Add(productAttribute);
+                                        addProductVariant.ParentId = productVariant.Id;
+                                    }
+                                    else
+                                    {
+                                        addProductVariant.ParentId = checkData.Data.Id;
+                                    }
                                 }
+
+
+                                // ProductVariant'ı veritabanına ekleyin
+                                if (categoryAttributeResult.Attribute == true)
+                                {
+                                    var checkData = GetByParentIdAttrValueId(addProductVariant.ProductId, addProductVariant.ParentId, attributeValue, attributeId);
+                                    if (checkData.Success == false)
+                                    {
+                                        productVariant.ProductId = addProductVariant.ProductId;
+                                        productVariant.AttributeId = attributeId;
+                                        productVariant.AttributeValueId = attributeValue;
+                                        productVariant.ParentId = addProductVariant.ParentId;
+                                        Add(productVariant);
+                                        productAttribute.ProductId = productVariant.ProductId;
+                                        productAttribute.AttributeId = attributeId;
+                                        productAttribute.AttributeValueId = attributeValue;
+                                        _productAttributeService.Add(productAttribute);
+                                        addProductVariant.ParentId =  productVariant.Id;
+                                    }
+                                    else
+                                    {
+                                        addProductVariant.ParentId = checkData.Data.Id;
+                                    }
+                                }
+
+                                if (variants.IndexOf(variant) == variants.Count -1)
+                                {
+                                    // ProductStock nesnesini doldurun
+                                    ProductStock productStock = new ProductStock()
+                                    {
+                                        ProductId = addProductVariant.ProductId,
+                                        ProductVariantId = productVariant.Id,
+                                        Price = addProductVariant.ProductStocks[productStockIndex].Price,
+                                        Kdv = addProductVariant.ProductStocks[productStockIndex].Kdv,
+                                        NetPrice = addProductVariant.ProductStocks[productStockIndex].NetPrice,
+                                        Quantity = addProductVariant.ProductStocks[productStockIndex].Quantity,
+                                        StockCode = addProductVariant.ProductStocks[productStockIndex].StockCode,
+                                    };
+
+                                    // ProductStock'ı listeye ekleyin
+                                    productStocks.Add(productStock);
+                                    productStockIndex++;
+                                }
+
                             }
-
-
-                            // ProductVariant'ı veritabanına ekleyin
-                            if (categoryAttributeResult.Attribute == true)
-                            {
-                                var checkData = GetByParentIdAttrValueId(addProductVariant.ProductId, addProductVariant.ParentId, attributeValue, attributeId);
-                                if (checkData.Success == false)
-                                {
-                                    productVariant.ProductId = addProductVariant.ProductId;
-                                    productVariant.AttributeId = attributeId;
-                                    productVariant.AttributeValueId = attributeValue;
-                                    productVariant.ParentId = addProductVariant.ParentId;
-                                    Add(productVariant);
-                                    productAttribute.ProductId = productVariant.ProductId;
-                                    productAttribute.AttributeId = attributeId;
-                                    productAttribute.AttributeValueId = attributeValue;
-                                    _productAttributeService.Add(productAttribute);
-                                    addProductVariant.ParentId =  productVariant.Id;
-                                }
-                                else
-                                {
-                                    addProductVariant.ParentId = checkData.Data.Id;
-                                }
-                            }
-
-                            if (variants.IndexOf(variant) == variants.Count -1)
-                            {
-                                // ProductStock nesnesini doldurun
-                                ProductStock productStock = new ProductStock()
-                                {
-                                    ProductId = addProductVariant.ProductId,
-                                    ProductVariantId = productVariant.Id,
-                                    Price = addProductVariant.ProductStocks[0].Price,
-                                    Quantity = addProductVariant.ProductStocks[0].Quantity,
-                                    StockCode = addProductVariant.ProductStocks[0].StockCode
-                                };
-
-                                // ProductStock'ı listeye ekleyin
-                                productStocks.Add(productStock);
-                            }
-
                         }
                     }
                 }
+
+                // ProductStock'ları veritabanına ekleyin
+                _productStockService.AddList(productStocks);
+                return new SuccessResult();
+
+            }
+            else if(jsonData.Count == 0 && !addProductVariant.IsVariant) //Eger urunun bir varyanti yok ise burasi calisacak
+            {
+                ProductVariant productVariant = new ProductVariant()
+                {
+                    ProductId = addProductVariant.ProductId,
+                    ParentId = 0
+                };
+                var addProductVariantResult = Add(productVariant);
+
+                if (addProductVariantResult.Success)
+                {
+                    ProductStock productStock = new ProductStock()
+                    {
+                        ProductId= addProductVariant.ProductId,
+                        ProductVariantId = productVariant.Id,
+                        Price = addProductVariant.ProductStocks[0].Price,
+                        Quantity = addProductVariant.ProductStocks[0].Quantity,
+                        Kdv = addProductVariant.ProductStocks[0].Kdv,
+                        NetPrice = addProductVariant.ProductStocks[0].NetPrice,
+                        StockCode = addProductVariant.ProductStocks[0].StockCode
+                    };
+
+                    var addProductStockResult = _productStockService.Add(productStock);
+
+                    if (addProductStockResult.Success)
+                    {
+                        return new SuccessResult();
+                    }
+                    return new ErrorResult();
+                }
             }
 
-            // ProductStock'ları veritabanına ekleyin
-            _productStockService.AddList(productStocks);
+
 
             // Diğer işlemleri burada gerçekleştirin
 
-            return new SuccessResult();
+            return new ErrorResult();
         }
 
         public IResult Delete(ProductVariant variant)
@@ -365,6 +407,8 @@ namespace Business.Concrete
                             {
                                 groupDetailList[i].ProductVariantAttributeValueDtos[j].Price = checkStock.Data.Price;
                                 groupDetailList[i].ProductVariantAttributeValueDtos[j].Quantity = checkStock.Data.Quantity;
+                                groupDetailList[i].ProductVariantAttributeValueDtos[j].Kdv = checkStock.Data.Kdv;
+                                groupDetailList[i].ProductVariantAttributeValueDtos[j].NetPrice = checkStock.Data.NetPrice;
                             }
                         }
                     }
@@ -425,7 +469,7 @@ namespace Business.Concrete
                                     productVariantGroupDetailDto.ProductVariantAttributeValueDtos = productVariantAttributeValues;
 
                                     ProductVariantAttributeValueDto productVariantAttributeValueDto = null;
-                                    productVariantGroupDetailDto.AttributeId = data[0].AttributeId;
+                                    productVariantGroupDetailDto.AttributeId = data[0].AttributeId.Value;
                                     productVariantGroupDetailDto.ParentId = data[0].ParentId.Value;
                                     productVariantGroupDetailDto.AttributeName = data[0].AttributeName;
                                     productVariantAttributeValueDto = data[0];
@@ -443,6 +487,8 @@ namespace Business.Concrete
                                     {
                                         productVariantGroups[j].ProductVariantAttributeValueDtos[k].Price = checkStock.Data.Price;
                                         productVariantGroups[j].ProductVariantAttributeValueDtos[k].Quantity = checkStock.Data.Quantity;
+                                        productVariantGroups[j].ProductVariantAttributeValueDtos[k].Kdv = checkStock.Data.Kdv;
+                                        productVariantGroups[j].ProductVariantAttributeValueDtos[k].NetPrice = checkStock.Data.NetPrice;
                                     }
                                 }
                             }
@@ -473,6 +519,10 @@ namespace Business.Concrete
             var result = GetProductVariantByParentId(productVariantId);
             if (result != null)
             {
+                if (result.Data == null)
+                {
+                    result = GetById(productVariantId);
+                }
                 List<ProductVariant> productVariants = new List<ProductVariant>();
 
                 productVariants.Add(result.Data);

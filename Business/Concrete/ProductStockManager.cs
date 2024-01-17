@@ -124,6 +124,8 @@ namespace Business.Concrete
                                          StockCode = stock.StockCode,
                                          Price = stock.Price,
                                          Quantity = stock.Quantity,
+                                         Kdv = stock.Kdv,
+                                         NetPrice = stock.NetPrice,
                                          AttributeValue = productVariantAttribute.AttributeValue
                                      };
 

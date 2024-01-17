@@ -13,25 +13,27 @@ namespace DataAccess.Concrete.EntityFramework
 {
     public class EfProductAttributeDal : EfEntityRepositoryBase<ProductAttribute, PofuMacrameContext>, IProductAttributeDal
     {
+        private readonly PofuMacrameContext _context;
+        public EfProductAttributeDal(PofuMacrameContext context) : base(context)
+        {
+            _context = context;
+        }
         public List<ProductAttributeDto> GetProductVariantAttribute(Expression<Func<ProductAttributeDto, bool>> filter = null)
         {
-            using (PofuMacrameContext context = new PofuMacrameContext())
-            {
-                var result = from pa in context.ProductAttributes
-                             join p in context.Products
-                             on pa.ProductId equals p.Id
-                             join a in context.Attributes
-                             on pa.AttributeId equals a.Id
+            var result = from pa in _context.ProductAttributes
+                         join p in _context.Products
+                         on pa.ProductId equals p.Id
+                         join a in _context.Attributes
+                         on pa.AttributeId equals a.Id
 
 
-                             select new ProductAttributeDto
-                             {
-                                 ProductId = p.Id,
-                                 ProductName = p.ProductName,
-                                 AttributeName = a.Name
-                             };
-                return filter == null ? result.ToList() : result.Where(filter).ToList();
-            }
+                         select new ProductAttributeDto
+                         {
+                             ProductId = p.Id,
+                             ProductName = p.ProductName,
+                             AttributeName = a.Name
+                         };
+            return filter == null ? result.ToList() : result.Where(filter).ToList();
         }
     }
 }

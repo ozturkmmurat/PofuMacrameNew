@@ -10,5 +10,10 @@ namespace DataAccess.Concrete.EntityFramework
 {
     public class EfCategoryImageDal : EfEntityRepositoryBase<CategoryImage, PofuMacrameContext>, ICategoryImageDal
     {
+        private readonly PofuMacrameContext _context;
+        public EfCategoryImageDal(PofuMacrameContext context) : base(context)
+        {
+            _context = context;
+        }
     }
 }

@@ -10,7 +10,7 @@ namespace Entities.Dtos.ProductVariant.Select
     {
         public int ProductId { get; set; }
         public int? ParentId { get; set; }
-        public int AttributeId { get; set; }
+        public int? AttributeId { get; set; }
         public int? AttributeValueId { get; set; }
         public int ProductVariantId { get; set; }
         public int EndProductVariantId { get; set; }
@@ -20,6 +20,8 @@ namespace Entities.Dtos.ProductVariant.Select
         public string AttributeValue { get; set; }
         public string ImagePath { get; set; }
         public decimal Price { get; set; }
+        public decimal Kdv { get; set; }
+        public decimal NetPrice { get; set; }
         public int Quantity { get; set; }
     }
 }
