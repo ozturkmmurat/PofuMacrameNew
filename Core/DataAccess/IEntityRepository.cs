@@ -10,7 +10,10 @@ namespace Core.DataAccess
     public interface IEntityRepository<T> where T : class, IEntity, new()
     {
         List<T> GetAll(Expression<Func<T, bool>> filter = null);
+        List<T> GetAllAsNoTracking(Expression<Func<T, bool>> filter = null);
         T Get(Expression<Func<T, bool>> filter);
+        T GetAsNoTracking(Expression<Func<T, bool>> filter);
+        T GetFind(int id);
         void Add(T entity);
         void AddRange(List<T> entity);
         void Delete(T entity);

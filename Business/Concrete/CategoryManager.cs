@@ -5,6 +5,7 @@ using Core.Utilities.Result.Abstract;
 using Core.Utilities.Result.Concrete;
 using DataAccess.Abstract;
 using Entities.Concrete;
+using Entities.Dtos.Category.Select;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -46,6 +47,30 @@ namespace Business.Concrete
                 return new SuccessDataResult<List<Category>>(result);
             }
             return new ErrorDataResult<List<Category>>();
+        }
+
+        public IDataResult<List<Category>> GetAllAsNoTracking()
+        {
+            var result = _categoryDal.GetAllAsNoTracking();
+            if (result != null)
+            {
+                return new SuccessDataResult<List<Category>>(result);
+            }
+            return new ErrorDataResult<List<Category>>();
+        }
+
+        public IDataResult<List<SelectCategoryDto>> GetAllCategoryHierarchy()
+        {
+            var categories = GetAllAsNoTracking();
+            if (categories != null)
+            {
+                var hierarchyCategories = _categoryDal.GetAllCategoryHierarchy(categories.Data, 0);
+                if (hierarchyCategories != null)
+                {
+                    return new SuccessDataResult<List<SelectCategoryDto>>(hierarchyCategories);
+                }
+            }
+            return new ErrorDataResult<List<SelectCategoryDto>>();
         }
 
         public IDataResult<Category> GetById(int id)

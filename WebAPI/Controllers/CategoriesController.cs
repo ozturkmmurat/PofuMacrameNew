@@ -26,6 +26,17 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
+        [HttpGet("GetAllCategoryHierarchy")]
+        public IActionResult GetAllCategoryHierarchy()
+        {
+            var result = _categoryService.GetAllCategoryHierarchy();
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
         [HttpPost("Add")]
         public IActionResult Add(Category category)
         {

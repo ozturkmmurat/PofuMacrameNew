@@ -70,6 +70,23 @@ namespace Core.DataAccess.EntityFramework
             _context.RemoveRange(entity);
             _context.SaveChanges();
         }
+
+        public List<TEntity> GetAllAsNoTracking(Expression<Func<TEntity, bool>> filter = null)
+        {
+            return filter == null
+                ? _context.Set<TEntity>().AsNoTracking().ToList()
+                : _context.Set<TEntity>().AsNoTracking().Where(filter).ToList();
+        }
+
+        public TEntity GetAsNoTracking(Expression<Func<TEntity, bool>> filter)
+        {
+            return _context.Set<TEntity>().AsNoTracking().FirstOrDefault(filter);
+        }
+
+        public TEntity GetFind(int id)
+        {
+            return _context.Set<TEntity>().Find(id);
+        }
     }
 
 }
