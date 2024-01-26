@@ -11,5 +11,6 @@ namespace DataAccess.Abstract
     public interface IProductAttributeDal : IEntityRepository<ProductAttribute>
     {
         List<ProductAttributeDto> GetProductVariantAttribute(Expression<Func<ProductAttributeDto, bool>> filter = null);
+        List<ProductAttribute> GetAllProductIdListNT(List<int> ids);
     }
 }

@@ -14,6 +14,7 @@ using System.IO;
 using System.Diagnostics.CodeAnalysis;
 using Entities.EntitiyParameter.Product;
 using Entities.EntityParameter.Product;
+using System.Xml.Linq;
 
 namespace DataAccess.Concrete.EntityFramework
 {
@@ -95,7 +96,7 @@ namespace DataAccess.Concrete.EntityFramework
                     });
                 }).ToList();
 
-                var categoryAttributes = _context.CategoryAttributes.AsNoTracking().Where(x => x.CategoryId == filterProduct.CategoryId && x.Slicer == true);
+                var categoryAttributes = _context.CategoryAttributes.AsNoTracking().Where(x => x.CategoryId == filterProduct.CategoryId);
                 if (categoryAttributes != null)
                 {
                     if (categoryAttributes.Any())
@@ -106,7 +107,8 @@ namespace DataAccess.Concrete.EntityFramework
                         var valueIds = filterProduct.Attributes.Where(x => attributeIds.Contains(x.Id)).SelectMany(x => x.ValueId).ToList();
 
                         // Son olarak, bu ValueId'leri kullanarak ProductVariants içerisindeki eşleşmeleri bul
-                        var slicerProduct = _context.ProductVariants.AsNoTracking().Where(x => x.AttributeValueId.HasValue && valueIds.Contains(x.AttributeValueId.Value)).ToList();
+                        var slicerProduct = _context.ProductVariants.AsNoTracking().Where(x => x.AttributeValueId.HasValue && valueIds.Contains(x.AttributeValueId.Value) && productIds.Contains(x.ProductId)).ToList();
+
                         if (slicerProduct != null)
                         {
                             var mainProductResult = from p in filteredProducts
@@ -120,7 +122,7 @@ namespace DataAccess.Concrete.EntityFramework
                                                         ProductName = p.ProductName,
                                                         Description = p.Description,
                                                         AttributeValues = spv != null ? _context.AttributeValues.AsNoTracking().Where(x => x.Id == spv.AttributeValueId).ToList() : new List<AttributeValue>(),
-                                                        ProductPaths = spv != null ? _context.ProductImages
+                                                        ProductPaths = spv != null ? _context.ProductImages.AsNoTracking()
                                                                                              .Where(x => x.ProductVariantId == spv.Id)
                                                                                              .Take(2)
                                                                                              .Select(pi => pi.Path)
@@ -233,6 +235,162 @@ namespace DataAccess.Concrete.EntityFramework
                 var result = _context.Products.Count();
                 return result;
             }
+        }
+
+        public List<ProductVariant> ApplyFilteres(FilterProduct filterProduct)
+        {
+            var products = _context.Products.AsNoTracking()
+                                            .Where(x => x.CategoryId == filterProduct.CategoryId)
+                                            .ToList();
+
+            var productIds = products.Select(p => p.Id).ToList();
+
+            var productAttributes = _context.ProductAttributes.AsNoTracking()
+                .Where(variant => productIds.Contains(variant.ProductId))
+                .ToList();
+
+            var categoryAttributes = _context.CategoryAttributes.AsNoTracking().Where(x => x.CategoryId == filterProduct.CategoryId);
+            if (categoryAttributes != null)
+            {
+                if (categoryAttributes.Any())
+                {
+
+                    // CategoryAttribute listesinden Slicer ve AttributeValue değeri false olanları filtrele
+                    var filteredIds = categoryAttributes
+                        .Where(ca => !ca.Slicer && !ca.Attribute)
+                        .Select(ca => ca.AttributeId).ToList();
+
+                    var filteredIdsCheck = filterProduct.Attributes.Where(x => filteredIds.Any(y => x.Id == y));
+
+                    if (filteredIdsCheck.Count() == 0)
+                    {
+                        filteredIds = categoryAttributes
+                        .Where(ca => ca.Slicer || ca.Attribute)
+                        .Select(ca => ca.AttributeId).ToList();
+                    }
+
+                    // FilterProduct'un Attributes listesini, CategoryAttribute listesinden elde edilen filtrelenmiş Id'ler kullanarak filtrele
+                    var filteredAttributeFalse = filterProduct.Attributes
+                        .Where(fa => filteredIds.Contains(fa.Id))
+                        .ToList();
+
+                    var filteredAttributeFalseProduct = filterProduct.Attributes.Where(x => filteredAttributeFalse.Any(y => y.Id == x.Id)).SelectMany(x => x.ValueId).ToList();
+
+                    var filteredEnd = productAttributes.Where(x => filteredAttributeFalseProduct.Contains(x.AttributeValueId));
+
+                    //filteredAttributeFalse sahip olan productları bul productAttributes üzerinden
+                    var productFilter = filteredEnd.Where(x => filteredAttributeFalse.Any(y => y.Id == x.AttributeId)).ToList();
+
+                    // CategoryAttribute listesinden Slicer ve AttributeValue değeri true olanları filtrele
+                    var filteredIdsTrue = categoryAttributes.Where(ca => ca.Slicer || ca.Attribute).Select(ca => ca.AttributeId).ToList();
+
+                    // filteredIdsTrue'un Attributes listesini, CategoryAttribute listesinden elde edilen filtrelenmiş Id'ler kullanarak filtrele
+
+                    var filteredAttributeTrue = filterProduct.Attributes.Where(fa => filteredIdsTrue.Contains(fa.Id)).ToList();
+
+                    // productFilter koleksiyonunu yerelde malzemele
+                    var productFilterList = productFilter.Select(pf => pf.ProductId).ToList();
+
+                    // Yerelde malzemeleme yapılmış koleksiyonu kullanarak LINQ sorgusunu oluştur
+                    var slicerProduct = _context.ProductVariants
+                        .AsNoTracking()
+                        .Where(x => productFilterList.Contains(x.ProductId))
+                        .ToList();
+
+                    var filteredAttributeTrueIds = filteredAttributeTrue
+                        .SelectMany(fa => fa.ValueId)
+                        .ToList();
+
+                    // AsEnumerable() kullanmadan hatayı gidermek için iki aşamada filtreleme yap
+                    var slicerProductExecute = slicerProduct
+                        .Where(x => x.AttributeValueId.HasValue && filteredAttributeTrueIds.Contains(x.AttributeValueId.Value))
+                        .ToList();
+                    return slicerProductExecute;
+                }
+
+            }
+            return null;
+        }
+
+        public List<SelectListProductVariantDto> ExecuteFilteres(List<SelectListProductVariantDto> filterProducts)
+        {
+            var result = from pv in filterProducts
+                         join p in _context.Products.AsNoTracking()
+                         on pv.ProductId equals p.Id
+                         select new SelectListProductVariantDto
+                         {
+                             ProductId = p.Id,
+                             CategoryId = p.CategoryId,
+                             ProductVariantId = pv?.ProductVariantId ?? 0,
+                             ParentId = pv.ParentId ?? 0,
+                             ProductName = p.ProductName,
+                             Description = p.Description,
+                             AttributeValues = pv != null ? _context.AttributeValues.AsNoTracking()
+                                                   .Where(av => pv.AttributeValues.Select(a => a.Id).Contains(av.Id))
+                                                   .ToList() : new List<AttributeValue>(),
+                             ProductPaths = pv != null ? _context.ProductImages.AsNoTracking()
+                                                              .Where(x => x.ProductVariantId == pv.ProductId)
+                                                              .Take(2)
+                                                              .Select(pi => pi.Path)
+                                                              .ToList() : new List<string>()
+                         };
+
+            return result.ToList();
+        }
+
+        public List<SelectListProductVariantDto> DefaultOnNoFilter(FilterProduct filterProduct)
+        {
+            if (filterProduct.CategoryId > 0 && filterProduct.Attributes.Count == 0)
+            {
+                var result = from p in _context.Products.AsNoTracking().Where(x => x.CategoryId == filterProduct.CategoryId).Skip(filterProduct.StartLength).Take(filterProduct.EndLength)
+                             join pv in _context.ProductVariants.AsNoTracking() on p.Id equals pv.ProductId
+                             where pv.ParentId == 0
+                             select new SelectListProductVariantDto
+                             {
+                                 ProductId = p.Id,
+                                 ProductVariantId = pv.Id,
+                                 ParentId = pv.ParentId,
+                                 ProductName = p.ProductName,
+                                 Description = p.Description,
+                                 AttributeValues = _context.AttributeValues.AsNoTracking().Where(x => x.Id == pv.AttributeValueId).ToList(),
+                                 ProductPaths = _context.ProductImages
+                                                     .Where(x => x.ProductVariantId == pv.Id)
+                                                     .Take(2)
+                                                     .Select(pi => pi.Path)
+                                                     .ToList(),
+                             };
+                return result.ToList();
+
+            }
+            return null;
+        }
+
+        public List<SelectListProductVariantDto> RandomDefaultOnNoFilter(FilterProduct filterProduct)
+        {
+            if (filterProduct.CategoryId == 0 && filterProduct.Attributes.Count == 0)
+            {
+                var result = from p in _context.Products.AsNoTracking().Skip(filterProduct.StartLength).Take(filterProduct.EndLength)
+                             join pv in _context.ProductVariants.AsNoTracking() on p.Id equals pv.ProductId
+                             where pv.ParentId == 0
+                             select new SelectListProductVariantDto
+                             {
+                                 ProductId = p.Id,
+                                 ProductVariantId = pv.Id,
+                                 ParentId = pv.ParentId,
+                                 ProductName = p.ProductName,
+                                 Description = p.Description,
+                                 AttributeValues = _context.AttributeValues.DefaultIfEmpty().AsNoTracking().Where(x => x.Id == pv.AttributeValueId).ToList(),
+                                 ProductPaths = _context.ProductImages.AsNoTracking()
+                                                     .Where(x => x.ProductVariantId == pv.Id)
+                                                     .Take(2)
+                                                     .Select(pi => pi.Path)
+                                                     .ToList(),
+                             };
+                return result.ToList();
+
+            }
+            return null;
+        
         }
     }
 }

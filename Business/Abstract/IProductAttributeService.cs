@@ -11,6 +11,7 @@ namespace Business.Abstract
     {
         IDataResult<List<ProductAttribute>> GetAll();
         IDataResult<List<ProductAttribute>> GetAllByProductId(int productId);
+        IDataResult<List<ProductAttribute>> GetAllByProductIds(List<int> productIds);
         IDataResult<ProductAttribute> MappingProductAttribute(ProductVariant productVariant);
         IResult Add(ProductAttribute productAttribute);
         IResult AddList(List<ProductAttribute> productAttributes);

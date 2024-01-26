@@ -89,17 +89,5 @@ namespace WebAPI.Controllers
             }
             return BadRequest(result);
         }
-
-
-        [HttpGet("Test")]
-        public IActionResult Test(int variantId)
-        {
-            var result = _variantService.MainVariantEndVariant(variantId);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-        }
     }
 }

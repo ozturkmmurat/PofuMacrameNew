@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess.Concrete.EntityFramework
 {
@@ -18,6 +19,13 @@ namespace DataAccess.Concrete.EntityFramework
         {
             _context = context;
         }
+
+        public List<ProductAttribute> GetAllProductIdListNT(List<int> ids)
+        {
+            var result = _context.ProductAttributes.AsNoTracking().Where(x => ids.Contains(x.ProductId)).ToList();
+            return result;
+        }
+
         public List<ProductAttributeDto> GetProductVariantAttribute(Expression<Func<ProductAttributeDto, bool>> filter = null)
         {
             var result = from pa in _context.ProductAttributes

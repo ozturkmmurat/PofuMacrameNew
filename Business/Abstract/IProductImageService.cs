@@ -14,7 +14,9 @@ namespace Business.Abstract
     {
         IDataResult<List<ProductImage>> GetAll();
         IDataResult<List<ProductImage>> GetAllByProductVariantId(int productVariantId);
+        IDataResult<List<string>> GetFirstTwoPathNT(int productVariantId);
         IDataResult<ProductImage> GetById(int id);
+        IDataResult<ProductImage> GetByIdNT(int id); //NT -> AsNoTracking
         IDataResult<ProductImage> GetByProductVariantId(int productVariantId);
         IResult Add(ProductImage productImage, IFormFile formFile);
         IResult AddList(AddProductImageDto addProductImageDtos);

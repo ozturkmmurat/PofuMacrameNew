@@ -102,7 +102,7 @@ namespace Business.Concrete
                 {
                     for (int j = 0; j < result[i].SelectSubOrderDtos.Count(); j++)
                     {
-                        result[i].SelectSubOrderDtos[j].ImagePath = _productImageService.GetByProductVariantId(_productVariantService.EndVariantMainVariant(result[i].SelectSubOrderDtos[j].ParentId).Data.Id).Data.Path;
+                        result[i].SelectSubOrderDtos[j].ImagePath = _productImageService.GetByProductVariantId(_productVariantService.EndVariantMainVariantNT(result[i].SelectSubOrderDtos[j].ParentId).Data.Id).Data.Path;
                     }
                 }
                 return new SuccessDataResult<List<SelectUserOrderDto>>(result);

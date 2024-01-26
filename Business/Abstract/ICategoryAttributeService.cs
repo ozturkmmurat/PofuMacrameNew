@@ -12,6 +12,7 @@ namespace Business.Abstract
     {
         IDataResult<List<CategoryAttribute>> GetAll();
         IDataResult<List<CategoryAttribute>> GetAllByCategoryId(int categoryId);
+        IDataResult<List<CategoryAttribute>> GetAllByCategoryIdSlicerAttribute(int categoryId, bool slicer, bool attribute);
         IDataResult<List<SelectCategoryAttributeDto>> GetAllSlctCategoryByCategoryId(int categoryId);
         IDataResult<List<ViewCategoryAttributeDto>> GetAllDtoTrueSlicer(int categoryId);
         IDataResult<List<ViewCategoryAttributeDto>> GetAllViewDtoTrueSlicerAttribute(int categoryId);

@@ -8,5 +8,6 @@ namespace DataAccess.Abstract
 {
     public interface IProductmageDal : IEntityRepository<ProductImage>
     {
+        List<string> GetFirstTwoPhotosNT(int productVariantId); //NT -> AsNoTracking
     }
 }

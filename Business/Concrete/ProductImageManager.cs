@@ -139,6 +139,16 @@ namespace Business.Concrete
             return new ErrorDataResult<ProductImage>();
         }
 
+        public IDataResult<ProductImage> GetByIdNT(int id)
+        {
+            var result = _productImageDal.GetAsNoTracking(x => x.Id == id);
+            if (result != null)
+            {
+                return new SuccessDataResult<ProductImage>(result);
+            }
+            return new ErrorDataResult<ProductImage>();
+        }
+
         public IDataResult<ProductImage> GetByProductVariantId(int productVariantId)
         {
             var result = _productImageDal.Get(x => x.ProductVariantId == productVariantId && x.IsMain == true);
@@ -147,6 +157,17 @@ namespace Business.Concrete
                 return new SuccessDataResult<ProductImage>(result);
             }
             return new ErrorDataResult<ProductImage>();
+        }
+
+        public IDataResult<List<string>> GetFirstTwoPathNT(int productVariantId)
+        {
+            var result = _productImageDal.GetFirstTwoPhotosNT(productVariantId);
+
+            if (result != null)
+            {
+                return new SuccessDataResult<List<string>>(result);
+            }
+            return new ErrorDataResult<List<string>>();
         }
 
         public IResult Update(ProductImage productImage, IFormFile formFile)

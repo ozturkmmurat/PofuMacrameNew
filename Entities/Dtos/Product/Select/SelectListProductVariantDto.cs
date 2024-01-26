@@ -9,6 +9,7 @@ namespace Entities.Dtos.Product.Select
     public class SelectListProductVariantDto : IDto
     {
         public int ProductId { get; set; }
+        public int CategoryId { get; set; }
         public int ProductVariantId { get; set; }
         public int? EndProductVariantId { get; set; }
         public int? ParentId { get; set; }
@@ -17,7 +18,7 @@ namespace Entities.Dtos.Product.Select
         public string StockCode { get; set; }  
         public List<AttributeValue> AttributeValues { get; set; }
         public List<string> ProductPaths { get; set; }
-        public decimal? Price { get; set; }
+        public decimal? NetPrice { get; set; }
         public int Quantity { get; set; }
     }
 }

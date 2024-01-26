@@ -23,11 +23,14 @@ namespace Business.Abstract.ProductVariants
         IDataResult<List<ProductVariant>> MapProductVariantCombination(int productId, int productVariantId);
         IDataResult<List<ProductVariantAttributeValueDto>> GetProductVariantCombination(int productId, int productVariantId);
         IDataResult<List<List<ProductVariantAttributeValueDto>>> GetAllProductVariantCombination(int productId);
-        IDataResult<ProductVariant> GetProductVariantByParentId(int parentId);
+        IDataResult<ProductVariant> GetProductVariantByParentIdNT(int parentId);
         IDataResult<ProductVariant> GetById(int id);
+        IDataResult<ProductVariant> GetByIdNT(int id); // NT -> AsNoTracking
         IDataResult<ProductVariant> GetByProductId(int productId);
-        IDataResult<ProductVariant> MainVariantEndVariant(int productVariantId);
-        IDataResult<ProductVariant> EndVariantMainVariant(int parentId);
+        IDataResult<ProductVariant> MainVariantEndVariantNT(int productVariantId);
+        IDataResult<ProductVariant> EndVariantMainVariantNT(int parentId);
+        IDataResult<SelectListProductVariantDto> DtoEndVariantMainVariantNT(int parentId);
+        IDataResult<List<string>> ProductVariantImage(int productVariantId);
         IDataResult<ProductVariant> GetByParentIdAttrValueId(int productId,int? parentId, int? attributeValueId, int? attributeId);
         IDataResult<ProductVariantAttributeDto> GetProductVariantAttribute(int parentId); //İlgili varyantın attributelerini getirir. Sonuncu varyant dan başlayıp
         IResult Add(ProductVariant variant);

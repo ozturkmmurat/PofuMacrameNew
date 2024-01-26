@@ -25,14 +25,20 @@ namespace Business.Concrete
         IProductDal _productDal;
         IProductVariantService _productVariantService;
         IProductStockService _productStockService;
+        ICategoryAttributeService _categoryAttributeService;
+        IProductAttributeService _productAttributeService;
         public ProductManager(
             IProductDal productDal,
             IProductStockService productStockService,
-            IProductVariantService productVariantService)
+            IProductVariantService productVariantService,
+            ICategoryAttributeService categoryAttributeService,
+            IProductAttributeService productAttributeService)
         {
             _productDal = productDal;
             _productVariantService = productVariantService;
             _productStockService = productStockService;
+            _categoryAttributeService=categoryAttributeService;
+            _productAttributeService  = productAttributeService;
         }
         public IResult Add(Product product)
         {
@@ -87,20 +93,69 @@ namespace Business.Concrete
 
         public IDataResult<List<SelectListProductVariantDto>> GetAllProductVariantDtoGroupVariant(FilterProduct filterProduct)
         {
-            var result = _productDal.GetAllPvFilterDto(filterProduct).Where(x => x.ProductPaths.Count > 0).ToList();
+            var result = _productDal.GetAllPvFilterDto(filterProduct);
             if (result != null)
             {
-                for (int i = 0; i < result.Count(); i++)
+                if (filterProduct != null & filterProduct.Attributes.Count > 0 && filterProduct.CategoryId > 0)
                 {
-                   var endVariant = _productVariantService.MainVariantEndVariant(result[i].ProductVariantId);
-                    result[i].EndProductVariantId = endVariant.Data.Id;
-                    var productVariantStock = _productStockService.GetByProductVariantId(result[i].EndProductVariantId.Value).Data;
-                    result[i].Price = productVariantStock.Price;
-                    result[i].Quantity = productVariantStock.Quantity;
-                    result[i].StockCode = productVariantStock.StockCode;
+                    var applyFiltered = _productDal.ApplyFilteres(filterProduct);
+                    List<SelectListProductVariantDto> filteredProductVariantDto = new List<SelectListProductVariantDto>();
+
+                    if (applyFiltered != null & applyFiltered.Count > 0)
+                    {
+                        for (int i = 0; i < applyFiltered.Count; i++)
+                        {
+                            if (applyFiltered[i].ParentId > 0)
+                            {
+                                filteredProductVariantDto.Add(_productVariantService.DtoEndVariantMainVariantNT(applyFiltered[i].ParentId.Value).Data);
+                            }
+                        }
+
+                        var resultFilters = _productDal.ExecuteFilteres(filteredProductVariantDto);
+                        var processProductVariant = ProcessProductVariantData(resultFilters);
+
+                        if (processProductVariant.Success)
+                        {
+                            var slicerAttributeValues = _categoryAttributeService.GetAllByCategoryIdSlicerAttribute(filterProduct.CategoryId, true, false);
+                            if (slicerAttributeValues != null)
+                            {
+                                var slicerIds = filterProduct.Attributes.Where(x => slicerAttributeValues.Data.Any(y => x.Id ==  y.AttributeId)).SelectMany(x => x.ValueId).ToList();
+                                var endFilters = processProductVariant.Data.Where(x => x.AttributeValues.Any(y => slicerIds.Contains(y.Id))).ToList();
+
+                                return new SuccessDataResult<List<SelectListProductVariantDto>>(endFilters);
+                            }
+
+                        }
+                    }
                 }
-                return new SuccessDataResult<List<SelectListProductVariantDto>>(result);
+                else if (filterProduct != null & filterProduct.Attributes.Count == 0 && filterProduct.CategoryId > 0)
+                {
+                    var executeNoFilter = _productDal.DefaultOnNoFilter(filterProduct);
+                    if (executeNoFilter.Count > 0)
+                    {
+                        var processProductVariant = ProcessProductVariantData(executeNoFilter);
+                        if (processProductVariant.Success)
+                        {
+                            return new SuccessDataResult<List<SelectListProductVariantDto>>(processProductVariant.Data);
+                        }
+
+                    }
+                }
+                else if (filterProduct != null & filterProduct.Attributes.Count == 0 && filterProduct.CategoryId == 0)
+                {
+                    var executeNoFilter = _productDal.RandomDefaultOnNoFilter(filterProduct);
+                    if (executeNoFilter.Count > 0)
+                    {
+                        var processProductVariant = ProcessProductVariantData(executeNoFilter);
+                        if (processProductVariant.Success)
+                        {
+                            return new SuccessDataResult<List<SelectListProductVariantDto>>(processProductVariant.Data);
+                        }
+                    }
+                }
+
             }
+
             return new ErrorDataResult<List<SelectListProductVariantDto>>();
         }
 
@@ -180,6 +235,79 @@ namespace Business.Concrete
         {
             var result = _productDal.GetTotalProduct(categoryId);
             return new SuccessDataResult<int>(result);
+        }
+
+        public IDataResult<List<Product>> GetAllProductByCategoryIdNT(int categoryId)
+        {
+            var result = _productDal.GetAllAsNoTracking(x => x.CategoryId == categoryId);
+            if (result != null)
+            {
+                return new SuccessDataResult<List<Product>>(result);
+            }
+            return new ErrorDataResult<List<Product>>(result);
+        }
+
+        public IDataResult<List<SelectListProductVariantDto>> ProcessProductVariantData(List<SelectListProductVariantDto> processProductVariants)
+        {
+            if (processProductVariants != null & processProductVariants.Count > 0)
+            {
+                //List<int> checkMainVariant = new List<int>();
+
+                //for (int i = 0; i < processProductVariants.Count; i++)
+                //{
+                //    var mainVariant = _productVariantService.EndVariantMainVariantNT(processProductVariants[i].ProductVariantId);
+                //    if (mainVariant.Success)
+                //    {
+                //        checkMainVariant.Add(mainVariant.Data.Id);
+                //        var count = checkMainVariant.Count(productVariantId => productVariantId == mainVariant.Data.Id);
+                //        if (count == 1)
+                //        {
+                //            if (processProductVariants[i].ProductPaths.Count == 0)
+                //            {
+                //                processProductVariants[i].ProductPaths = _productVariantService.ProductVariantImage(mainVariant.Data.Id).Data;
+                //            }
+                //            processProductVariants[i].ProductVariantId = mainVariant.Data.Id;
+                //            var endVariant = _productVariantService.MainVariantEndVariantNT(processProductVariants[i].ProductVariantId);
+                //            processProductVariants[i].EndProductVariantId = endVariant.Data.Id;
+
+                //            var productVariantStock = _productStockService.GetByProductVariantId(processProductVariants[i].EndProductVariantId.Value).Data;
+                //            processProductVariants[i].NetPrice = productVariantStock.NetPrice;
+                //            processProductVariants[i].Quantity = productVariantStock.Quantity;
+                //            processProductVariants[i].StockCode = productVariantStock.StockCode;
+                //        }
+                //        else
+                //        {
+                //            processProductVariants.Remove(processProductVariants[i]);
+                //            i--;
+                //        }
+                //    }
+                //}
+
+                //return new SuccessDataResult<List<SelectListProductVariantDto>>(processProductVariants);
+
+                for (int i = 0; i < processProductVariants.Count; i++)
+                {
+                    var mainVariant = _productVariantService.EndVariantMainVariantNT(processProductVariants[i].ProductVariantId);
+                    processProductVariants[i].ProductPaths = _productVariantService.ProductVariantImage(mainVariant.Data.Id).Data;
+                    if (processProductVariants[i].ProductPaths != null & processProductVariants[i].ProductPaths.Count > 0)
+                    {
+                        processProductVariants[i].ProductVariantId = mainVariant.Data.Id;
+                        var endVariant = _productVariantService.MainVariantEndVariantNT(processProductVariants[i].ProductVariantId);
+                        processProductVariants[i].EndProductVariantId = endVariant.Data.Id;
+
+                        var productVariantStock = _productStockService.GetByProductVariantId(processProductVariants[i].EndProductVariantId.Value).Data;
+                        processProductVariants[i].NetPrice = productVariantStock.NetPrice;
+                        processProductVariants[i].Quantity = productVariantStock.Quantity;
+                        processProductVariants[i].StockCode = productVariantStock.StockCode;
+                    }
+                    else
+                    {
+                        processProductVariants.Remove(processProductVariants[i]);
+                    }
+                }
+                return new SuccessDataResult<List<SelectListProductVariantDto>>(processProductVariants);
+            }
+            return new ErrorDataResult<List<SelectListProductVariantDto>>();
         }
     }
 }

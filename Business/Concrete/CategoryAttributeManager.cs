@@ -190,5 +190,15 @@ namespace Business.Concrete
             }
             return new ErrorDataResult<CategoryAttribute>();
         }
+
+        public IDataResult<List<CategoryAttribute>> GetAllByCategoryIdSlicerAttribute(int categoryId, bool slicer, bool attribute)
+        {
+            var result = _categoryAttributeDal.GetAllAsNoTracking(x => x.CategoryId == categoryId && x.Slicer == slicer && x.Attribute == attribute);
+            if (result != null)
+            {
+                return new SuccessDataResult<List<CategoryAttribute>>(result);
+            }
+            return new ErrorDataResult<List<CategoryAttribute>>();
+        }
     }
 }

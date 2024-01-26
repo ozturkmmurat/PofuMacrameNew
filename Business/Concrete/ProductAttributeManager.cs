@@ -70,6 +70,16 @@ namespace Business.Concrete
             return new ErrorDataResult<List<ProductAttribute>>();
         }
 
+        public IDataResult<List<ProductAttribute>> GetAllByProductIds(List<int> productIds)
+        {
+            var result = _productAttributeDal.GetAllProductIdListNT(productIds);
+            if (result != null & result.Count > 0)
+            {
+                return new SuccessDataResult<List<ProductAttribute>>(result);
+            }
+            return new ErrorDataResult<List<ProductAttribute>>();
+        }
+
         public IDataResult<ProductAttribute> MappingProductAttribute(ProductVariant productVariant)
         {
             if (productVariant != null)

@@ -23,8 +23,8 @@ namespace DataAccess.Concrete.EntityFramework
         }
         public List<ProductVariantDetailAttributeDto> GetAllProductDetailAttributeByParentId(int parentId)
         {
-            var result = (from pv in _context.ProductVariants.Where(x => x.ParentId == parentId)
-                          join a in _context.Attributes
+            var result = (from pv in _context.ProductVariants.AsNoTracking().Where(x => x.ParentId == parentId)
+                          join a in _context.Attributes.AsNoTracking()
                           on pv.AttributeId equals a.Id
 
                           select new ProductVariantDetailAttributeDto

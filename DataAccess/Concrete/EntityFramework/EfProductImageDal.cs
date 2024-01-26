@@ -2,8 +2,10 @@
 using DataAccess.Abstract;
 using DataAccess.Context;
 using Entities.Concrete;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace DataAccess.Concrete.EntityFramework
@@ -14,6 +16,17 @@ namespace DataAccess.Concrete.EntityFramework
         public EfProductImageDal(PofuMacrameContext context) : base(context)
         {
             _context = context;
+        }
+
+        public List<string> GetFirstTwoPhotosNT(int productVariantId)
+        {
+            var result = _context.ProductImages.AsNoTracking()
+                .Where(x => x.ProductVariantId == productVariantId)
+                .Select(x => x.Path)
+                .Take(2)
+                .ToList();
+
+            return result;
         }
     }
 }

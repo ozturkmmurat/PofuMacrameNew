@@ -436,7 +436,7 @@ namespace Business.Concrete
                     {
                         if (productVariantGroups[i].ProductVariantAttributeValueDtos.Any(x => x.ProductVariantId == parentId))
                         {
-                            productVariant = GetProductVariantByParentId(parentId).Data;
+                            productVariant = GetProductVariantByParentIdNT(parentId).Data;
                         }
                         if (productVariant != null)
                         {
@@ -446,7 +446,7 @@ namespace Business.Concrete
                                 {
                                     keepParentId = productVariant.Id;
                                 }
-                                productVariant = GetProductVariantByParentId(productVariant.Id).Data;
+                                productVariant = GetProductVariantByParentIdNT(productVariant.Id).Data;
                                 productVariantGroups.Remove(productVariantGroups[i]);
 
                                 i--;
@@ -503,9 +503,9 @@ namespace Business.Concrete
             return new ErrorDataResult<List<ProductVariantGroupDetailDto>>();
         }
 
-        public IDataResult<ProductVariant> GetProductVariantByParentId(int parentId)
+        public IDataResult<ProductVariant> GetProductVariantByParentIdNT(int parentId)
         {
-            var result = _productVariantDal.Get(x => x.ParentId == parentId);
+            var result = _productVariantDal.GetAsNoTracking(x => x.ParentId == parentId);
             if (result != null)
             {
                 return new SuccessDataResult<ProductVariant>(result);
@@ -514,21 +514,21 @@ namespace Business.Concrete
         }
 
         //Bir ana varyantın id bilgisine göre o varyantın en sonuncu varyantını buluyor.
-        public IDataResult<ProductVariant> MainVariantEndVariant(int productVariantId)
+        public IDataResult<ProductVariant> MainVariantEndVariantNT(int productVariantId)
         {
-            var result = GetProductVariantByParentId(productVariantId);
+            var result = GetProductVariantByParentIdNT(productVariantId);
             if (result != null)
             {
                 if (result.Data == null)
                 {
-                    result = GetById(productVariantId);
+                    result = GetByIdNT(productVariantId);
                 }
                 List<ProductVariant> productVariants = new List<ProductVariant>();
 
                 productVariants.Add(result.Data);
                 for (int i = 0; i < productVariants.Count; i++)
                 {
-                    var productVariant = GetProductVariantByParentId(productVariants[i].Id).Data;
+                    var productVariant = GetProductVariantByParentIdNT(productVariants[i].Id).Data;
                     if (productVariant != null)
                     {
                         productVariants.Add(productVariant);
@@ -544,9 +544,9 @@ namespace Business.Concrete
 
         }
         //Sonuncu varyanttan ana varyantı buluyor
-        public IDataResult<ProductVariant> EndVariantMainVariant(int parentId)
+        public IDataResult<ProductVariant> EndVariantMainVariantNT(int parentId)
         {
-            var result = GetProductVariantByParentId(parentId);
+            var result = GetProductVariantByParentIdNT(parentId);
             if (result.Data != null)
             {
                 List<ProductVariant> productVariants = new List<ProductVariant>();
@@ -554,7 +554,7 @@ namespace Business.Concrete
                 productVariants.Add(result.Data);
                 for (int i = 0; i < productVariants.Count; i++)
                 {
-                    var productVariant = GetById(productVariants[i].ParentId.Value).Data;
+                    var productVariant = GetByIdNT(productVariants[i].ParentId.Value).Data;
                     if (productVariant != null)
                     {
                         productVariants.Add(productVariant);
@@ -572,7 +572,7 @@ namespace Business.Concrete
         //ParentId den baslayıp ilgili varyantın ozelliklerini buluyor.
         public IDataResult<ProductVariantAttributeDto> GetProductVariantAttribute(int parentId)
         {
-            var result = GetProductVariantByParentId(parentId);
+            var result = GetProductVariantByParentIdNT(parentId);
             if (result.Data != null)
             {
                 List<ProductVariant> productVariants = new List<ProductVariant>();
@@ -598,6 +598,81 @@ namespace Business.Concrete
             }
             return new ErrorDataResult<ProductVariantAttributeDto>();
 
+        }
+
+        public IDataResult<ProductVariant> GetByIdNT(int id)
+        {
+            var result = _productVariantDal.GetAsNoTracking(x => x.Id == id);
+            if (result != null)
+            {
+                return new SuccessDataResult<ProductVariant>(result);
+            }
+            return new ErrorDataResult<ProductVariant>();
+        }
+
+        //Sonuncu varyanttan ana varyanta gidip urun fotografini getiriyor
+        public IDataResult<List<string>> ProductVariantImage(int propductVariantId)
+        {
+            if (propductVariantId > 0)
+            {
+                var productImages = _productImageService.GetFirstTwoPathNT(propductVariantId);
+                return new SuccessDataResult<List<string>>(productImages.Data);
+            }
+            return new ErrorDataResult<List<string>>();
+        }
+
+        public IDataResult<SelectListProductVariantDto> DtoEndVariantMainVariantNT(int parentId)
+        {
+
+            var result = GetProductVariantByParentIdNT(parentId);
+            if (result.Data != null & parentId > 0)
+            {
+                List<SelectListProductVariantDto> productVariants = new List<SelectListProductVariantDto>();
+                List<AttributeValue> attributeValues = new List<AttributeValue>();
+
+                SelectListProductVariantDto productVariantDto = new SelectListProductVariantDto();
+                productVariantDto.ProductVariantId = result.Data.Id;
+                productVariantDto.ParentId  = result.Data.ParentId;
+                productVariantDto.ProductId = result.Data.ProductId;
+
+                AttributeValue firstAttributeValue = new AttributeValue();
+                firstAttributeValue.Id = result.Data.AttributeValueId.Value;
+                firstAttributeValue.AttributeId = result.Data.AttributeId.Value;
+                attributeValues.Add(firstAttributeValue);
+
+                productVariants.Add(productVariantDto);
+
+                for (int i = 0; i < productVariants.Count; i++)
+                {
+                    var productVariant = GetByIdNT(productVariants[i].ParentId.Value).Data;
+                    if (productVariant != null && productVariant.ParentId != 0)
+                    {
+                        SelectListProductVariantDto data = new SelectListProductVariantDto();
+                        data.ProductVariantId = productVariant.Id;
+                        data.ParentId = productVariant.ParentId;
+                        data.ProductId = productVariant.ProductId;
+
+                        productVariants.Add(data);
+
+                        AttributeValue attributeValue = new AttributeValue();
+                        attributeValue.Id = productVariant.AttributeValueId.Value;
+                        attributeValue.AttributeId = productVariant.AttributeId.Value;
+
+                        attributeValues.Add(attributeValue);
+                    }
+                    else
+                    {
+                        AttributeValue attributeValue = new AttributeValue();
+                        attributeValue.Id = productVariant.AttributeValueId.Value;
+                        attributeValue.AttributeId = productVariant.AttributeId.Value;
+                        attributeValues.Add(attributeValue);
+                        productVariants[i].AttributeValues = attributeValues;
+                        return new SuccessDataResult<SelectListProductVariantDto>(productVariants[i]);
+                    }
+
+                }
+            }
+            return new ErrorDataResult<SelectListProductVariantDto>();
         }
     }
 }

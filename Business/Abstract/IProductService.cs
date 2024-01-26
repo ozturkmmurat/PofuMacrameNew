@@ -15,10 +15,12 @@ namespace Business.Abstract
     public interface IProductService
     {
         IDataResult<List<Product>> GetAll();
+        IDataResult<List<Product>> GetAllProductByCategoryIdNT(int categoryId);
         IDataResult<List<SelectProductDto>> GetallProductDto();
         IDataResult<int> GetTotalProduct(int categoryId);
         IDataResult<SelectProductDetailDto> GetProductDetailDtoByPvId(int productVariantId);
         IDataResult<List<SelectListProductVariantDto>> GetAllProductVariantDtoGroupVariant(FilterProduct filterProduct);
+        IDataResult<List<SelectListProductVariantDto>> ProcessProductVariantData(List<SelectListProductVariantDto> processProductVariants);
         IDataResult<Product> GetById(int id);
         IDataResult<SelectProductDto> GetByProductDto(int productId);
         IResult Add(Product product);
