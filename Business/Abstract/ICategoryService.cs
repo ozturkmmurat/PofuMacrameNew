@@ -11,6 +11,7 @@ namespace Business.Abstract
     {
         IDataResult<List<Category>> GetAll();
         IDataResult<List<Category>> GetAllAsNoTracking();
+        IDataResult<List<Category>> GetAllSubCategory(int categoryId);
         IDataResult<List<SelectCategoryDto>> GetAllCategoryHierarchy();
         IDataResult<Category> GetById(int id);
         IResult Add(Category category);

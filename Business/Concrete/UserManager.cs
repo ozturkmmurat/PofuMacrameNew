@@ -62,10 +62,11 @@ namespace Business.Concrete
         {
             byte[] passwordHash, passwordSalt;
 
-
-            if (GetByMail(userForUpdateDto.Email) != null && GetById(userForUpdateDto.UserId).Data.Email != userForUpdateDto.Email)
+            var getByMail = GetByMail(userForUpdateDto.Email);
+            var getByIdUser = GetById(userForUpdateDto.UserId).Data;
+            if (getByMail != null &&  getByIdUser.Email != userForUpdateDto.Email)
             {
-                return new ErrorResult(Messages.AvailableUserMail);
+                return new ErrorResult(Messages.CurrentMail);
             }
 
 
@@ -78,40 +79,25 @@ namespace Business.Concrete
                 var result = CheckPassword(userForUpdateDto.Email, userForUpdateDto.OldPassword);
                 if (result.Success != true)
                 {
-                    return new ErrorResult(Messages.OldPasswordIncorrect);
+                    return new ErrorResult("Eski şifreniz hatalı");
                 }
                 HashingHelper.CreatePasswordHash(userForUpdateDto.NewPassword, out passwordHash, out passwordSalt);
-                var user = new User
-                {
-                    Id = userForUpdateDto.UserId,
-                    Email = userForUpdateDto.Email,
-                    FirstName = userForUpdateDto.FirstName,
-                    LastName = userForUpdateDto.LastName,
-                    PhoneNumber = userForUpdateDto.PhoneNumber,
-                    PasswordHash = passwordHash,
-                    PasswordSalt = passwordSalt,
-                    Status = true
-                };
-                _userDal.Update(user);
+                getByIdUser.Email = userForUpdateDto.Email;
+                getByIdUser.FirstName = userForUpdateDto.FirstName;
+                getByIdUser.LastName = userForUpdateDto.LastName;
+                getByIdUser.PasswordHash = passwordHash;
+                getByIdUser.PasswordSalt = passwordSalt;
+                getByIdUser.Status = true;
+                _userDal.Update(getByIdUser);
             }
             else
             {
+                getByIdUser.Email = userForUpdateDto.Email;
+                getByIdUser.FirstName = userForUpdateDto.FirstName;
+                getByIdUser.LastName = userForUpdateDto.LastName;
+                getByIdUser.Status = userForUpdateDto.Status;
 
-                var result = GetById(userForUpdateDto.UserId);
-                var user = new User
-                {
-                    Id = userForUpdateDto.UserId,
-                    Email = userForUpdateDto.Email,
-                    FirstName = userForUpdateDto.FirstName,
-                    LastName = userForUpdateDto.LastName,
-                    PhoneNumber = userForUpdateDto.PhoneNumber,
-                    PasswordHash = result.Data.PasswordHash,
-                    PasswordSalt = result.Data.PasswordSalt,
-                    RefreshToken = result.Data.RefreshToken,
-                    RefreshTokenEndDate = result.Data.RefreshTokenEndDate,
-                    Status = userForUpdateDto.Status
-                };
-                _userDal.Update(user);
+                _userDal.Update(getByIdUser);
             }
 
 
@@ -141,7 +127,7 @@ namespace Business.Concrete
             {
                 if (!HashingHelper.VerifyPasswordHash(password, userToCheck.PasswordHash, userToCheck.PasswordSalt))
                 {
-                    return new ErrorDataResult<User>();
+                    return new ErrorDataResult<User>(Messages.CheckPassword);
                 }
             }
             return new SuccessResult();

@@ -73,6 +73,16 @@ namespace Business.Concrete
             return new ErrorDataResult<List<SelectCategoryDto>>();
         }
 
+        public IDataResult<List<Category>> GetAllSubCategory(int categoryId)
+        {
+            var result = _categoryDal.GetAllAsNoTracking(x => x.ParentId == categoryId);
+            if (result?.Count > 0)
+            {
+                return new SuccessDataResult<List<Category>>(result);
+            }
+            return new ErrorDataResult<List<Category>>();
+        }
+
         public IDataResult<Category> GetById(int id)
         {
             var result = _categoryDal.Get(x => x.Id == id);

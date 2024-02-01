@@ -342,7 +342,7 @@ namespace DataAccess.Concrete.EntityFramework
         {
             if (filterProduct.CategoryId > 0 && filterProduct.Attributes.Count == 0)
             {
-                var result = from p in _context.Products.AsNoTracking().Where(x => x.CategoryId == filterProduct.CategoryId).Skip(filterProduct.StartLength).Take(filterProduct.EndLength)
+                var result = from p in _context.Products.AsNoTracking().Where(x => x.CategoryId == filterProduct.CategoryId)
                              join pv in _context.ProductVariants.AsNoTracking() on p.Id equals pv.ProductId
                              where pv.ParentId == 0
                              select new SelectListProductVariantDto

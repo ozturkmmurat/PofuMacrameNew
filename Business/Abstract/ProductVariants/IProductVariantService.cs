@@ -26,10 +26,13 @@ namespace Business.Abstract.ProductVariants
         IDataResult<ProductVariant> GetProductVariantByParentIdNT(int parentId);
         IDataResult<ProductVariant> GetById(int id);
         IDataResult<ProductVariant> GetByIdNT(int id); // NT -> AsNoTracking
+        IDataResult<ProductVariant> GetByParentIdNT(int parentId); // NT -> AsNoTracking
+
         IDataResult<ProductVariant> GetByProductId(int productId);
         IDataResult<ProductVariant> MainVariantEndVariantNT(int productVariantId);
         IDataResult<ProductVariant> EndVariantMainVariantNT(int parentId);
         IDataResult<SelectListProductVariantDto> DtoEndVariantMainVariantNT(int parentId);
+        IDataResult<SelectListProductVariantDto> DtoMainVariantEndVariantNT(int productVariantId);
         IDataResult<List<string>> ProductVariantImage(int productVariantId);
         IDataResult<ProductVariant> GetByParentIdAttrValueId(int productId,int? parentId, int? attributeValueId, int? attributeId);
         IDataResult<ProductVariantAttributeDto> GetProductVariantAttribute(int parentId); //İlgili varyantın attributelerini getirir. Sonuncu varyant dan başlayıp

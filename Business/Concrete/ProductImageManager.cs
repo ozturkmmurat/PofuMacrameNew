@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Business.Concrete
@@ -38,14 +39,14 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
-        public IResult AddList(AddProductImageDto addProductImageDtos)
+        public IResult AddList(CrudProductImageDto addProductImageDtos)
         {
             if (addProductImageDtos != null)
             {
                 List<ProductImage> productImages = new List<ProductImage>();
                 if (addProductImageDtos.Files != null)
                 {
-                    if(addProductImageDtos.Files.Count > 0)
+                    if (addProductImageDtos.Files.Count > 0)
                     {
                         var checkImageLimit = CheckImageLimit(addProductImageDtos.ProductVariantId, addProductImageDtos.Files.Count);
                         IResult result = BusinessRules.Run(checkImageLimit);
@@ -103,7 +104,7 @@ namespace Business.Concrete
                         Update(controlImage, null);
                     }
                 }
-               
+
                 return new SuccessResult();
             }
             return new ErrorResult();
@@ -174,18 +175,27 @@ namespace Business.Concrete
         {
             if (productImage != null)
             {
-                if (formFile != null)
+                var getAllImage = GetAllByProductVariantId(productImage.ProductVariantId);
+                if (getAllImage.Data?.Count > 0)
                 {
-                    productImage.Path = _fileHelper.Upload(formFile, PathConstans.ImagesPath);
+                    var updateData = getAllImage.Data.FirstOrDefault(x => x.Id == productImage.Id);
+                    updateData.IsMain = true;
+                    updateData.CreateDate = DateTime.Now;
+                    updateData.ProductVariantId = productImage.ProductVariantId;
+                    if (formFile != null)
+                    {
+                        productImage.Path = _fileHelper.Upload(formFile, PathConstans.ImagesPath);
+                    }
+                    else
+                    {
+                        productImage.Path = updateData.Path;
+                    }
+                    getAllImage.Data.Remove(updateData);
+                    _productImageDal.Update(updateData);
 
+                    getAllImage.Data.Select(x => x.IsMain = false).ToList();
+                    _productImageDal.UpdateRange(getAllImage.Data);
                 }
-                else
-                {
-                    productImage.Path = GetById(productImage.Id).Data.Path;
-                }
-
-                productImage.CreateDate = DateTime.Now;
-                _productImageDal.Update(productImage);
                 return new SuccessResult();
             }
             return new ErrorResult();

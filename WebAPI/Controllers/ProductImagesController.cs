@@ -62,7 +62,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("AddList")]
-        public IActionResult AddList([FromForm] AddProductImageDto addProductImageDto)
+        public IActionResult AddList([FromForm] CrudProductImageDto addProductImageDto)
         {
             var result = _productImageService.AddList(addProductImageDto);
             if (result.Success)

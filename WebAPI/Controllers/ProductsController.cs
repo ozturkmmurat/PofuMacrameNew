@@ -52,7 +52,7 @@ namespace WebAPI.Controllers
         //Ürünün Ana varyantlarını çekiyoruz.
         [HttpPost("GetAllProductVariantDtoGroupVariant")]
         public IActionResult GetAllProductVariantDtoGroupVariant(FilterProduct filterProduct)
-        {
+      {
             var result = _productService.GetAllProductVariantDtoGroupVariant(filterProduct);
             if (result.Success)
             {

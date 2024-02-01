@@ -19,7 +19,7 @@ namespace Business.Abstract
         IDataResult<ProductImage> GetByIdNT(int id); //NT -> AsNoTracking
         IDataResult<ProductImage> GetByProductVariantId(int productVariantId);
         IResult Add(ProductImage productImage, IFormFile formFile);
-        IResult AddList(AddProductImageDto addProductImageDtos);
+        IResult AddList(CrudProductImageDto addProductImageDtos);
         IResult Update(ProductImage productImage, IFormFile formFile);
         IResult Delete(ProductImage productImage);
         IResult CheckImageLimit(int productVariantId, int fileCount);

@@ -674,6 +674,69 @@ namespace Business.Concrete
             }
             return new ErrorDataResult<SelectListProductVariantDto>();
         }
+
+        public IDataResult<SelectListProductVariantDto> DtoMainVariantEndVariantNT(int productVariantId)
+        {
+            var result = GetByIdNT(productVariantId);
+            if (result.Data != null & productVariantId > 0)
+            {
+                List<SelectListProductVariantDto> productVariants = new List<SelectListProductVariantDto>();
+                List<AttributeValue> attributeValues = new List<AttributeValue>();
+
+                SelectListProductVariantDto productVariantDto = new SelectListProductVariantDto();
+                productVariantDto.ProductVariantId = result.Data.Id;
+                productVariantDto.ParentId  = result.Data.ParentId;
+                productVariantDto.ProductId = result.Data.ProductId;
+
+                AttributeValue firstAttributeValue = new AttributeValue();
+                firstAttributeValue.Id = result.Data.AttributeValueId.Value;
+                firstAttributeValue.AttributeId = result.Data.AttributeId.Value;
+                attributeValues.Add(firstAttributeValue);
+
+                productVariants.Add(productVariantDto);
+
+                for (int i = 0; i < productVariants.Count; i++)
+                {
+                    var productVariant = GetByParentIdNT(productVariants[i].ProductVariantId).Data;
+                    if (productVariant != null && productVariant.ParentId == 0)
+                    {
+                        SelectListProductVariantDto data = new SelectListProductVariantDto();
+                        data.ProductVariantId = productVariant.Id;
+                        data.ParentId = productVariant.ParentId;
+                        data.ProductId = productVariant.ProductId;
+
+                        productVariants.Add(data);
+
+                        AttributeValue attributeValue = new AttributeValue();
+                        attributeValue.Id = productVariant.AttributeValueId.Value;
+                        attributeValue.AttributeId = productVariant.AttributeId.Value;
+
+                        attributeValues.Add(attributeValue);
+                    }
+                    else
+                    {
+                        AttributeValue attributeValue = new AttributeValue();
+                        attributeValue.Id = productVariant.AttributeValueId.Value;
+                        attributeValue.AttributeId = productVariant.AttributeId.Value;
+                        attributeValues.Add(attributeValue);
+                        productVariants[i].AttributeValues = attributeValues;
+                        return new SuccessDataResult<SelectListProductVariantDto>(productVariants[i]);
+                    }
+
+                }
+            }
+            return new ErrorDataResult<SelectListProductVariantDto>();
+        }
+
+        public IDataResult<ProductVariant> GetByParentIdNT(int parentId)
+        {
+            var result = _productVariantDal.GetAsNoTracking(x => x.ParentId == parentId);
+            if (result != null)
+            {
+                return new SuccessDataResult<ProductVariant>(result);
+            }
+            return new ErrorDataResult<ProductVariant>();
+        }
     }
 }
 
