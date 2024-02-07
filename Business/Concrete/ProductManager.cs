@@ -13,6 +13,7 @@ using Entities.Dtos.ProductVariant;
 using Entities.EntitiyParameter.Product;
 using Entities.EntityParameter.Product;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -98,14 +99,15 @@ namespace Business.Concrete
                 var applyFiltered = _productDal.ApplyFilteres(filterProduct);
                 List<SelectListProductVariantDto> filteredProductVariantDto = new List<SelectListProductVariantDto>();
 
-                if (applyFiltered != null & applyFiltered.Count > 0)
+                if (applyFiltered?.Count > 0)
                 {
                     for (int i = 0; i < applyFiltered.Count; i++)
                     {
                         if (applyFiltered[i].ParentId > 0)
                         {
                             filteredProductVariantDto.Add(_productVariantService.DtoEndVariantMainVariantNT(applyFiltered[i].ParentId.Value).Data);
-                        }else if (applyFiltered[i].ParentId == 0)
+                        }
+                        else if (applyFiltered[i].ParentId == 0)
                         {
                             filteredProductVariantDto.Add(_productVariantService.DtoMainVariantEndVariantNT(applyFiltered[i].Id).Data);
 
@@ -118,19 +120,116 @@ namespace Business.Concrete
 
                     if (processProductVariant.Success)
                     {
-                        var slicerAttributeValues = _categoryAttributeService.GetAllByCategoryIdSlicerAttribute(filterProduct.CategoryId, true, false);
+                        var categoryAttributes = _categoryAttributeService.GetAllByCategoryId(filterProduct.CategoryId).Data;
+                        var slicerAttributeValues = categoryAttributes.Where(x => x.Slicer && x.Attribute == false);
+                        var attributeAttributeValues = categoryAttributes.Where(x => x.Slicer == false && x.Attribute);
+                        var falseAttributeValues = categoryAttributes.Where(x => x.Slicer == false && x.Attribute == false);
                         if (slicerAttributeValues != null)
                         {
-                            var slicerIds = filterProduct.Attributes.Where(x => slicerAttributeValues.Data.Any(y => x.Id ==  y.AttributeId)).SelectMany(x => x.ValueId).ToList();
-                            var processFilters = processProductVariant.Data.Where(x => x.AttributeValues.Any(y => slicerIds.Contains(y.Id))).ToList();
-                            var endFilters = processFilters.GroupBy(x => x.ProductVariantId).Select(y => y.First()).ToList();
-                            if (endFilters.Count > 0)
+                            var slicerIds = filterProduct.Attributes.Where(x => slicerAttributeValues.Any(y => x.Id ==  y.AttributeId)).SelectMany(x => x.ValueId).ToList();
+                            var attributeIds = filterProduct.Attributes.Where(x => attributeAttributeValues.Any(y => x.Id ==  y.AttributeId)).SelectMany(x => x.ValueId).ToList();
+                            if (slicerIds.Count > 0 && attributeIds.Count > 0 && falseAttributeValues.Count() == 0)
                             {
-                                return new SuccessDataResult<List<SelectListProductVariantDto>>(endFilters);
+                                var processFilters = processProductVariant.Data.Where(x => x.AttributeValues.Any(y => slicerIds.Contains(y.Id))).ToList();
+                                var endFilters = processFilters
+                                                .GroupBy(x => x.ProductVariantId)
+                                                .Select(group =>
+                                                {
+                                                    var maxAttributeValueItem = group.OrderByDescending(item => item.AttributeValues.Count()).FirstOrDefault();
+                                                    return maxAttributeValueItem;
+                                                })
+                                .ToList();
+
+                                var test = endFilters.Where(x => x.AttributeValues.Any(y => attributeIds.Contains(y.Id))).ToList();
+
+                                var endFilters2 = test
+                                                    .GroupBy(x => x.ProductVariantId)
+                                                    .Select(group =>
+                                                    {
+                                                        var maxAttributeValueItem = group.OrderByDescending(item => item.AttributeValues.Count()).FirstOrDefault();
+                                                        return maxAttributeValueItem;
+                                                    })
+                                    .ToList();
+
+                                for (int i = endFilters2.Count - 1; i >= 0; i--)
+                                {
+                                    var dto = endFilters2[i];
+                                    bool shouldRemove = dto.AttributeValues.Any(av => filterProduct.Attributes.Any(fa => fa.Id == av.AttributeId && !fa.ValueId.Contains(av.Id)));
+                                    if (shouldRemove)
+                                    {
+                                        endFilters2.RemoveAt(i);
+                                    }
+                                }
+
+
+
+
+
+                                if (endFilters.Count > 0)
+                                {
+                                    return new SuccessDataResult<List<SelectListProductVariantDto>>(endFilters2);
+                                }
                             }
-                            else
+                            else if (slicerIds.Count > 0 && attributeIds.Count ==  0)
                             {
-                                return new SuccessDataResult<List<SelectListProductVariantDto>>();
+                                var processFilters = processProductVariant.Data.Where(x => x.AttributeValues.Any(y => slicerIds.Contains(y.Id))).ToList();
+                                var endFilters = processFilters
+                                                .GroupBy(x => x.ProductVariantId)
+                                                .Select(group =>
+                                                {
+                                                    var maxAttributeValueItem = group.OrderByDescending(item => item.AttributeValues.Count()).FirstOrDefault();
+                                                    return maxAttributeValueItem;
+                                                })
+                                .ToList();
+
+                                var list2Ids = filterProduct.Attributes.SelectMany(entity => entity.ValueId).ToList();
+
+                                var filteredEndFilters = endFilters
+                                    .Where(filter => filter.AttributeValues.Any(attributeValue => list2Ids.Contains(attributeValue.Id)))
+                                    .ToList();
+
+                                if (endFilters.Count > 0)
+                                {
+                                    return new SuccessDataResult<List<SelectListProductVariantDto>>(filteredEndFilters);
+                                }
+                            }
+                            else if (slicerIds.Count == 0 && attributeIds.Count > 0)
+                            {
+                                
+                                if (attributeIds.Count > 0)
+                                {
+                                    var processFilters = processProductVariant.Data.Where(x => x.AttributeValues.Any(y => attributeIds.Contains(y.Id))).ToList();
+
+                                    var test = processFilters.Where(x => x.AttributeValues.Any(y => attributeIds.Contains(y.Id))).ToList();
+
+                                    var endFilters2 = test
+                                                        .GroupBy(x => x.ProductVariantId)
+                                                        .Select(group =>
+                                                        {
+                                                            var maxAttributeValueItem = group.OrderByDescending(item => item.AttributeValues.Count()).FirstOrDefault();
+                                                            return maxAttributeValueItem;
+                                                        })
+                                        .ToList();
+
+                                    for (int i = endFilters2.Count - 1; i >= 0; i--)
+                                    {
+                                        var dto = endFilters2[i];
+                                        bool shouldRemove = dto.AttributeValues.Any(av => filterProduct.Attributes.Any(fa => fa.Id == av.AttributeId && !fa.ValueId.Contains(av.Id)));
+                                        if (shouldRemove)
+                                        {
+                                            endFilters2.RemoveAt(i);
+                                        }
+                                    }
+
+                                    if (endFilters2.Count > 0)
+                                    {
+                                        return new SuccessDataResult<List<SelectListProductVariantDto>>(endFilters2);
+                                    }
+                                }
+                                else
+                                {
+                                    return new SuccessDataResult<List<SelectListProductVariantDto>>();
+                                }
                             }
 
                         }

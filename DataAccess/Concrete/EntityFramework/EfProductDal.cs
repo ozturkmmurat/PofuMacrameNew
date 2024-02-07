@@ -15,6 +15,7 @@ using System.Diagnostics.CodeAnalysis;
 using Entities.EntitiyParameter.Product;
 using Entities.EntityParameter.Product;
 using System.Xml.Linq;
+using System.Collections;
 
 namespace DataAccess.Concrete.EntityFramework
 {
@@ -239,73 +240,69 @@ namespace DataAccess.Concrete.EntityFramework
 
         public List<ProductVariant> ApplyFilteres(FilterProduct filterProduct)
         {
-            var products = _context.Products.AsNoTracking()
-                                            .Where(x => x.CategoryId == filterProduct.CategoryId)
-                                            .ToList();
+            var products = _context.Products.AsNoTracking()  //Kategoriye gore urunleri cek
+                                           .Where(x => x.CategoryId == filterProduct.CategoryId)
+                                           .ToList();
 
-            var productIds = products.Select(p => p.Id).ToList();
+            var productIds = products.Select(p => p.Id).ToList(); //Cekilen urunlerin idlerini al
 
-            var productAttributes = _context.ProductAttributes.AsNoTracking()
+            var productAttributes = _context.ProductAttributes.AsNoTracking() // Bu urunlerin ozelliklerini al
                 .Where(variant => productIds.Contains(variant.ProductId))
                 .ToList();
 
-            var categoryAttributes = _context.CategoryAttributes.AsNoTracking().Where(x => x.CategoryId == filterProduct.CategoryId);
+            var categoryAttributes = _context.CategoryAttributes.AsNoTracking().Where(x => x.CategoryId == filterProduct.CategoryId); //İlgili kategorideki hangi attributeler ana grup alt grup ve normal ozellik onları kontrol icin cek
             if (categoryAttributes != null)
             {
                 if (categoryAttributes.Any())
                 {
 
                     // CategoryAttribute listesinden Slicer ve AttributeValue değeri false olanları filtrele
-                    var filteredIds = categoryAttributes
+                    var filteredIdsFalse = categoryAttributes //Duz attributeleri al cinsiyet gibi urun detay da gozukmeyen
                         .Where(ca => !ca.Slicer && !ca.Attribute)
                         .Select(ca => ca.AttributeId).ToList();
 
-                    var filteredIdsCheck = filterProduct.Attributes.Where(x => filteredIds.Any(y => x.Id == y));
-
-                    if (filteredIdsCheck.Count() == 0)
-                    {
-                        filteredIds = categoryAttributes
+                    var filteredIdsTrue = categoryAttributes //Urun detay da gozuekn attributeleri al
                         .Where(ca => ca.Slicer || ca.Attribute)
                         .Select(ca => ca.AttributeId).ToList();
+
+                    var falseCheck = productAttributes.Where(x => filteredIdsFalse.Any(y => x.AttributeId == y)).ToList(); // Urun ozelliklerinde hangileri duz ozellik onları bul
+
+                    var filteredAttributeFalseProduct = filterProduct.Attributes.Where(x => falseCheck.Any(y => y.AttributeId == x.Id)).SelectMany(x => x.ValueId).ToList(); //paramtrede duz ozellik secilmis mi  var ise valueIdlerini al
+
+                    var filteredEnd = productAttributes.Where(x => filteredAttributeFalseProduct.Contains(x.AttributeValueId)).ToList(); //Duz ozelliklere gore filtrele
+
+                    var trueCheck = productAttributes.Where(x => filteredIdsTrue.Any(y => x.AttributeId == y)).ToList(); // Urun ozelliklerinde hangileri duz ozellik onları bul
+
+                    var filteredAttributeTrueProduct = filterProduct.Attributes.Where(x => trueCheck.Any(y => y.AttributeId == x.Id)).SelectMany(x => x.ValueId).ToList(); //paramtrede duz ozellik secilmis mi  var ise valueIdlerini al
+
+                    var filteredEndTrue = productAttributes.Where(x => filteredAttributeTrueProduct.Contains(x.AttributeValueId)).ToList(); //Duz ozelliklere gore filtrele
+
+                    if (filteredEnd.Count > 0) //Duz ozellik secilmis ise bura calissin
+                    {
+                        var filteredAttributeFalse = filterProduct.Attributes
+                         .Where(fa => filteredIdsFalse.Contains(fa.Id))
+                         .ToList();
+
+                        var getFilteredAttributeFalseId = filteredAttributeFalse.SelectMany(x => x.ValueId).ToList();
+
+                        var filterProductAttributes = productAttributes.Where(x => getFilteredAttributeFalseId.Contains(x.AttributeValueId));
+
+                        var filteredProductAttributesId = filterProductAttributes.Select(x => x.ProductId);
+
+                        var productVariantFalse = _context.ProductVariants.Where(x => x.ParentId == 0 && filteredProductAttributesId.Contains(x.ProductId)).ToList();
+
+                        return productVariantFalse;
+                    }
+                    else if(filteredAttributeFalseProduct.Count == 0 && filteredEndTrue.Count > 0) //Duz ozellik secilmemis ise sadece urun detay daki ozellikler secilmis ise burasi calissin
+                    {
+                        var trueCheckFilter = productAttributes.Where(x => filteredIdsTrue.Any(y => y == x.AttributeId)).Select(t => t.AttributeValueId).Distinct().ToList();
+                        var test = _context.ProductVariants.Where(x => productIds.Contains(x.ProductId)).ToList();
+                        var filteredAttributeTrue = test.Where(x => trueCheckFilter.Any(y => x.AttributeValueId == y)).ToList();
+                        return filteredAttributeTrue;
+
                     }
 
-                    // FilterProduct'un Attributes listesini, CategoryAttribute listesinden elde edilen filtrelenmiş Id'ler kullanarak filtrele
-                    var filteredAttributeFalse = filterProduct.Attributes
-                        .Where(fa => filteredIds.Contains(fa.Id))
-                        .ToList();
-
-                    var filteredAttributeFalseProduct = filterProduct.Attributes.Where(x => filteredAttributeFalse.Any(y => y.Id == x.Id)).SelectMany(x => x.ValueId).ToList();
-
-                    var filteredEnd = productAttributes.Where(x => filteredAttributeFalseProduct.Contains(x.AttributeValueId));
-
-                    //filteredAttributeFalse sahip olan productları bul productAttributes üzerinden
-                    var productFilter = filteredEnd.Where(x => filteredAttributeFalse.Any(y => y.Id == x.AttributeId)).ToList();
-
-                    // CategoryAttribute listesinden Slicer ve AttributeValue değeri true olanları filtrele
-                    var filteredIdsTrue = categoryAttributes.Where(ca => ca.Slicer || ca.Attribute).Select(ca => ca.AttributeId).ToList();
-
-                    // filteredIdsTrue'un Attributes listesini, CategoryAttribute listesinden elde edilen filtrelenmiş Id'ler kullanarak filtrele
-
-                    var filteredAttributeTrue = filterProduct.Attributes.Where(fa => filteredIdsTrue.Contains(fa.Id)).ToList();
-
-                    // productFilter koleksiyonunu yerelde malzemele
-                    var productFilterList = productFilter.Select(pf => pf.ProductId).ToList();
-
-                    // Yerelde malzemeleme yapılmış koleksiyonu kullanarak LINQ sorgusunu oluştur
-                    var slicerProduct = _context.ProductVariants
-                        .AsNoTracking()
-                        .Where(x => productFilterList.Contains(x.ProductId))
-                        .ToList();
-
-                    var filteredAttributeTrueIds = filteredAttributeTrue
-                        .SelectMany(fa => fa.ValueId)
-                        .ToList();
-
-                    // AsEnumerable() kullanmadan hatayı gidermek için iki aşamada filtreleme yap
-                    var slicerProductExecute = slicerProduct
-                        .Where(x => x.AttributeValueId.HasValue && filteredAttributeTrueIds.Contains(x.AttributeValueId.Value))
-                        .ToList();
-                    return slicerProductExecute;
+                    
                 }
 
             }
@@ -390,7 +387,7 @@ namespace DataAccess.Concrete.EntityFramework
 
             }
             return null;
-        
+
         }
     }
 }

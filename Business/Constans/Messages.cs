@@ -29,7 +29,7 @@ namespace Business.Constans
         public static string LoginCheck = "Email ve şifreyi kontrol ediniz";
         public static string UserCheck = "Böyle bir kullanıcı bulunamadı.";
         public static string SuccessRegister = "Başarıyla Kayıt olundu";
-        public static string SuccessCreateToken = "Token başarıyal oluşturuldu";
+        public static string SuccessCreateToken = "Token başarıyla oluşturuldu";
         public static string UnSuccessProductStockCheck = "Sepetteki ürünlerin stoğunu kontrol ediniz.";
         public static string UnSuccessProductStockPrice = "Sepetteki ürünlerin fiyatı eşleşmiyor.";
         public static string failCheckOrder = "Böyle bir siparişiniz bulunmamaktadır.";
