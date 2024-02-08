@@ -18,6 +18,5 @@ namespace DataAccess.Abstract
         List<ProductVariantAttributeValueDto> GetAllSubProductAttributeDtoProductId(int productId);
         List<ProductVariantAttributeValueDto> GetAllSubProductAttributeDtoByParentId(int parentId);
 
-
     }
 }

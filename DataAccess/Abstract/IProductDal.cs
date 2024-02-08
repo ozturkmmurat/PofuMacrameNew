@@ -19,7 +19,7 @@ namespace DataAccess.Abstract
         List<SelectListProductVariantDto> GetAllPvFilterDto(FilterProduct filterProduct);
         List<SelectListProductVariantDto> DefaultOnNoFilter(FilterProduct filterProduct);
         List<SelectListProductVariantDto> RandomDefaultOnNoFilter(FilterProduct filterProduct);
-        List<ProductVariant> ApplyFilteres(FilterProduct filterProduct);
+        Tuple<List<ProductVariant>, List<ProductAttribute?>> ApplyFilteres(FilterProduct filterProduct);
         List<SelectListProductVariantDto> ExecuteFilteres(List<SelectListProductVariantDto> filterProducts);
         List<SelectProductDto> GetAllFilterDto(Expression<Func<SelectProductDto, bool>> filter = null);
         SelectProductDto GetProductFilterDto(Expression<Func<SelectProductDto, bool>> filter = null);

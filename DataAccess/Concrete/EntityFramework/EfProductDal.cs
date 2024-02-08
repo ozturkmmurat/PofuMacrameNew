@@ -16,6 +16,7 @@ using Entities.EntitiyParameter.Product;
 using Entities.EntityParameter.Product;
 using System.Xml.Linq;
 using System.Collections;
+using Core.Entities;
 
 namespace DataAccess.Concrete.EntityFramework
 {
@@ -238,7 +239,7 @@ namespace DataAccess.Concrete.EntityFramework
             }
         }
 
-        public List<ProductVariant> ApplyFilteres(FilterProduct filterProduct)
+        public Tuple<List<ProductVariant>, List<ProductAttribute?>> ApplyFilteres(FilterProduct filterProduct)
         {
             var products = _context.Products.AsNoTracking()  //Kategoriye gore urunleri cek
                                            .Where(x => x.CategoryId == filterProduct.CategoryId)
@@ -277,7 +278,7 @@ namespace DataAccess.Concrete.EntityFramework
 
                     var filteredEndTrue = productAttributes.Where(x => filteredAttributeTrueProduct.Contains(x.AttributeValueId)).ToList(); //Duz ozelliklere gore filtrele
 
-                    if (filteredEnd.Count > 0) //Duz ozellik secilmis ise bura calissin
+                    if (filteredEnd?.Count > 0) //Duz ozellik secilmis ise bura calissin
                     {
                         var filteredAttributeFalse = filterProduct.Attributes
                          .Where(fa => filteredIdsFalse.Contains(fa.Id))
@@ -291,14 +292,18 @@ namespace DataAccess.Concrete.EntityFramework
 
                         var productVariantFalse = _context.ProductVariants.Where(x => x.ParentId == 0 && filteredProductAttributesId.Contains(x.ProductId)).ToList();
 
-                        return productVariantFalse;
+                        return Tuple.Create(productVariantFalse, filteredEnd);
                     }
-                    else if(filteredAttributeFalseProduct.Count == 0 && filteredEndTrue.Count > 0) //Duz ozellik secilmemis ise sadece urun detay daki ozellikler secilmis ise burasi calissin
+                    else if(filteredAttributeFalseProduct?.Count == 0 && filteredEndTrue?.Count > 0) //Duz ozellik secilmemis ise sadece urun detay daki ozellikler secilmis ise burasi calissin
                     {
                         var trueCheckFilter = productAttributes.Where(x => filteredIdsTrue.Any(y => y == x.AttributeId)).Select(t => t.AttributeValueId).Distinct().ToList();
                         var test = _context.ProductVariants.Where(x => productIds.Contains(x.ProductId)).ToList();
                         var filteredAttributeTrue = test.Where(x => trueCheckFilter.Any(y => x.AttributeValueId == y)).ToList();
-                        return filteredAttributeTrue;
+                        filteredEnd = null;
+                       return Tuple.Create(filteredAttributeTrue, filteredEnd);
+                    }
+                    else if (filteredEnd?.Count == 0)
+                    {
 
                     }
 

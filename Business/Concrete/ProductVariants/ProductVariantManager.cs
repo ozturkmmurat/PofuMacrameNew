@@ -713,14 +713,24 @@ namespace Business.Concrete
 
                         attributeValues.Add(attributeValue);
                     }
-                    else
+                    else if(productVariant != null && productVariant.ParentId > 0)
                     {
+                        SelectListProductVariantDto data = new SelectListProductVariantDto();
+                        data.ProductVariantId = productVariant.Id;
+                        data.ParentId = productVariant.ParentId;
+                        data.ProductId = productVariant.ProductId;
+
+                        productVariants.Add(data);
+
                         AttributeValue attributeValue = new AttributeValue();
                         attributeValue.Id = productVariant.AttributeValueId.Value;
                         attributeValue.AttributeId = productVariant.AttributeId.Value;
                         attributeValues.Add(attributeValue);
-                        productVariants[i].AttributeValues = attributeValues;
-                        return new SuccessDataResult<SelectListProductVariantDto>(productVariants[i]);
+                        productVariants[0].AttributeValues = attributeValues;
+                    }
+                    else if(productVariant == null)
+                    {
+                        return new SuccessDataResult<SelectListProductVariantDto>(productVariants[0]);
                     }
 
                 }
