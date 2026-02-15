@@ -38,7 +38,7 @@ namespace DataAccess.Concrete.EntityFramework
                                                    {
                                                        SubOrderId = so.Id,
                                                        VariantId = so.VariantId, // Burada ProductVariant'ın Id'sini alıyoruz
-                                                       ParentId = pv.ParentId.Value,
+                                                       ParentId = pv.ParentId,
                                                        Price = so.Price,
                                                        Kdv = so.Kdv,
                                                        NetPrice = so.NetPrice,
@@ -71,7 +71,7 @@ namespace DataAccess.Concrete.EntityFramework
                                                        {
                                                            SubOrderId = so.Id,
                                                            VariantId = so.VariantId, // Burada ProductVariant'ın Id'sini alıyoruz
-                                                           ParentId = pv.ParentId.Value,
+                                                           ParentId = pv.ParentId,
                                                            Price = so.Price,
                                                            Kdv = so.Kdv,
                                                            NetPrice = so.NetPrice,
@@ -112,7 +112,7 @@ namespace DataAccess.Concrete.EntityFramework
                                                        {
                                                            SubOrderId = so.Id,
                                                            VariantId = so.VariantId, // Burada ProductVariant'ın Id'sini alıyoruz
-                                                           ParentId = pv.ParentId.Value,
+                                                           ParentId = pv.ParentId,
                                                            Price = so.Price,
                                                            Kdv = so.Kdv,
                                                            NetPrice = so.NetPrice,

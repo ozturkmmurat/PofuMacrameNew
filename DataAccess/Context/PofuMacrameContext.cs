@@ -1,4 +1,4 @@
-﻿using Core.Entities.Concrete;
+using Core.Entities.Concrete;
 using Entities.Concrete;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -13,8 +13,8 @@ namespace DataAccess.Context
         {
             if (!optionsBuilder.IsConfigured)
             {
-                //optionsBuilder.UseSqlServer("Server=DESKTOP-K1G3PAC;Database=PofuMacrame;Trusted_Connection=True;");
-                optionsBuilder.UseSqlServer("Server=YAYIN01;Database=PofuMacrame; User ID=murat;Password=123456;Connect Timeout=30;MultiSubnetFailover=False;");
+                optionsBuilder.UseSqlServer("Server=DESKTOP-K1G3PAC;Database=PofuMacrame;Trusted_Connection=True;");
+                //optionsBuilder.UseSqlServer("Server=YAYIN01;Database=PofuMacrame; User ID=murat;Password=123456;Connect Timeout=30;MultiSubnetFailover=False;");
                 //optionsBuilder.UseSqlServer("Server=94.102.74.13;Database=WeighbridgeCalculator; User ID=websa;Password=v2qySqsu7MkXL5D;Connect Timeout=30;MultiSubnetFailover=False;");
 
             }
@@ -43,6 +43,7 @@ namespace DataAccess.Context
         public DbSet<CategoryAttribute> CategoryAttributes { get; set; }
         public DbSet<CategoryImage> CategoryImages { get; set; }
         public DbSet<Order> Orders { get; set; }
+        public DbSet<ProductCategory> ProductCategories { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductAttribute> ProductAttributes { get; set; }
         public DbSet<ProductStock> ProductStocks { get; set; }
@@ -55,5 +56,7 @@ namespace DataAccess.Context
         public DbSet<UserAddress> UserAddresses { get; set; }
         public DbSet<City> Cities { get; set; }
         public DbSet<PasswordReset> PasswordResets { get; set; }
+        public DbSet<ProductPriceFactor> ProductPriceFactors { get; set; }
+        public DbSet<District> Districts { get; set; }
     }
 }

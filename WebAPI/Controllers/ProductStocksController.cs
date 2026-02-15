@@ -1,5 +1,6 @@
-﻿using Business.Abstract;
+using Business.Abstract;
 using Entities.Concrete;
+using Entities.Dtos.ProductStock;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -89,6 +90,17 @@ namespace WebAPI.Controllers
         public IActionResult Delete(ProductStock productStock)
         {
             var result = _productStockService.Delete(productStock);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        [HttpPost("CheckProductStockPrice")]
+        public IActionResult CheckProductStockPrice(ProductStockPriceCheckDto productStockPriceCheckDto)
+        {
+            var result = _productStockService.CheckProductStockPrice(productStockPriceCheckDto);
             if (result.Success)
             {
                 return Ok(result);

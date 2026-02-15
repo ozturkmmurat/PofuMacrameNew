@@ -10,6 +10,9 @@ namespace Entities.Concrete
     {
         public int Id { get; set; }
         public int UserId { get; set; }
+        public int ProductPriceFactorId { get; set; }
+        public decimal Price { get; set; }
+        public decimal ExtraPrice { get; set; }
         public decimal TotalPrice { get; set; }
         public string OrderCode { get; set; }
         public DateTime OrderDate { get; set; }
@@ -18,6 +21,7 @@ namespace Entities.Concrete
         public string CancelResultJson { get; set; }
         public string PaymentToken { get; set; }
         public string Address { get; set; }
+        public string Description { get; set; }
 
         public Order()
         {

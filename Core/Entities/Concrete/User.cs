@@ -18,6 +18,5 @@ namespace Core.Entities.Concrete
         public DateTime? RefreshTokenEndDate { get; set; }
         public DateTime? RegistrationDate { get; set; }
         public DateTime? LastLoginDate { get; set; }
-        public string VerificationCode { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Core.Utilities.Result.Abstract;
+using Core.Utilities.Result.Abstract;
 using Entities.Concrete;
 using Entities.Dtos.Product;
 using Entities.Dtos.ProductStock;
@@ -23,6 +23,9 @@ namespace Business.Abstract
 
         //BusinessRules Check
         IResult CheckProductStock(ProductStock productStock);
-        IResult CheckProductStockPrice(ProductStock productStock);
+        /// <summary>
+        /// ProductVariantIds listesindeki her varyant için NetPrice döner. İlçe ek ücreti sipariş başına bir kez: ilk dönen elemanın ExtraPrice alanında.
+        /// </summary>
+        IDataResult<List<ProductStockPriceDto>> CheckProductStockPrice(ProductStockPriceCheckDto productStockPriceCheckDto);
     }
 }

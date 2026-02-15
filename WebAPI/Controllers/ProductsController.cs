@@ -1,6 +1,7 @@
-﻿using Business.Abstract;
+using Business.Abstract;
 using Entities.Concrete;
 using Entities.Dtos.Product;
+using Entities.Dtos.Product.Select;
 using Entities.Dtos.ProductVariant;
 using Entities.EntitiyParameter.Product;
 using Entities.EntityParameter.Product;
@@ -107,13 +108,11 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("Add")]
-        public IActionResult Add(Product product)
+        public IActionResult Add(ProductDto productDto)
         {
-            var result = _productService.Add(product);
+            var result = _productService.Add(productDto);
             if (result.Success)
-            {
                 return Ok(result);
-            }
             return BadRequest(result);
         }
 
@@ -128,16 +127,15 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpPost("Update")]
-        public IActionResult Update(Product product)
+        [HttpPost("TsaUpdate")]
+        public IActionResult TsaUpdate(ProductDto productDto)
         {
-            var result = _productService.Update(product);
+            var result = _productService.TsaUpdate(productDto);
             if (result.Success)
-            {
                 return Ok(result);
-            }
             return BadRequest(result);
         }
+
 
         [HttpPost("Delete")]
         public IActionResult Delete(Product product)

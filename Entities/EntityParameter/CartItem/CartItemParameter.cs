@@ -1,4 +1,4 @@
-﻿using Entities.Dtos.ProductVariant.Select;
+using Entities.Dtos.ProductVariant.Select;
 using System;
 using System.Collections.Generic;
 using System.Text;

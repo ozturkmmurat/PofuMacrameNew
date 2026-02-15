@@ -1,4 +1,4 @@
-﻿using Business.Abstract;
+using Business.Abstract;
 using Core.Utilities.Result.Abstract;
 using Core.Utilities.Result.Concrete;
 using DataAccess.Abstract;
@@ -82,12 +82,12 @@ namespace Business.Concrete
 
         public IDataResult<ProductAttribute> MappingProductAttribute(ProductVariant productVariant)
         {
-            if (productVariant != null)
+            if (productVariant != null && productVariant.AttributeId != 0 && productVariant.AttributeValueId != 0)
             {
                 ProductAttribute productAttribute = new ProductAttribute();
                 productAttribute.ProductId = productVariant.ProductId;
-                productAttribute.AttributeValueId = Convert.ToInt32(productVariant.AttributeValueId);
-                productAttribute.AttributeId = Convert.ToInt32(productVariant.AttributeId);
+                productAttribute.AttributeValueId = productVariant.AttributeValueId;
+                productAttribute.AttributeId = productVariant.AttributeId;
                 return new SuccessDataResult<ProductAttribute>(productAttribute);
             }
             return new ErrorDataResult<ProductAttribute>();

@@ -1,4 +1,4 @@
-﻿using Core.Entities;
+using Core.Entities;
 using Entities.Concrete;
 using System;
 using System.Collections.Generic;
@@ -9,9 +9,9 @@ namespace Entities.Dtos.ProductVariant.Select
     public class ProductVariantAttributeValueDto : IDto
     {
         public int ProductId { get; set; }
-        public int? ParentId { get; set; }
-        public int? AttributeId { get; set; }
-        public int? AttributeValueId { get; set; }
+        public int ParentId { get; set; }
+        public int AttributeId { get; set; }
+        public int AttributeValueId { get; set; }
         public int ProductVariantId { get; set; }
         public int EndProductVariantId { get; set; }
         public string ProductName { get; set; }

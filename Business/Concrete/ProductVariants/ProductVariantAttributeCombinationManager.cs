@@ -1,4 +1,4 @@
-﻿using Business.Abstract.ProductVariants;
+using Business.Abstract.ProductVariants;
 using Core.Utilities.Result.Abstract;
 using Core.Utilities.Result.Concrete;
 using DataAccess.Abstract;
@@ -80,7 +80,7 @@ namespace Business.Concrete.ProductVariants
 
                 if (startGroup != null)
                 {
-                    GenerateSubCombinations(result, combination, startGroup.ParentId.Value);
+                    GenerateSubCombinations(result, combination, startGroup.ParentId);
                 }
 
                 return new SuccessDataResult<List<ProductVariantAttributeValueDto>>(combination);
@@ -105,7 +105,7 @@ namespace Business.Concrete.ProductVariants
                             {
                                 productVariantAttributeValueDto.AttributeValue += item.AttributeName + ": " + item.AttributeValue + " - ";
                             }
-                            if (item == items.First() && (item.ParentId == 0 || item.ParentId == null))
+                            if (item == items.First() && item.ParentId == 0)
                             {
                                 productVariantAttributeValueDto.ProductVariantId = item.ProductVariantId;
                             }
@@ -141,7 +141,7 @@ namespace Business.Concrete.ProductVariants
                             {
                                 productVariantAttributeValueDto.AttributeValue += item.AttributeName + ": " + item.AttributeValue + " - ";
                             }
-                            if (item == result.First() && (item.ParentId == 0 || item.ParentId == null))
+                            if (item == result.First() && item.ParentId == 0)
                             {
                                 productVariantAttributeValueDto.ProductVariantId = item.ProductVariantId;
                             }

@@ -1,4 +1,4 @@
-﻿using Autofac;
+using Autofac;
 using Autofac.Extras.DynamicProxy;
 using Business.Abstract;
 using Business.Abstract.ProductVariants;
@@ -41,6 +41,9 @@ namespace Business.DependecyResolvers.Autofac
             builder.RegisterType<EfCategoryDal>().As<ICategoryDal>().InstancePerLifetimeScope();
             builder.RegisterType<CategoryManager>().As<ICategoryService>().InstancePerLifetimeScope();
 
+            builder.RegisterType<EfProductCategoryDal>().As<IProductCategoryDal>().InstancePerLifetimeScope();
+            builder.RegisterType<ProductCategoryManager>().As<IProductCategoryService>().InstancePerLifetimeScope();
+
             builder.RegisterType<EfCategoryAttributeDal>().As<ICategoryAttributeDal>().InstancePerLifetimeScope();
             builder.RegisterType<CategoryAttributeManager>().As<ICategoryAttributeService>().InstancePerLifetimeScope();
 
@@ -81,6 +84,12 @@ namespace Business.DependecyResolvers.Autofac
 
             builder.RegisterType<PasswordResetManager>().As<IPasswordResetService>().InstancePerLifetimeScope();
             builder.RegisterType<EfPasswordResetDal>().As<IPasswordResetDal>().InstancePerLifetimeScope();
+
+            builder.RegisterType<EfProductPriceFactorDal>().As<IProductPriceFactorDal>().InstancePerLifetimeScope();
+            builder.RegisterType<ProductPriceFactorManager>().As<IProductPriceFactorService>().InstancePerLifetimeScope();
+
+            builder.RegisterType<EfDistrictDal>().As<IDistrictDal>().InstancePerLifetimeScope();
+            builder.RegisterType<DistrictManager>().As<IDistrictService>().InstancePerLifetimeScope();
 
             builder.RegisterType<AuthManager>().As<IAuthService>().InstancePerLifetimeScope();
             builder.RegisterType<JwtHelper>().As<ITokenHelper>().InstancePerLifetimeScope();

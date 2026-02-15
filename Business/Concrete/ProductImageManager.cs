@@ -39,7 +39,7 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
-        public IResult AddList(CrudProductImageDto addProductImageDtos)
+        public IResult AddList(ProductImageDto addProductImageDtos)
         {
             if (addProductImageDtos != null)
             {

@@ -1,4 +1,4 @@
-﻿using Business.Abstract;
+using Business.Abstract;
 using Business.VirtualPos.Iyzico.Abstract;
 using Entities.Concrete;
 using Entities.Dtos.User;
@@ -55,7 +55,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("TsaPayment")]
-        public IActionResult TsaPayment(TsaPaymentParameter tsaPaymentParameter)
+        public IActionResult TsaPayment([FromBody] TsaPaymentParameter tsaPaymentParameter)
         {
             var result = _iyzicoPaymentService.TsaPayment(tsaPaymentParameter);
             if (result.Success)

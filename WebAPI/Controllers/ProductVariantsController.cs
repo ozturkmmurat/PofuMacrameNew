@@ -79,15 +79,16 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpPost("Delete")]
-        public IActionResult Delete(ProductVariant productVariant)
-        {
-            var result = _variantService.Delete(productVariant);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-        }
+        //Varyant silerken ana varyantı silip tamamen ana varyantı siliyor
+        //[HttpPost("Delete")]
+        //public IActionResult Delete(ProductVariant productVariant)
+        //{
+        //    var result = _variantService.Delete(productVariant);
+        //    if (result.Success)
+        //    {
+        //        return Ok(result);
+        //    }
+        //    return BadRequest(result);
+        //}
     }
 }

@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Entities.Dtos.ProductImage
 {
-    public class CrudProductImageDto : IEntity
+    public class ProductImageDto : IEntity
     {
         public int ProductVariantId { get; set; }
         public int ProductId { get; set; }

@@ -1,4 +1,4 @@
-﻿using Core.DataAccess.EntityFramework;
+using Core.DataAccess.EntityFramework;
 using Core.Utilities.Result.Abstract;
 using DataAccess.Abstract;
 using DataAccess.Context;
@@ -45,18 +45,22 @@ namespace DataAccess.Concrete.EntityFramework
                          on so.VariantId equals pv.Id
                          join p in _context.Products
                          on pv.ProductId equals p.Id
-
+                         join pi in _context.ProductImages.Where(x => x.IsMain)
+                         on pv.Id equals pi.ProductVariantId
+                         into piGroup
+                         from pi in piGroup.DefaultIfEmpty()
                          select new SelectOrderedProducts
                          {
                              OrderId = o.Id,
                              OrderDate = o.OrderDate,
                              OrderCode = o.OrderCode,
                              UserId = o.UserId,
-                             VariantId = so.VariantId, // Burada ProductVariant'ın Id'sini alıyoruz
-                             ParentId = pv.ParentId.Value,
+                             VariantId = so.VariantId,
+                             ParentId = pv.ParentId,
                              Price = so.Price,
                              SubOrderStatus = so.SubOrderStatus,
-                             ProductName = p.ProductName
+                             ProductName = p.ProductName,
+                             ImagePath = pi != null ? pi.Path : null
                          };
 
             return result.ToList();

@@ -1,4 +1,4 @@
-﻿using Business.Abstract;
+using Business.Abstract;
 using Business.BusinessAspects.Autofac;
 using Business.Constans;
 using Business.Utilities;
@@ -11,6 +11,7 @@ using Core.Utilities.Result.Concrete;
 using Core.Utilities.User;
 using Entities.Concrete;
 using Entities.Dtos.User;
+using Entities.Dtos.ProductStock;
 using Entities.EntityParameter.CartItem;
 using Entities.EntityParameter.Iyzico;
 using Entities.LibraryEntities.Iyzico;
@@ -35,6 +36,7 @@ namespace Business.VirtualPos.Iyzico.Concrete
         IOrderService _orderService;
         ISubOrderService _subOrderService;
         IUserService _userService;
+        IProductPriceFactorService _productPriceFactorService;
         private IHttpContextAccessor _httpContextAccessor;
         IMailService _mailService;
 
@@ -43,6 +45,7 @@ namespace Business.VirtualPos.Iyzico.Concrete
             IOrderService orderService,
             ISubOrderService subOrderService,
             IUserService userService,
+            IProductPriceFactorService productPriceFactorService,
             IMailService mailService)
         {
             _productStockService = productStockService;
@@ -50,7 +53,8 @@ namespace Business.VirtualPos.Iyzico.Concrete
             _subOrderService = subOrderService;
             _httpContextAccessor = ServiceTool.ServiceProvider.GetService<IHttpContextAccessor>();
             _userService = userService;
-            _mailService=mailService;
+            _productPriceFactorService = productPriceFactorService;
+            _mailService = mailService;
         }
 
         [SecuredOperation("user,admin")]
@@ -457,14 +461,54 @@ namespace Business.VirtualPos.Iyzico.Concrete
 
                     MappingAddress(userDto, request);
 
-                    if (tsaPaymentParameter.CartItems != null & tsaPaymentParameter.CartItems.Count > 0)
+                    if (tsaPaymentParameter.CartItems != null && tsaPaymentParameter.CartItems.Count > 0)
                     {
+                        var productVariantIds = new List<int>();
+                        for (int i = 0; i < tsaPaymentParameter.CartItems.Count; i++)
+                        {
+                            if (tsaPaymentParameter.CartItems[i]?.product != null)
+                                productVariantIds.Add(tsaPaymentParameter.CartItems[i].product.EndProductVariantId);
+                        }
+
+                        decimal orderPriceSum = 0;
+                        decimal orderExtraPrice = 0;
+                        if (productVariantIds.Count > 0)
+                        {
+                            var checkRequest = new ProductStockPriceCheckDto
+                            {
+                                ProductVariantId = productVariantIds,
+                                ProductPriceFactorId = tsaPaymentParameter.ProductPriceFactorId
+                            };
+                            var priceResult = _productStockService.CheckProductStockPrice(checkRequest);
+                            orderExtraPrice = priceResult.Data[0].ExtraPrice;
+
+                            if (priceResult.Success && priceResult.Data != null && priceResult.Data.Count == productVariantIds.Count)
+                            {
+                                int index = 0;
+                                for (int i = 0; i < tsaPaymentParameter.CartItems.Count; i++)
+                                {
+                                    if (tsaPaymentParameter.CartItems[i]?.product != null)
+                                    {
+                                        var netPrice = priceResult.Data[index].NetPrice;
+                                        tsaPaymentParameter.CartItems[i].product.NetPrice = netPrice;
+                                        tsaPaymentParameter.CartItems[i].product.Price = netPrice;
+                                        orderPriceSum += netPrice * tsaPaymentParameter.CartItems[i].Quantity;
+                                        index++;
+                                    }
+                                }
+                            }
+                        }
+
                         Order order = new Order();
                         order.OrderCode = CreateCodeTime.GenerateOrderCode();
                         order.UserId = userDto.UserId;
+                        order.ProductPriceFactorId = tsaPaymentParameter.ProductPriceFactorId;
                         order.OrderStatus = 0;
+                        order.Description = tsaPaymentParameter.OrderDescription;
                         order.Address = $"Adres Başlığı : {userDto.AddressTitle} Şehir : {userDto.UserCity}  Posta Kodu : {userDto.PostCode} Adres: {userDto.Address} Telefon Numarası: {userDto.PhoneNumber}";
-                        order.TotalPrice = tsaPaymentParameter.CartItems.Sum(x => x.product.NetPrice * x.Quantity);
+                        order.Price = orderPriceSum;                                    // Ürün fiyatları toplamı (ProductVariant)
+                        order.ExtraPrice = orderExtraPrice;                   // Seçilen ilçe tutarı (ProductPriceFactor)
+                        order.TotalPrice = order.Price + order.ExtraPrice;              // Tüm tutarların toplamı
                         var addOrder = _orderService.Add(order);
                         if (addOrder.Success)
                         {
@@ -477,7 +521,7 @@ namespace Business.VirtualPos.Iyzico.Concrete
                                 productStock.Quantity = tsaPaymentParameter.CartItems[i].Quantity;
                                 productStock.Kdv = tsaPaymentParameter.CartItems[i].product.Kdv;
                                 productStock.NetPrice = tsaPaymentParameter.CartItems[i].product.NetPrice;
-                                IResult rulesResult = BusinessRules.Run(_productStockService.CheckProductStock(productStock), _productStockService.CheckProductStockPrice(productStock));
+                                IResult rulesResult = BusinessRules.Run(_productStockService.CheckProductStock(productStock));
                                 if (rulesResult == null)
                                 {
                                     for (int j = 0; j < tsaPaymentParameter.CartItems[i].Quantity; j++)
@@ -499,16 +543,24 @@ namespace Business.VirtualPos.Iyzico.Concrete
                                         basketItem.Name = tsaPaymentParameter.CartItems[i].product.ProductName;
                                         basketItem.Category1 = tsaPaymentParameter.CartItems[i].product.CategoryName;
                                         basketItem.ItemType = BasketItemType.PHYSICAL.ToString();
-                                        basketItem.Price = tsaPaymentParameter.CartItems[i].product.Price.ToString();
+                                        basketItem.Price = tsaPaymentParameter.CartItems[i].product.Price.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
                                         basketItems.Add(basketItem);
                                         if (i == tsaPaymentParameter.CartItems.Count -1)
                                         {
                                             if (j == tsaPaymentParameter.CartItems[i].Quantity -1)
                                             {
+                                                basketItems.Add(new BasketItem
+                                                {
+                                                    Id = "KARGO",
+                                                    Name = "Kargo Ücreti",
+                                                    Category1 = "Kargo",
+                                                    ItemType = BasketItemType.PHYSICAL.ToString(),
+                                                    Price = orderExtraPrice.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)
+                                                });
                                                 request.Locale = Locale.TR.ToString();
                                                 request.ConversationId = order.Id.ToString();
-                                                request.Price = tsaPaymentParameter.CartItems.Sum(x => x.product.Price * x.Quantity).ToString();
-                                                request.PaidPrice = order.TotalPrice.ToString();
+                                                request.Price = order.TotalPrice.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+                                                request.PaidPrice = order.TotalPrice.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
                                                 request.Currency = Currency.TRY.ToString();
                                                 request.BasketId = order.Id.ToString();
                                                 request.PaymentGroup = PaymentGroup.PRODUCT.ToString();

@@ -26,8 +26,7 @@ namespace Business.Concrete
             {
                 var repeatedData = CheckRepeatedData(categoryAttribute);
                 var checkAttributeSlicer = CheckSliderAttribute(categoryAttribute);
-                var checkSlicer = CheckSlicer(categoryAttribute);
-                IResult result = BusinessRules.Run(repeatedData, checkAttributeSlicer, checkSlicer);
+                IResult result = BusinessRules.Run(repeatedData, checkAttributeSlicer);
                 if (result  != null)
                 {
                     return new ErrorResult(result.Message);
@@ -101,7 +100,7 @@ namespace Business.Concrete
 
         public IDataResult<CategoryAttribute> GetByAttributeIdCategoryId(int attributeId, int categoryId)
         {
-            var result = _categoryAttributeDal.Get(x => x.AttributeId == attributeId && x.CategoryId == categoryId);
+            var result = _categoryAttributeDal.GetAsNoTracking(x => x.AttributeId == attributeId && x.CategoryId == categoryId);
             if (result != null)
             {
                 return new SuccessDataResult<CategoryAttribute>(result);
@@ -115,8 +114,7 @@ namespace Business.Concrete
             {
                 var repeatedData = CheckRepeatedData(categoryAttribute);
                 var checkAttributeSlicer = CheckSliderAttribute(categoryAttribute);
-                var checkSlicer = CheckSlicer(categoryAttribute);
-                IResult rulesResult = BusinessRules.Run(repeatedData, checkAttributeSlicer, checkSlicer);
+                IResult rulesResult = BusinessRules.Run(repeatedData, checkAttributeSlicer);
                 if (rulesResult  != null)
                 {
                     return new ErrorResult(rulesResult.Message);

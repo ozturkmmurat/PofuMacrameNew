@@ -1,4 +1,4 @@
-﻿using Business.Abstract;
+using Business.Abstract;
 using Business.Abstract.ProductVariants;
 using Business.BusinessAspects.Autofac;
 using Business.Utilities;
@@ -9,6 +9,7 @@ using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.Dtos.Product;
 using Entities.Dtos.Product.Select;
+using Entities.Dtos.ProductCategory;
 using Entities.Dtos.ProductVariant;
 using Entities.EntitiyParameter.Product;
 using Entities.EntityParameter.Product;
@@ -29,27 +30,51 @@ namespace Business.Concrete
         IProductStockService _productStockService;
         ICategoryAttributeService _categoryAttributeService;
         IProductAttributeService _productAttributeService;
+        IProductCategoryService _productCategoryService;
+
         public ProductManager(
             IProductDal productDal,
             IProductStockService productStockService,
             IProductVariantService productVariantService,
             ICategoryAttributeService categoryAttributeService,
-            IProductAttributeService productAttributeService)
+            IProductAttributeService productAttributeService,
+            IProductCategoryService productCategoryService)
         {
             _productDal = productDal;
             _productVariantService = productVariantService;
             _productStockService = productStockService;
-            _categoryAttributeService=categoryAttributeService;
-            _productAttributeService  = productAttributeService;
+            _categoryAttributeService = categoryAttributeService;
+            _productAttributeService = productAttributeService;
+            _productCategoryService = productCategoryService;
         }
-        public IResult Add(Product product)
+
+        public IResult Add(ProductDto dto)
         {
-            if (product != null)
+            if (dto == null)
+                return new ErrorResult();
+            if (string.IsNullOrWhiteSpace(dto.ProductName))
+                return new ErrorResult();
+            if (dto.MainCategoryId <= 0)
+                return new ErrorResult();
+
+            var product = new Product
             {
-                _productDal.Add(product);
-                return new SuccessResult();
-            }
-            return new ErrorResult();
+                ProductName = dto.ProductName,
+                Description = dto.Description,
+                ProductCode = dto.ProductCode
+            };
+            _productDal.Add(product);
+
+            var addCategoriesResult = _productCategoryService.AddProductCategories(new ProductCategoryDto
+            {
+                ProductId = product.Id,
+                MainCategoryId = dto.MainCategoryId,
+                CategoryId = dto.CategoryId
+            });
+            if (!addCategoriesResult.Success)
+                return new ErrorResult();
+
+            return new SuccessResult();
         }
 
 
@@ -83,6 +108,46 @@ namespace Business.Concrete
             return new ErrorDataResult<Product>();
         }
 
+        [TransactionScopeAspect]
+        public IResult TsaUpdate(ProductDto dto)
+        {
+            if (dto == null)
+                return new ErrorResult();
+            if (dto.ProductId <= 0)
+                return new ErrorResult();
+
+            var product = _productDal.Get(x => x.Id == dto.ProductId);
+            if (product == null)
+                return new ErrorResult();
+
+            product.ProductName = dto.ProductName;
+            product.Description = dto.Description;
+            product.ProductCode = dto.ProductCode;
+            _productDal.Update(product);
+
+            var mainCategoryResult = _productCategoryService.GetByProductMainCategory(dto.ProductId);
+            if (mainCategoryResult.Success && mainCategoryResult.Data != null)
+            {
+                var deleteExtraResult = _productCategoryService.DeleteExtraByProductId(dto.ProductId);
+                if (!deleteExtraResult.Success)
+                    return new ErrorResult();
+
+                if (dto.CategoryId != null && dto.CategoryId.Count > 0)
+                {
+                    var addResult = _productCategoryService.AddProductCategories(new ProductCategoryDto
+                    {
+                        ProductId = dto.ProductId,
+                        MainCategoryId = 0,
+                        CategoryId = dto.CategoryId
+                    });
+                    if (!addResult.Success)
+                        return new ErrorResult();
+                }
+            }
+
+            return new SuccessResult();
+        }
+
         public IResult Update(Product product)
         {
             if (product != null)
@@ -106,7 +171,7 @@ namespace Business.Concrete
                     {
                         if (applyFiltered.Item1[i].ParentId > 0)
                         {
-                            filteredProductVariantDto.Add(_productVariantService.DtoEndVariantMainVariantNT(applyFiltered.Item1[i].ParentId.Value).Data);
+                            filteredProductVariantDto.Add(_productVariantService.DtoEndVariantMainVariantNT(applyFiltered.Item1[i].ParentId).Data);
                         }
                         else if (applyFiltered.Item1[i].ParentId == 0)
                         {
@@ -251,27 +316,30 @@ namespace Business.Concrete
             }
             else
             {
-
                 if (addProductVariant != null)
                 {
-                    Product product = new Product()
+                    var product = new Product
                     {
-                        CategoryId = addProductVariant.CategoryId,
                         ProductName = addProductVariant.ProductName,
                         Description = addProductVariant.Description,
-                        ProductCode = addProductVariant.ProductCode,
+                        ProductCode = addProductVariant.ProductCode
                     };
-                    var addProduct = Add(product);
-                    if (addProduct.Success)
+                    _productDal.Add(product);
+
+                    var addCategoriesResult = _productCategoryService.AddProductCategories(new ProductCategoryDto
                     {
-                        addProductVariant.ProductId = product.Id;
-                        var result = _productVariantService.AddTsaProductVariant(addProductVariant);
-                        if (result.Success)
-                        {
-                            return new SuccessResult();
-                        }
+                        ProductId = product.Id,
+                        MainCategoryId = addProductVariant.MainCategoryId,
+                        CategoryId = addProductVariant.CategoryId
+                    });
+                    if (!addCategoriesResult.Success)
                         return new ErrorResult();
-                    }
+
+                    addProductVariant.ProductId = product.Id;
+                    var result = _productVariantService.AddTsaProductVariant(addProductVariant);
+                    if (result.Success)
+                        return new SuccessResult();
+                    return new ErrorResult();
                 }
             }
             return new ErrorResult();
@@ -301,16 +369,6 @@ namespace Business.Concrete
         {
             var result = _productDal.GetTotalProduct(categoryId);
             return new SuccessDataResult<int>(result);
-        }
-
-        public IDataResult<List<Product>> GetAllProductByCategoryIdNT(int categoryId)
-        {
-            var result = _productDal.GetAllAsNoTracking(x => x.CategoryId == categoryId);
-            if (result != null)
-            {
-                return new SuccessDataResult<List<Product>>(result);
-            }
-            return new ErrorDataResult<List<Product>>(result);
         }
 
         public IDataResult<List<SelectListProductVariantDto>> ProcessProductVariantData(List<SelectListProductVariantDto> processProductVariants)

@@ -1,4 +1,4 @@
-﻿using Core.DataAccess.EntityFramework;
+using Core.DataAccess.EntityFramework;
 using DataAccess.Abstract;
 using DataAccess.Context;
 using Entities.Concrete;
@@ -42,7 +42,7 @@ namespace DataAccess.Concrete.EntityFramework
                                  ParentId = pv.ParentId,
                                  ProductName = p.ProductName,
                                  Description = p.Description,
-                                 AttributeValues = _context.AttributeValues.DefaultIfEmpty().AsNoTracking().Where(x => x.Id == pv.AttributeValueId).ToList(),
+                                 AttributeValues = pv.AttributeValueId != 0 ? _context.AttributeValues.AsNoTracking().Where(x => x.Id == pv.AttributeValueId).ToList() : new List<AttributeValue>(),
                                  ProductPaths = _context.ProductImages.AsNoTracking()
                                                      .Where(x => x.ProductVariantId == pv.Id)
                                                      .Take(2)
@@ -54,7 +54,12 @@ namespace DataAccess.Concrete.EntityFramework
             }
             else if (filterProduct.CategoryId > 0 && filterProduct.Attributes.Count == 0)
             {
-                var result = from p in _context.Products.AsNoTracking().Where(x => x.CategoryId == filterProduct.CategoryId).Skip(filterProduct.StartLength).Take(filterProduct.EndLength)
+                var productIdsInCategory = _context.ProductCategories.AsNoTracking()
+                    .Where(pc => pc.CategoryId == filterProduct.CategoryId || (pc.CategoryId == 0 && pc.MainCategoryId == filterProduct.CategoryId))
+                    .Select(pc => pc.ProductId)
+                    .Distinct()
+                    .ToList();
+                var result = from p in _context.Products.AsNoTracking().Where(x => productIdsInCategory.Contains(x.Id)).Skip(filterProduct.StartLength).Take(filterProduct.EndLength)
                              join pv in _context.ProductVariants.AsNoTracking() on p.Id equals pv.ProductId
                              where pv.ParentId == 0
                              select new SelectListProductVariantDto
@@ -64,7 +69,7 @@ namespace DataAccess.Concrete.EntityFramework
                                  ParentId = pv.ParentId,
                                  ProductName = p.ProductName,
                                  Description = p.Description,
-                                 AttributeValues = _context.AttributeValues.AsNoTracking().Where(x => x.Id == pv.AttributeValueId).ToList(),
+                                 AttributeValues = pv.AttributeValueId != 0 ? _context.AttributeValues.AsNoTracking().Where(x => x.Id == pv.AttributeValueId).ToList() : new List<AttributeValue>(),
                                  ProductPaths = _context.ProductImages
                                                      .Where(x => x.ProductVariantId == pv.Id)
                                                      .Take(2)
@@ -76,8 +81,13 @@ namespace DataAccess.Concrete.EntityFramework
             }
             else if (filterProduct.CategoryId > 0 && filterProduct.Attributes.Count > 0)
             {
+                var productIdsInCategory = _context.ProductCategories.AsNoTracking()
+                    .Where(pc => pc.CategoryId == filterProduct.CategoryId)
+                    .Select(pc => pc.ProductId)
+                    .Distinct()
+                    .ToList();
                 var products = _context.Products.AsNoTracking()
-                                .Where(x => x.CategoryId == filterProduct.CategoryId)
+                                .Where(x => productIdsInCategory.Contains(x.Id))
                                 .ToList();
 
                 var productIds = products.Select(p => p.Id).ToList();
@@ -109,7 +119,7 @@ namespace DataAccess.Concrete.EntityFramework
                         var valueIds = filterProduct.Attributes.Where(x => attributeIds.Contains(x.Id)).SelectMany(x => x.ValueId).ToList();
 
                         // Son olarak, bu ValueId'leri kullanarak ProductVariants içerisindeki eşleşmeleri bul
-                        var slicerProduct = _context.ProductVariants.AsNoTracking().Where(x => x.AttributeValueId.HasValue && valueIds.Contains(x.AttributeValueId.Value) && productIds.Contains(x.ProductId)).ToList();
+                        var slicerProduct = _context.ProductVariants.AsNoTracking().Where(x => x.AttributeValueId != 0 && valueIds.Contains(x.AttributeValueId) && productIds.Contains(x.ProductId)).ToList();
 
                         if (slicerProduct != null)
                         {
@@ -120,10 +130,10 @@ namespace DataAccess.Concrete.EntityFramework
                                                     {
                                                         ProductId = p.Id,
                                                         ProductVariantId = spv?.Id ?? 0,
-                                                        ParentId = spv.ParentId ?? 0,
+                                                        ParentId = spv.ParentId,
                                                         ProductName = p.ProductName,
                                                         Description = p.Description,
-                                                        AttributeValues = spv != null ? _context.AttributeValues.AsNoTracking().Where(x => x.Id == spv.AttributeValueId).ToList() : new List<AttributeValue>(),
+                                                        AttributeValues = spv != null && spv.AttributeValueId != 0 ? _context.AttributeValues.AsNoTracking().Where(x => x.Id == spv.AttributeValueId).ToList() : new List<AttributeValue>(),
                                                         ProductPaths = spv != null ? _context.ProductImages.AsNoTracking()
                                                                                              .Where(x => x.ProductVariantId == spv.Id)
                                                                                              .Take(2)
@@ -142,10 +152,10 @@ namespace DataAccess.Concrete.EntityFramework
                                  {
                                      ProductId = p.Id,
                                      ProductVariantId = pv?.Id ?? 0,
-                                     ParentId = pv.ParentId ?? 0,
+                                     ParentId = pv.ParentId,
                                      ProductName = p.ProductName,
                                      Description = p.Description,
-                                     AttributeValues = pv != null ? _context.AttributeValues.AsNoTracking().Where(x => x.Id == pv.AttributeValueId).ToList() : new List<AttributeValue>(),
+                                     AttributeValues = pv != null && pv.AttributeValueId != 0 ? _context.AttributeValues.AsNoTracking().Where(x => x.Id == pv.AttributeValueId).ToList() : new List<AttributeValue>(),
                                      ProductPaths = pv != null ? _context.ProductImages.AsNoTracking()
                                                                 .Where(x => x.ProductVariantId == pv.Id)
                                                                 .Take(2)
@@ -193,8 +203,9 @@ namespace DataAccess.Concrete.EntityFramework
         public List<SelectProductDto> GetAllFilterDto(Expression<Func<SelectProductDto, bool>> filter = null)
         {
             var result = (from p in _context.Products
-                          join c in _context.Categories on p.CategoryId equals c.Id
-
+                          join pc in _context.ProductCategories on p.Id equals pc.ProductId
+                          join c in _context.Categories on pc.MainCategoryId equals c.Id
+                          where pc.CategoryId == 0
                           select new SelectProductDto
                           {
                               ProductId = p.Id,
@@ -210,8 +221,9 @@ namespace DataAccess.Concrete.EntityFramework
         public SelectProductDto GetProductFilterDto(Expression<Func<SelectProductDto, bool>> filter = null)
         {
             var result = (from p in _context.Products
-                          join c in _context.Categories on p.CategoryId equals c.Id
-
+                          join pc in _context.ProductCategories on p.Id equals pc.ProductId
+                          join c in _context.Categories on pc.MainCategoryId equals c.Id
+                          where pc.CategoryId == 0
                           select new SelectProductDto
                           {
                               ProductId = p.Id,
@@ -229,7 +241,11 @@ namespace DataAccess.Concrete.EntityFramework
         {
             if (categoryId != 0)
             {
-                var result = _context.Products.Where(x => x.CategoryId == categoryId).Count();
+                var result = _context.ProductCategories
+                    .Where(pc => pc.CategoryId == categoryId || (pc.CategoryId == 0 && pc.MainCategoryId == categoryId))
+                    .Select(pc => pc.ProductId)
+                    .Distinct()
+                    .Count();
                 return result;
             }
             else
@@ -241,8 +257,13 @@ namespace DataAccess.Concrete.EntityFramework
 
         public Tuple<List<ProductVariant>, List<ProductAttribute?>> ApplyFilteres(FilterProduct filterProduct)
         {
-            var products = _context.Products.AsNoTracking()  //Kategoriye gore urunleri cek
-                                           .Where(x => x.CategoryId == filterProduct.CategoryId)
+            var productIdsInCategory = _context.ProductCategories.AsNoTracking()
+                .Where(pc => pc.CategoryId == filterProduct.CategoryId || (pc.CategoryId == 0 && pc.MainCategoryId == filterProduct.CategoryId))
+                .Select(pc => pc.ProductId)
+                .Distinct()
+                .ToList();
+            var products = _context.Products.AsNoTracking()
+                                           .Where(x => productIdsInCategory.Contains(x.Id))
                                            .ToList();
 
             var productIds = products.Select(p => p.Id).ToList(); //Cekilen urunlerin idlerini al
@@ -319,10 +340,13 @@ namespace DataAccess.Concrete.EntityFramework
             var result = from pv in filterProducts
                          join p in _context.Products.AsNoTracking()
                          on pv.ProductId equals p.Id
+                         join pc in _context.ProductCategories.AsNoTracking()
+                         on p.Id equals pc.ProductId
+                         where pc.CategoryId == 0
                          select new SelectListProductVariantDto
                          {
                              ProductId = p.Id,
-                             CategoryId = p.CategoryId,
+                             CategoryId = pc.MainCategoryId,
                              ProductVariantId = pv?.ProductVariantId ?? 0,
                              ParentId = pv.ParentId ?? 0,
                              ProductName = p.ProductName,
@@ -331,7 +355,7 @@ namespace DataAccess.Concrete.EntityFramework
                                                    .Where(av => pv.AttributeValues.Select(a => a.Id).Contains(av.Id))
                                                    .ToList() : new List<AttributeValue>(),
                              ProductPaths = pv != null ? _context.ProductImages.AsNoTracking()
-                                                              .Where(x => x.ProductVariantId == pv.ProductId)
+                                                              .Where(x => x.ProductVariantId == pv.ProductVariantId)
                                                               .Take(2)
                                                               .Select(pi => pi.Path)
                                                               .ToList() : new List<string>()
@@ -344,7 +368,12 @@ namespace DataAccess.Concrete.EntityFramework
         {
             if (filterProduct.CategoryId > 0 && filterProduct.Attributes.Count == 0)
             {
-                var result = from p in _context.Products.AsNoTracking().Where(x => x.CategoryId == filterProduct.CategoryId)
+                var productIdsInCategory = _context.ProductCategories.AsNoTracking()
+                    .Where(pc => pc.CategoryId == filterProduct.CategoryId || (pc.CategoryId == 0 && pc.MainCategoryId == filterProduct.CategoryId))
+                    .Select(pc => pc.ProductId)
+                    .Distinct()
+                    .ToList();
+                var result = from p in _context.Products.AsNoTracking().Where(x => productIdsInCategory.Contains(x.Id))
                              join pv in _context.ProductVariants.AsNoTracking() on p.Id equals pv.ProductId
                              where pv.ParentId == 0
                              select new SelectListProductVariantDto
@@ -354,7 +383,7 @@ namespace DataAccess.Concrete.EntityFramework
                                  ParentId = pv.ParentId,
                                  ProductName = p.ProductName,
                                  Description = p.Description,
-                                 AttributeValues = _context.AttributeValues.AsNoTracking().Where(x => x.Id == pv.AttributeValueId).ToList(),
+                                 AttributeValues = pv.AttributeValueId != 0 ? _context.AttributeValues.AsNoTracking().Where(x => x.Id == pv.AttributeValueId).ToList() : new List<AttributeValue>(),
                                  ProductPaths = _context.ProductImages
                                                      .Where(x => x.ProductVariantId == pv.Id)
                                                      .Take(2)
@@ -381,7 +410,7 @@ namespace DataAccess.Concrete.EntityFramework
                                  ParentId = pv.ParentId,
                                  ProductName = p.ProductName,
                                  Description = p.Description,
-                                 AttributeValues = _context.AttributeValues.DefaultIfEmpty().AsNoTracking().Where(x => x.Id == pv.AttributeValueId).ToList(),
+                                 AttributeValues = pv.AttributeValueId != 0 ? _context.AttributeValues.AsNoTracking().Where(x => x.Id == pv.AttributeValueId).ToList() : new List<AttributeValue>(),
                                  ProductPaths = _context.ProductImages.AsNoTracking()
                                                      .Where(x => x.ProductVariantId == pv.Id)
                                                      .Take(2)

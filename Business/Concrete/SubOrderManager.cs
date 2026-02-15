@@ -1,4 +1,4 @@
-﻿using Business.Abstract;
+using Business.Abstract;
 using Business.Abstract.ProductVariants;
 using Business.BusinessAspects.Autofac;
 using Core.Utilities.Result.Abstract;
@@ -89,8 +89,24 @@ namespace Business.Concrete
                 for (int i = 0; i < result.Count; i++)
                 {
                     var getProductVariantAttributeResult = _productVariantService.GetProductVariantAttribute(result[i].ParentId);
-                    result[i].ImagePath = _productImageService.GetByProductVariantId(getProductVariantAttributeResult.Data.VariantId).Data.Path;
-                    result[i].Attribute = _productVariantService.GetProductVariantAttribute(result[i].ParentId).Data.Attribute;
+                    if (getProductVariantAttributeResult.Success && getProductVariantAttributeResult.Data != null)
+                    {
+                        result[i].Attribute = getProductVariantAttributeResult.Data.Attribute;
+                        // IsMain fotoğraf zincirin ana (kök) varyantında; ParentId=0 ise mevcut varyant köktür
+                        int mainVariantId = result[i].ParentId == 0
+                            ? result[i].VariantId
+                            : getProductVariantAttributeResult.Data.VariantId;
+                        var imageResult = _productImageService.GetByProductVariantId(mainVariantId);
+                        if (imageResult.Success && imageResult.Data != null)
+                            result[i].ImagePath = imageResult.Data.Path;
+                    }
+                    else if (result[i].ParentId == 0)
+                    {
+                        // ParentId=0 iken GetProductVariantAttribute çalışmaz; doğrudan bu varyantın IsMain fotoğrafını al
+                        var imageResult = _productImageService.GetByProductVariantId(result[i].VariantId);
+                        if (imageResult.Success && imageResult.Data != null)
+                            result[i].ImagePath = imageResult.Data.Path;
+                    }
                 }
                 return new SuccessDataResult<List<SelectOrderedProducts>>(result);
             }

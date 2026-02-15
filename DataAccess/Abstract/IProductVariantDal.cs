@@ -1,4 +1,4 @@
-﻿using Core.DataAccess;
+using Core.DataAccess;
 using Entities.Concrete;
 using Entities.Dtos.Product.Select;
 using Entities.Dtos.ProductVariant.Select;
@@ -17,6 +17,5 @@ namespace DataAccess.Abstract
         List<ProductVariantAttributeValueDto> GetAllProductDetailAttributeByProductIdParentId(int productId, int parentId);
         List<ProductVariantAttributeValueDto> GetAllSubProductAttributeDtoProductId(int productId);
         List<ProductVariantAttributeValueDto> GetAllSubProductAttributeDtoByParentId(int parentId);
-
     }
 }

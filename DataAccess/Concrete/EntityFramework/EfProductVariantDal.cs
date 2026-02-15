@@ -1,4 +1,4 @@
-﻿using Core.DataAccess.EntityFramework;
+using Core.DataAccess.EntityFramework;
 using DataAccess.Abstract;
 using DataAccess.Context;
 using Entities.Concrete;
@@ -23,7 +23,7 @@ namespace DataAccess.Concrete.EntityFramework
         }
         public List<ProductVariantDetailAttributeDto> GetAllProductDetailAttributeByParentId(int parentId)
         {
-            var result = (from pv in _context.ProductVariants.AsNoTracking().Where(x => x.ParentId == parentId)
+            var result = (from pv in _context.ProductVariants.AsNoTracking().Where(x => x.ParentId == parentId && x.AttributeId != 0)
                           join a in _context.Attributes.AsNoTracking()
                           on pv.AttributeId equals a.Id
 
@@ -41,7 +41,7 @@ namespace DataAccess.Concrete.EntityFramework
         //Urun detay sayfasi icin kullaniliyor. Kullanilan yerler --> (Kullanicilarin girdigi urunlerin detay bolumu)
         public List<ProductVariantDetailAttributeDto> GetAllProductDetailAttributeByProductId(int productId)
         {
-            var result = (from pv in _context.ProductVariants.Where(x => x.ProductId == productId)
+            var result = (from pv in _context.ProductVariants.Where(x => x.ProductId == productId && x.AttributeId != 0)
                           join a in _context.Attributes
                           on pv.AttributeId equals a.Id
 
@@ -58,7 +58,7 @@ namespace DataAccess.Concrete.EntityFramework
 
         public List<ProductVariantAttributeValueDto> GetAllProductDetailAttributeByProductIdParentId(int productId, int parentId)
         {
-            var result = (from pv in _context.ProductVariants.Where(x => x.ProductId == productId && x.ParentId == parentId)
+            var result = (from pv in _context.ProductVariants.Where(x => x.ProductId == productId && x.ParentId == parentId && x.AttributeValueId != 0 && x.AttributeId != 0)
                           join av in _context.AttributeValues
                           on pv.AttributeValueId equals av.Id
                           select new ProductVariantAttributeValueDto
@@ -66,7 +66,7 @@ namespace DataAccess.Concrete.EntityFramework
                               ProductId = pv.ProductId,
                               ParentId = pv.ParentId,
                               ProductVariantId = pv.Id,
-                              AttributeId = pv.AttributeId.Value,
+                              AttributeId = pv.AttributeId,
                               AttributeValueId = av.Id,
                               AttributeValue = av.Value
                           }).ToList();
@@ -76,7 +76,7 @@ namespace DataAccess.Concrete.EntityFramework
 
         public List<ProductVariantAttributeValueDto> GetAllSubProductAttributeDtoByParentId(int parentId)
         {
-            var result = (from pv in _context.ProductVariants.Where(x => x.ParentId == parentId)
+            var result = (from pv in _context.ProductVariants.Where(x => x.ParentId == parentId && x.AttributeId != 0 && x.AttributeValueId != 0)
                           join a in _context.Attributes
                           on pv.AttributeId equals a.Id
                           join av in _context.AttributeValues
@@ -86,7 +86,7 @@ namespace DataAccess.Concrete.EntityFramework
                               ProductId = pv.ProductId,
                               ParentId = pv.ParentId,
                               ProductVariantId = pv.Id,
-                              AttributeId = pv.AttributeId.Value,
+                              AttributeId = pv.AttributeId,
                               AttributeValueId = av.Id,
                               AttributeName =  a.Name,
                               AttributeValue = av.Value,
@@ -113,8 +113,8 @@ namespace DataAccess.Concrete.EntityFramework
                              ProductId = pv.ProductId,
                              ParentId = pv.ParentId,
                              ProductVariantId = pv.Id,
-                             AttributeId = a != null ? a.Id : (int?)null,
-                             AttributeValueId = av != null ? av.Id : (int?)null,
+                             AttributeId = a != null ? a.Id : 0,
+                             AttributeValueId = av != null ? av.Id : 0,
                              AttributeName = a != null ? a.Name : null,
                              AttributeValue = av != null ? av.Value : null
                          };

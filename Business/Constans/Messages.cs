@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -47,5 +47,6 @@ namespace Business.Constans
         public static string CodeHasExpired = "Kodun süresi dolmuş. Lütfen tekrardan işlemleri gerçekleştiriniz";
         public static string CheckSlicer = "Bir slicer mevcut.";
         public static string CheckPassword = "Kullanıcıı bilgilerinizi kontrol ediniz";
+        public static string ProductPriceFactorDistrictExists = "Bu ilçe için zaten bir fiyat faktörü tanımlı. Bir ilçenin tek fiyatı olabilir.";
     }
 }

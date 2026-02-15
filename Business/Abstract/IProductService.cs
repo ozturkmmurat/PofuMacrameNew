@@ -1,4 +1,4 @@
-﻿using Core.Utilities.Result.Abstract;
+using Core.Utilities.Result.Abstract;
 using Entities.Concrete;
 using Entities.Dtos.Product;
 using Entities.Dtos.Product.Select;
@@ -15,7 +15,6 @@ namespace Business.Abstract
     public interface IProductService
     {
         IDataResult<List<Product>> GetAll();
-        IDataResult<List<Product>> GetAllProductByCategoryIdNT(int categoryId);
         IDataResult<List<SelectProductDto>> GetallProductDto();
         IDataResult<int> GetTotalProduct(int categoryId);
         IDataResult<SelectProductDetailDto> GetProductDetailDtoByPvId(int productVariantId);
@@ -23,8 +22,15 @@ namespace Business.Abstract
         IDataResult<List<SelectListProductVariantDto>> ProcessProductVariantData(List<SelectListProductVariantDto> processProductVariants);
         IDataResult<Product> GetById(int id);
         IDataResult<SelectProductDto> GetByProductDto(int productId);
-        IResult Add(Product product);
+        /// <summary>
+        /// Ürün + ProductCategory ekler. ProductId 0, MainCategoryId zorunlu.
+        /// </summary>
+        IResult Add(ProductDto dto);
         IResult TsaAdd(AddProductVariant addProductVariant);
+        /// <summary>
+        /// Ürün bilgisi + ek kategorileri günceller. ProductId zorunlu; ana kategori değiştirilmez.
+        /// </summary>
+        IResult TsaUpdate(ProductDto dto);
         IResult Update(Product product);
         IResult Delete(Product product);
     }
