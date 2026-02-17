@@ -1,5 +1,6 @@
-﻿using Core.DataAccess;
+using Core.DataAccess;
 using Entities.Concrete;
+using Entities.Dtos.CategoryAttribute;
 using Entities.Dtos.CategoryAttribute.Select;
 using System;
 using System.Collections.Generic;
@@ -14,5 +15,6 @@ namespace DataAccess.Abstract
         List<ViewCategoryAttributeDto> GetCategorySlicerAttribute(int categoryId);
         List<ViewCategoryAttributeDto> GetAllTrueSlicerAttribute(int categoryId);
         List<FilterCategoryAttributeDto> GetAllCategoryAttributeFilter(int categoryId);
+        List<CategoryAttributeDto> GetAllCategoryAttribute(CategoryAttributeDto categoryAttributeDto);
     }
 }

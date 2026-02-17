@@ -1,10 +1,11 @@
-﻿using Business.Abstract;
+using Business.Abstract;
 using Business.Constans;
 using Core.Business;
 using Core.Utilities.Result.Abstract;
 using Core.Utilities.Result.Concrete;
 using DataAccess.Abstract;
 using Entities.Concrete;
+using Entities.Dtos.CategoryAttribute;
 using Entities.Dtos.CategoryAttribute.Select;
 using System;
 using System.Collections.Generic;
@@ -97,6 +98,16 @@ namespace Business.Concrete
             return new ErrorDataResult<List<ViewCategoryAttributeDto>>();
         }
 
+
+        public IDataResult<List<CategoryAttribute>> GetByAttributeIds(List<int> attributeIds)
+        {
+            if (attributeIds == null || !attributeIds.Any())
+                return new ErrorDataResult<List<CategoryAttribute>>();
+            var result = _categoryAttributeDal.GetAll(x => attributeIds.Contains(x.AttributeId));
+            if (result != null)
+                return new SuccessDataResult<List<CategoryAttribute>>(result);
+            return new ErrorDataResult<List<CategoryAttribute>>();
+        }
 
         public IDataResult<CategoryAttribute> GetByAttributeIdCategoryId(int attributeId, int categoryId)
         {
@@ -197,6 +208,20 @@ namespace Business.Concrete
                 return new SuccessDataResult<List<CategoryAttribute>>(result);
             }
             return new ErrorDataResult<List<CategoryAttribute>>();
+        }
+
+        public IDataResult<List<CategoryAttributeDto>> GetAllCategoryAttribute(CategoryAttributeDto categoryAttributeDto)
+        {
+            if (categoryAttributeDto.CategoryId == null || !categoryAttributeDto.CategoryId.Any())
+            {
+                return new ErrorDataResult<List<CategoryAttributeDto>>();
+            }
+            var result = _categoryAttributeDal.GetAllCategoryAttribute(categoryAttributeDto);
+            if (result != null)
+            {
+                return new SuccessDataResult<List<CategoryAttributeDto>>(result);
+            }
+            return new ErrorDataResult<List<CategoryAttributeDto>>();
         }
     }
 }

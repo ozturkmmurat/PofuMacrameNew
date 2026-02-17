@@ -1,4 +1,4 @@
-﻿using Business.Abstract;
+using Business.Abstract;
 using Entities.Concrete;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -45,6 +45,17 @@ namespace WebAPI.Controllers
         public IActionResult Add(ProductAttribute productAttribute)
         {
             var result = _productAttributeService.Add(productAttribute);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        [HttpPost("AddRange")]
+        public IActionResult AddRange([FromBody] List<ProductAttribute> productAttributes)
+        {
+            var result = _productAttributeService.AddRange(productAttributes);
             if (result.Success)
             {
                 return Ok(result);

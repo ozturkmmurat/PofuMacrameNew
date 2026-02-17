@@ -1,13 +1,15 @@
-﻿using Core.DataAccess.EntityFramework;
+using Core.DataAccess.EntityFramework;
 using DataAccess.Abstract;
 using DataAccess.Context;
 using Entities.Concrete;
+using Entities.Dtos.CategoryAttribute;
 using Entities.Dtos.CategoryAttribute.Select;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess.Concrete.EntityFramework
 {
@@ -96,6 +98,27 @@ namespace DataAccess.Concrete.EntityFramework
                              AttributeValues = _context.AttributeValues.Where(x => x.AttributeId == ca.AttributeId).ToList()
                          };
             return result.ToList();
+        }
+
+        public List<CategoryAttributeDto> GetAllCategoryAttribute(CategoryAttributeDto categoryAttributeDto)
+        {
+            if (categoryAttributeDto.CategoryId == null || !categoryAttributeDto.CategoryId.Any())
+                return new List<CategoryAttributeDto>();
+
+            var categoryIds = categoryAttributeDto.CategoryId;
+            var query = from ca in _context.CategoryAttributes.AsNoTracking()
+                         .Where(x => categoryIds.Contains(x.CategoryId) && x.Attribute == false && x.Slicer == false)
+                        join av in _context.AttributeValues.AsNoTracking()
+                        on ca.AttributeId equals av.AttributeId
+                        select new CategoryAttributeDto
+                        {
+                            AttributeId = av.AttributeId,
+                            AttributeValueId = av.Id,
+                            AttributeValue = av.Value
+                        };
+            var list = query.ToList();
+            var result = list.GroupBy(x => x.AttributeValueId).Select(g => g.First()).ToList();
+            return result;
         }
     }
 }

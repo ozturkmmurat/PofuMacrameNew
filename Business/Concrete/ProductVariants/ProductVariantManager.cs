@@ -116,17 +116,17 @@ namespace Business.Concrete
                                 };
                                 Add(newVariant);
                                 currentParentId = newVariant.Id;
-
-                                _productAttributeService.Add(new ProductAttribute
-                                {
-                                    ProductId = addProductVariant.ProductId,
-                                    AttributeId = attributeId,
-                                    AttributeValueId = attributeValue
-                                });
                             }
                             break; // her step'ta tek key-value var
                         }
                     }
+
+                    foreach (var attribute in addProductVariant.ProductAttributes)
+                    {
+                        attribute.ProductId = addProductVariant.ProductId;
+                    }
+
+                    _productAttributeService.AddRange(addProductVariant.ProductAttributes);
 
                     // Bu kombinasyonun son düğümü (yaprak) = stok bağlanacak varyant
                     if (productStockIndex < addProductVariant.ProductStocks.Count)

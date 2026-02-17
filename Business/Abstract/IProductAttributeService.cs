@@ -1,4 +1,4 @@
-﻿using Core.Utilities.Result.Abstract;
+using Core.Utilities.Result.Abstract;
 using Entities.Concrete;
 using Entities.Dtos;
 using System;
@@ -14,7 +14,7 @@ namespace Business.Abstract
         IDataResult<List<ProductAttribute>> GetAllByProductIds(List<int> productIds);
         IDataResult<ProductAttribute> MappingProductAttribute(ProductVariant productVariant);
         IResult Add(ProductAttribute productAttribute);
-        IResult AddList(List<ProductAttribute> productAttributes);
+        IResult AddRange(List<ProductAttribute> productAttributes);
         IResult Update(ProductAttribute productAttribute);
         IResult Delete(ProductAttribute productAttribute);
     }

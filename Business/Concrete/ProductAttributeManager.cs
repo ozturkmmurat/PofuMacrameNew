@@ -6,16 +6,20 @@ using Entities.Concrete;
 using Entities.Dtos;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Business.Concrete
 {
     public class ProductAttributeManager : IProductAttributeService
     {
-        IProductAttributeDal _productAttributeDal;
-        public ProductAttributeManager(IProductAttributeDal productAttributeDal)
+        private readonly IProductAttributeDal _productAttributeDal;
+        private readonly ICategoryAttributeService _categoryAttributeService;
+
+        public ProductAttributeManager(IProductAttributeDal productAttributeDal, ICategoryAttributeService categoryAttributeService)
         {
             _productAttributeDal = productAttributeDal;
+            _categoryAttributeService = categoryAttributeService;
         }
         public IResult Add(ProductAttribute productAttribute)
         {
@@ -27,17 +31,65 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
-        public IResult AddList(List<ProductAttribute> productAttributes)
+        public IResult AddRange(List<ProductAttribute> productAttributes)
         {
-            if (productAttributes != null)
+            if (productAttributes == null || productAttributes.Count == 0)
             {
-                if (productAttributes.Count >= 0)
-                {
-                    _productAttributeDal.AddRange(productAttributes);
-                    return new SuccessResult();
-                }
+                return new ErrorResult();
             }
-            return new ErrorResult();
+
+            var attributeIds = productAttributes.Select(pa => pa.AttributeId).Distinct().ToList();
+            var categoryAttributesResult = _categoryAttributeService.GetByAttributeIds(attributeIds);
+            if (!categoryAttributesResult.Success || categoryAttributesResult.Data == null)
+            {
+                return new ErrorResult();
+            }
+
+            var categoryAttributes = categoryAttributesResult.Data;
+            var attributeIdsSlicerOrAttributeTrue = new HashSet<int>(categoryAttributes
+                .Where(ca => ca.Slicer || ca.Attribute)
+                .Select(ca => ca.AttributeId)
+                .Distinct());
+            var attributeIdsSlicerAndAttributeFalse = new HashSet<int>(categoryAttributes
+                .Where(ca => !ca.Slicer && !ca.Attribute)
+                .Select(ca => ca.AttributeId)
+                .Distinct()
+                .Where(id => !attributeIdsSlicerOrAttributeTrue.Contains(id)));
+
+            var productAttributesFalseToAdd = productAttributes
+                .Where(pa => attributeIdsSlicerAndAttributeFalse.Contains(pa.AttributeId))
+                .ToList();
+            var productAttributesExcluded = productAttributes
+                .Where(pa => attributeIdsSlicerOrAttributeTrue.Contains(pa.AttributeId))
+                .ToList();
+
+            // False grubu: DB'de olup gelen listede olmayanları kaldır, gelen listede olup DB'de olmayanları ekle
+            if (productAttributesFalseToAdd.Count > 0)
+            {
+                var productIds = productAttributesFalseToAdd.Select(pa => pa.ProductId).Distinct().ToList();
+                var existingInDb = _productAttributeDal.GetAll(pa =>
+                    productIds.Contains(pa.ProductId) && attributeIdsSlicerAndAttributeFalse.Contains(pa.AttributeId));
+
+                var incomingSet = new HashSet<(int ProductId, int AttributeId, int AttributeValueId)>(
+                    productAttributesFalseToAdd.Select(pa => (pa.ProductId, pa.AttributeId, pa.AttributeValueId)));
+
+                var toRemove = existingInDb
+                    .Where(e => !incomingSet.Contains((e.ProductId, e.AttributeId, e.AttributeValueId)))
+                    .ToList();
+                var toAdd = productAttributesFalseToAdd
+                    .Where(i => !existingInDb.Any(e => e.ProductId == i.ProductId && e.AttributeId == i.AttributeId && e.AttributeValueId == i.AttributeValueId))
+                    .ToList();
+
+                if (toRemove.Count > 0)
+                    _productAttributeDal.DeleteRange(toRemove);
+                if (toAdd.Count > 0)
+                    _productAttributeDal.AddRange(toAdd);
+            }
+
+            if (productAttributesExcluded.Count > 0)
+                _productAttributeDal.AddRange(productAttributesExcluded);
+
+            return new SuccessResult();
         }
 
         public IResult Delete(ProductAttribute productAttribute)

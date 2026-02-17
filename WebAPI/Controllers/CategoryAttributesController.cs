@@ -1,5 +1,6 @@
-﻿using Business.Abstract;
+using Business.Abstract;
 using Entities.Concrete;
+using Entities.Dtos.CategoryAttribute;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -74,6 +75,17 @@ namespace WebAPI.Controllers
         public IActionResult GetAllViewDtoTrueSlicerAttribute(int categoryId)
         {
             var result = _categoryAttributeService.GetAllViewDtoTrueSlicerAttribute(categoryId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        [HttpPost("GetAllCategoryAttribute")]
+        public IActionResult GetAllCategoryAttribute(CategoryAttributeDto categoryAttributeDto)
+        {
+            var result = _categoryAttributeService.GetAllCategoryAttribute(categoryAttributeDto);
             if (result.Success)
             {
                 return Ok(result);
