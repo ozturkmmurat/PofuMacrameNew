@@ -1,16 +1,16 @@
-﻿using Core.DataAccess;
+using Core.DataAccess;
 using Entities.Concrete;
+using Entities.Dtos.Category;
 using Entities.Dtos.Category.Select;
-using Entities.Dtos.Product.Select;
+using Entities.EntityParameter.Category;
 using Entities.EntitiyParameter.Product;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace DataAccess.Abstract
 {
     public interface ICategoryDal : IEntityRepository<Category>
     {
         List<SelectCategoryDto> GetAllCategoryHierarchy(List<Category> categories, int? parentId);
+        List<CategoryDto> GetRandomCategoriesWithFirstImage(FilterCategoryDto filter);
     }
 }

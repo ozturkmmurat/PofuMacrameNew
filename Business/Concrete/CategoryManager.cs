@@ -1,14 +1,14 @@
-﻿using Business.Abstract;
+using Business.Abstract;
 using Business.Constans;
 using Core.Business;
 using Core.Utilities.Result.Abstract;
 using Core.Utilities.Result.Concrete;
 using DataAccess.Abstract;
 using Entities.Concrete;
+using Entities.Dtos.Category;
 using Entities.Dtos.Category.Select;
-using System;
+using Entities.EntityParameter.Category;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Business.Concrete
 {
@@ -18,6 +18,16 @@ namespace Business.Concrete
         public CategoryManager(ICategoryDal categoryDal)
         {
             _categoryDal = categoryDal;
+        }
+
+        public IDataResult<List<CategoryDto>> GetAllRandomCategory(FilterCategoryDto filter)
+        {
+            if (filter == null)
+                return new ErrorDataResult<List<CategoryDto>>();
+            var result = _categoryDal.GetRandomCategoriesWithFirstImage(filter);
+            if (result != null)
+                return new SuccessDataResult<List<CategoryDto>>(result);
+            return new ErrorDataResult<List<CategoryDto>>();
         }
         public IResult Add(Category category)
         {
@@ -37,16 +47,6 @@ namespace Business.Concrete
                 return new SuccessResult();
             }
             return new ErrorResult();
-        }
-
-        public IDataResult<List<Category>> GetAll()
-        {
-            var result = _categoryDal.GetAll();
-            if (result != null)
-            {
-                return new SuccessDataResult<List<Category>>(result);
-            }
-            return new ErrorDataResult<List<Category>>();
         }
 
         public IDataResult<List<Category>> GetAllAsNoTracking()

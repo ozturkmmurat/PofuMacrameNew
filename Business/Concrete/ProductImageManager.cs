@@ -1,4 +1,4 @@
-﻿using Business.Abstract;
+using Business.Abstract;
 using Business.Constans;
 using Core.Business;
 using Core.Helpers.FileHelper;
@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -94,6 +95,13 @@ namespace Business.Concrete
         {
             if (productImage != null)
             {
+                // Veritabanından silmeden önce diskteki dosyayı sil
+                if (!string.IsNullOrEmpty(productImage.Path))
+                {
+                    var fullPath = Path.Combine(PathConstans.ImagesPath, productImage.Path);
+                    _fileHelper.Delete(fullPath);
+                }
+
                 _productImageDal.Delete(productImage);
                 if (productImage.IsMain == true)
                 {
@@ -179,17 +187,25 @@ namespace Business.Concrete
                 if (getAllImage.Data?.Count > 0)
                 {
                     var updateData = getAllImage.Data.FirstOrDefault(x => x.Id == productImage.Id);
+                    if (updateData == null)
+                        return new ErrorResult();
+
                     updateData.IsMain = true;
                     updateData.CreateDate = DateTime.Now;
                     updateData.ProductVariantId = productImage.ProductVariantId;
+
                     if (formFile != null)
                     {
-                        productImage.Path = _fileHelper.Upload(formFile, PathConstans.ImagesPath);
+                        // Eski fotoğrafı diskten sil, yenisini yükle
+                        var oldFullPath = !string.IsNullOrEmpty(updateData.Path)
+                            ? Path.Combine(PathConstans.ImagesPath, updateData.Path)
+                            : null;
+                        updateData.Path = oldFullPath != null
+                            ? _fileHelper.Update(formFile, oldFullPath, PathConstans.ImagesPath)
+                            : _fileHelper.Upload(formFile, PathConstans.ImagesPath);
                     }
-                    else
-                    {
-                        productImage.Path = updateData.Path;
-                    }
+                    // formFile null ise updateData.Path aynen kalır
+
                     getAllImage.Data.Remove(updateData);
                     _productImageDal.Update(updateData);
 

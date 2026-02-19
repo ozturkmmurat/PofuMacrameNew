@@ -10,5 +10,6 @@ namespace Entities.Concrete
         public int Id { get; set; }
         public int? ParentId { get; set; }
         public string CategoryName { get; set; }
+        public bool Status { get; set; }
     }
 }

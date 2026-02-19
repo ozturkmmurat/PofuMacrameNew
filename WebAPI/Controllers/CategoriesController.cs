@@ -1,6 +1,6 @@
-﻿using Business.Abstract;
+using Business.Abstract;
 using Entities.Concrete;
-using Microsoft.AspNetCore.Http;
+using Entities.EntityParameter.Category;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers
@@ -18,7 +18,7 @@ namespace WebAPI.Controllers
         [HttpGet("GetAll")]
         public IActionResult GetAll()
         {
-            var result = _categoryService.GetAll();
+            var result = _categoryService.GetAllAsNoTracking();
             if (result.Success)
             {
                 return Ok(result);
@@ -45,6 +45,15 @@ namespace WebAPI.Controllers
             {
                 return Ok(result);
             }
+            return BadRequest(result);
+        }
+
+        [HttpPost("GetAllRandomCategory")]
+        public IActionResult GetAllRandomCategory(FilterCategoryDto filter)
+        {
+            var result = _categoryService.GetAllRandomCategory(filter);
+            if (result.Success)
+                return Ok(result);
             return BadRequest(result);
         }
 

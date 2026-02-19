@@ -534,7 +534,7 @@ namespace DataAccess.Concrete.EntityFramework
                 if (filterProduct.EndLength <= 0)
                     return new List<SelectListProductVariantDto>();
 
-                var result = from p in _context.Products.AsNoTracking().Skip(filterProduct.StartLength).Take(filterProduct.EndLength)
+                var result = from p in _context.Products.AsNoTracking().OrderBy(p => Guid.NewGuid()).Skip(filterProduct.StartLength).Take(filterProduct.EndLength)
                              join pv in _context.ProductVariants.AsNoTracking() on p.Id equals pv.ProductId
                              where pv.ParentId == 0
                              select new SelectListProductVariantDto
