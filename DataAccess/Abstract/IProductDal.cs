@@ -1,4 +1,4 @@
-﻿using Core.DataAccess;
+using Core.DataAccess;
 using Entities.Concrete;
 using Entities.Dtos.CategoryAttribute.Select;
 using Entities.Dtos.Product;
@@ -16,6 +16,7 @@ namespace DataAccess.Abstract
     public interface IProductDal : IEntityRepository<Product>
     {
         int GetTotalProduct(int categoryId);
+        int GetTotalProductWithPriceFilter(int categoryId, decimal minPrice, decimal maxPrice);
         List<SelectListProductVariantDto> GetAllPvFilterDto(FilterProduct filterProduct);
         List<SelectListProductVariantDto> DefaultOnNoFilter(FilterProduct filterProduct);
         List<SelectListProductVariantDto> RandomDefaultOnNoFilter(FilterProduct filterProduct);

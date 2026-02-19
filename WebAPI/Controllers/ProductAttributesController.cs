@@ -1,5 +1,6 @@
 using Business.Abstract;
 using Entities.Concrete;
+using Entities.Dtos.ProductAttribute;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -41,6 +42,31 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
+        [HttpPost("GetAllProductAttribute")]
+        public IActionResult GetAllProductAttribute(ProductAttributeDto productAttributeDto)
+        {
+            var result = _productAttributeService.GetAllProductAttribute(productAttributeDto);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        /// <summary>
+        /// Verilen ürün id listesine ait filtre özellikleri ve seçeneklerini döner. Ürün listesi filtre alanında kullanılır.
+        /// </summary>
+        [HttpPost("GetFilterAttributesByProductIds")]
+        public IActionResult GetFilterAttributesByProductIds([FromBody] List<int> productIds)
+        {
+            var result = _productAttributeService.GetFilterAttributesByProductIds(productIds);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
         [HttpPost("Add")]
         public IActionResult Add(ProductAttribute productAttribute)
         {
@@ -53,7 +79,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("AddRange")]
-        public IActionResult AddRange([FromBody] List<ProductAttribute> productAttributes)
+        public IActionResult AddRange(List<ProductAttribute> productAttributes)
         {
             var result = _productAttributeService.AddRange(productAttributes);
             if (result.Success)

@@ -71,7 +71,7 @@ namespace Business.Concrete
             return new ErrorResult();
         }
         [TransactionScopeAspect]
-        public IResult AddTsaProductVariant(AddProductVariant addProductVariant)
+        public IResult AddTsaProductVariant(AddProductVariantDto addProductVariant)
         {
             // JsonElement'i bir string'e dönüştürün
             string jsonDataString = addProductVariant.JsonData.ToString();

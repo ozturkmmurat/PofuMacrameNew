@@ -1,4 +1,4 @@
-﻿using Core.Entities;
+using Core.Entities;
 using Entities.Concrete;
 using System;
 using System.Collections.Generic;
@@ -20,5 +20,6 @@ namespace Entities.Dtos.Product.Select
         public List<string> ProductPaths { get; set; }
         public decimal? NetPrice { get; set; }
         public int Quantity { get; set; }
+        public int TotalProduct { get; set; }
     }
 }

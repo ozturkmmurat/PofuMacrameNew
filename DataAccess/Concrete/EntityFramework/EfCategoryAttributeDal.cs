@@ -82,43 +82,5 @@ namespace DataAccess.Concrete.EntityFramework
             return result.ToList();
         }
 
-        public List<FilterCategoryAttributeDto> GetAllCategoryAttributeFilter(int categoryId)
-        {
-            var result = from ca in _context.CategoryAttributes.Where(x => x.CategoryId == categoryId)
-                         join c in _context.Categories
-                         on ca.CategoryId equals c.Id
-                         join a in _context.Attributes
-                         on ca.AttributeId equals a.Id
-
-                         select new FilterCategoryAttributeDto
-                         {
-                             AttributeId = ca.AttributeId,
-                             AttributeName = a.Name,
-                             CategoryName = c.CategoryName,
-                             AttributeValues = _context.AttributeValues.Where(x => x.AttributeId == ca.AttributeId).ToList()
-                         };
-            return result.ToList();
-        }
-
-        public List<CategoryAttributeDto> GetAllCategoryAttribute(CategoryAttributeDto categoryAttributeDto)
-        {
-            if (categoryAttributeDto.CategoryId == null || !categoryAttributeDto.CategoryId.Any())
-                return new List<CategoryAttributeDto>();
-
-            var categoryIds = categoryAttributeDto.CategoryId;
-            var query = from ca in _context.CategoryAttributes.AsNoTracking()
-                         .Where(x => categoryIds.Contains(x.CategoryId) && x.Attribute == false && x.Slicer == false)
-                        join av in _context.AttributeValues.AsNoTracking()
-                        on ca.AttributeId equals av.AttributeId
-                        select new CategoryAttributeDto
-                        {
-                            AttributeId = av.AttributeId,
-                            AttributeValueId = av.Id,
-                            AttributeValue = av.Value
-                        };
-            var list = query.ToList();
-            var result = list.GroupBy(x => x.AttributeValueId).Select(g => g.First()).ToList();
-            return result;
-        }
     }
 }

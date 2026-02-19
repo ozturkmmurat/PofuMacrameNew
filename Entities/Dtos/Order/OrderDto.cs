@@ -12,6 +12,6 @@ namespace Entities.Dtos.Order
         public int UserId { get; set; }
         public decimal TotalPrice { get; set; }
         public string OrderCode { get; set; }
-        public List<Entities.Concrete.SubOrder> subOrders { get; set; }
+        public List<Entities.Concrete.SubOrder> SubOrders { get; set; }
     }
 }

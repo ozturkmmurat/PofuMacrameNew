@@ -143,6 +143,8 @@ namespace Business.Concrete
                     if (!addResult.Success)
                         return new ErrorResult();
                 }
+
+                var addProductAttributeResult = _productAttributeService.AddRange(dto.ProductAttributes);
             }
 
             return new SuccessResult();
@@ -241,7 +243,25 @@ namespace Business.Concrete
 
                                 if (endFilters.Count > 0)
                                 {
-                                    return new SuccessDataResult<List<SelectListProductVariantDto>>(endFilters);
+                                    // MinPrice ve MaxPrice ikisi de 0 ise fiyat filtresi uygulanmaz
+                                    bool applyPriceFilter = filterProduct.MinPrice != 0 || filterProduct.MaxPrice != 0;
+                                    if (applyPriceFilter)
+                                    {
+                                        endFilters = endFilters
+                                            .Where(x => x.NetPrice != null
+                                                && x.NetPrice >= filterProduct.MinPrice
+                                                && (filterProduct.MaxPrice <= 0 || x.NetPrice <= filterProduct.MaxPrice))
+                                            .ToList();
+                                    }
+
+                                    int totalProduct = endFilters.Count;
+                                    var pagedFilters = endFilters
+                                        .Skip(filterProduct.StartLength)
+                                        .Take(filterProduct.EndLength)
+                                        .ToList();
+                                    foreach (var item in pagedFilters)
+                                        item.TotalProduct = totalProduct;
+                                    return new SuccessDataResult<List<SelectListProductVariantDto>>(pagedFilters);
                                 }
                             }
 
@@ -258,6 +278,13 @@ namespace Business.Concrete
                     var processProductVariant = ProcessProductVariantData(executeNoFilter);
                     if (processProductVariant.Success)
                     {
+                        // MinPrice ve MaxPrice ikisi de 0 ise fiyat filtresi uygulanmaz
+                        bool applyPriceFilter = filterProduct.MinPrice != 0 || filterProduct.MaxPrice != 0;
+                        int totalProduct = applyPriceFilter
+                            ? _productDal.GetTotalProductWithPriceFilter(filterProduct.CategoryId, filterProduct.MinPrice, filterProduct.MaxPrice)
+                            : _productDal.GetTotalProduct(filterProduct.CategoryId);
+                        foreach (var item in processProductVariant.Data)
+                            item.TotalProduct = totalProduct;
                         return new SuccessDataResult<List<SelectListProductVariantDto>>(processProductVariant.Data);
                     }
 
@@ -277,6 +304,9 @@ namespace Business.Concrete
                     {
                         if (processProductVariant.Data.Count > 0)
                         {
+                            int totalProduct = _productDal.GetTotalProduct(0);
+                            foreach (var item in processProductVariant.Data)
+                                item.TotalProduct = totalProduct;
                             return new SuccessDataResult<List<SelectListProductVariantDto>>(processProductVariant.Data);
                         }
                         else
@@ -303,7 +333,7 @@ namespace Business.Concrete
             return new ErrorDataResult<List<SelectProductDto>>(result);
         }
 
-        public IResult TsaAdd(AddProductVariant addProductVariant)
+        public IResult TsaAdd(AddProductVariantDto addProductVariant)
         {
             if (GetById(addProductVariant.ProductId).Data != null)
             {
@@ -365,17 +395,11 @@ namespace Business.Concrete
             return new ErrorDataResult<SelectProductDto>();
         }
 
-        public IDataResult<int> GetTotalProduct(int categoryId)
-        {
-            var result = _productDal.GetTotalProduct(categoryId);
-            return new SuccessDataResult<int>(result);
-        }
-
         public IDataResult<List<SelectListProductVariantDto>> ProcessProductVariantData(List<SelectListProductVariantDto> processProductVariants)
         {
             if (processProductVariants != null & processProductVariants.Count > 0)
             {
-                for (int i = 0; i < processProductVariants.Count; i++)
+                for (int i = processProductVariants.Count - 1; i >= 0; i--)
                 {
                     if (processProductVariants[i].ParentId == 0)
                     {

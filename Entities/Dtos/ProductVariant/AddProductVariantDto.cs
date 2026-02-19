@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace Entities.Dtos.ProductVariant
 {
-    public class AddProductVariant
+    public class AddProductVariantDto
     {
         public int ProductId { get; set; }
         public int MainCategoryId { get; set; }
@@ -19,7 +19,7 @@ namespace Entities.Dtos.ProductVariant
         public string ProductCode { get; set; }
         public List<Entities.Concrete.ProductVariant> ProductVariants { get; set; }
         public List<Entities.Concrete.ProductStock> ProductStocks { get; set; }
-        public List<ProductAttribute> ProductAttributes { get; set; }
+        public List<Entities.Concrete.ProductAttribute> ProductAttributes { get; set; }
         public JsonElement JsonData { get; set; }
 
         [NotMapped]

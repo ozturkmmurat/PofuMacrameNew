@@ -96,17 +96,6 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("GetTotalProduct")]
-        public IActionResult GetTotalProduct(int categoryId)
-        {
-            var result = _productService.GetTotalProduct(categoryId);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-        }
-
         [HttpPost("Add")]
         public IActionResult Add(ProductDto productDto)
         {
@@ -117,7 +106,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("TsaAdd")]
-        public IActionResult TsaAdd(AddProductVariant addProductVariant)
+        public IActionResult TsaAdd(AddProductVariantDto addProductVariant)
         {
             var result = _productService.TsaAdd(addProductVariant);
             if (result.Success)

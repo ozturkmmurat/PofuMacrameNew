@@ -30,6 +30,9 @@ namespace DataAccess.Concrete.EntityFramework
 
         public List<SelectListProductVariantDto> GetAllPvFilterDto(FilterProduct filterProduct)
         {
+            if (filterProduct.EndLength <= 0)
+                return new List<SelectListProductVariantDto>();
+
             if (filterProduct.CategoryId == 0)
             {
                 var result = from p in _context.Products.AsNoTracking().Skip(filterProduct.StartLength).Take(filterProduct.EndLength)
@@ -237,22 +240,51 @@ namespace DataAccess.Concrete.EntityFramework
             return filter == null ? result.FirstOrDefault() : result.Where(filter).FirstOrDefault();
         }
 
+        /// <summary>
+        /// Kategorideki, en az bir fotoğrafı olan ana varyant (ParentId=0) sayısı. Fotoğrafı olmayan varyant TotalProduct hesabına dahil edilmez.
+        /// </summary>
         public int GetTotalProduct(int categoryId)
         {
             if (categoryId != 0)
             {
-                var result = _context.ProductCategories
+                var productIdsInCategory = _context.ProductCategories
                     .Where(pc => pc.CategoryId == categoryId || (pc.CategoryId == 0 && pc.MainCategoryId == categoryId))
                     .Select(pc => pc.ProductId)
-                    .Distinct()
+                    .Distinct();
+                return _context.ProductVariants
+                    .Where(pv => pv.ParentId == 0 && productIdsInCategory.Contains(pv.ProductId))
+                    .Where(pv => _context.ProductImages.Any(pi => pi.ProductVariantId == pv.Id))
                     .Count();
-                return result;
             }
             else
             {
-                var result = _context.Products.Count();
-                return result;
+                return _context.ProductVariants
+                    .Where(pv => pv.ParentId == 0)
+                    .Where(pv => _context.ProductImages.Any(pi => pi.ProductVariantId == pv.Id))
+                    .Count();
             }
+        }
+
+        /// <summary>
+        /// Fiyat aralığındaki ve en az bir fotoğrafı olan ana varyant sayısı. Fotoğrafı olmayan varyant TotalProduct hesabına dahil edilmez.
+        /// </summary>
+        public int GetTotalProductWithPriceFilter(int categoryId, decimal minPrice, decimal maxPrice)
+        {
+            if (categoryId == 0 || (minPrice <= 0 && maxPrice <= 0))
+                return 0;
+            var productIdsInCategory = _context.ProductCategories.AsNoTracking()
+                .Where(pc => pc.CategoryId == categoryId || (pc.CategoryId == 0 && pc.MainCategoryId == categoryId))
+                .Select(pc => pc.ProductId)
+                .Distinct()
+                .ToList();
+            var mainVariantIds = GetMainVariantIdsInPriceRange(minPrice, maxPrice, productIdsInCategory);
+            if (mainVariantIds.Count == 0)
+                return 0;
+            return _context.ProductImages.AsNoTracking()
+                .Where(pi => mainVariantIds.Contains(pi.ProductVariantId))
+                .Select(pi => pi.ProductVariantId)
+                .Distinct()
+                .Count();
         }
 
         public Tuple<List<ProductVariant>, List<ProductAttribute?>> ApplyFilteres(FilterProduct filterProduct)
@@ -364,34 +396,133 @@ namespace DataAccess.Concrete.EntityFramework
             return result.ToList();
         }
 
+        /// <summary>
+        /// Fiyat aralığındaki ProductStock kayıtlarından end variant id'lerini alır,
+        /// parent zincirini tırmanarak her biri için ana varyant (root, ParentId=0) id'sini bulur.
+        /// MinPrice=0 ve MaxPrice=0 ise boş liste döner.
+        /// </summary>
+        private List<int> GetMainVariantIdsInPriceRange(decimal minPrice, decimal maxPrice, List<int> productIdsInCategory)
+        {
+            if (productIdsInCategory == null || productIdsInCategory.Count == 0)
+                return new List<int>();
+            if (minPrice <= 0 && maxPrice <= 0)
+                return new List<int>();
+
+            var endVariantIds = _context.ProductStocks.AsNoTracking()
+                .Where(ps => productIdsInCategory.Contains(ps.ProductId)
+                    && ps.NetPrice >= minPrice
+                    && (maxPrice <= 0 || ps.NetPrice <= maxPrice))
+                .Select(ps => ps.ProductVariantId)
+                .Distinct()
+                .ToList();
+
+            if (endVariantIds.Count == 0)
+                return new List<int>();
+
+            var allVariantsInCategory = _context.ProductVariants.AsNoTracking()
+                .Where(pv => productIdsInCategory.Contains(pv.ProductId))
+                .ToList();
+
+            var variantById = allVariantsInCategory.ToDictionary(pv => pv.Id);
+
+            int GetRootMainVariantId(int variantId)
+            {
+                while (variantById.TryGetValue(variantId, out var v))
+                {
+                    if (v.ParentId == 0)
+                        return v.Id;
+                    variantId = v.ParentId;
+                }
+                return 0;
+            }
+
+            return endVariantIds
+                .Select(GetRootMainVariantId)
+                .Where(id => id != 0)
+                .Distinct()
+                .ToList();
+        }
+
         public List<SelectListProductVariantDto> DefaultOnNoFilter(FilterProduct filterProduct)
         {
             if (filterProduct.CategoryId > 0 && filterProduct.Attributes.Count == 0)
             {
+                if (filterProduct.EndLength <= 0)
+                    return new List<SelectListProductVariantDto>();
+
                 var productIdsInCategory = _context.ProductCategories.AsNoTracking()
                     .Where(pc => pc.CategoryId == filterProduct.CategoryId || (pc.CategoryId == 0 && pc.MainCategoryId == filterProduct.CategoryId))
                     .Select(pc => pc.ProductId)
                     .Distinct()
+                    .OrderBy(id => id)
                     .ToList();
-                var result = from p in _context.Products.AsNoTracking().Where(x => productIdsInCategory.Contains(x.Id))
-                             join pv in _context.ProductVariants.AsNoTracking() on p.Id equals pv.ProductId
-                             where pv.ParentId == 0
-                             select new SelectListProductVariantDto
-                             {
-                                 ProductId = p.Id,
-                                 ProductVariantId = pv.Id,
-                                 ParentId = pv.ParentId,
-                                 ProductName = p.ProductName,
-                                 Description = p.Description,
-                                 AttributeValues = pv.AttributeValueId != 0 ? _context.AttributeValues.AsNoTracking().Where(x => x.Id == pv.AttributeValueId).ToList() : new List<AttributeValue>(),
-                                 ProductPaths = _context.ProductImages
-                                                     .Where(x => x.ProductVariantId == pv.Id)
-                                                     .Take(2)
-                                                     .Select(pi => pi.Path)
-                                                     .ToList(),
-                             };
-                return result.ToList();
 
+                if (productIdsInCategory.Count == 0)
+                    return new List<SelectListProductVariantDto>();
+
+                // MinPrice ve MaxPrice ikisi de 0 ise fiyat filtresi uygulanmaz
+                bool applyPriceFilter = filterProduct.MinPrice != 0 || filterProduct.MaxPrice != 0;
+                List<int> mainVariantIdsToUse = null;
+
+                if (applyPriceFilter)
+                {
+                    mainVariantIdsToUse = GetMainVariantIdsInPriceRange(filterProduct.MinPrice, filterProduct.MaxPrice, productIdsInCategory);
+                    if (mainVariantIdsToUse.Count == 0)
+                        return new List<SelectListProductVariantDto>();
+                }
+                else
+                {
+                    var productIdsPaged = productIdsInCategory
+                        .Skip(filterProduct.StartLength)
+                        .Take(filterProduct.EndLength)
+                        .ToList();
+                    if (productIdsPaged.Count == 0)
+                        return new List<SelectListProductVariantDto>();
+
+                    var result = from p in _context.Products.AsNoTracking().Where(x => productIdsPaged.Contains(x.Id))
+                                 join pv in _context.ProductVariants.AsNoTracking() on p.Id equals pv.ProductId
+                                 where pv.ParentId == 0
+                                 select new SelectListProductVariantDto
+                                 {
+                                     ProductId = p.Id,
+                                     ProductVariantId = pv.Id,
+                                     ParentId = pv.ParentId,
+                                     ProductName = p.ProductName,
+                                     Description = p.Description,
+                                     AttributeValues = pv.AttributeValueId != 0 ? _context.AttributeValues.AsNoTracking().Where(x => x.Id == pv.AttributeValueId).ToList() : new List<AttributeValue>(),
+                                     ProductPaths = _context.ProductImages
+                                                         .Where(x => x.ProductVariantId == pv.Id)
+                                                         .Take(2)
+                                                         .Select(pi => pi.Path)
+                                                         .ToList(),
+                                 };
+                    return result.ToList();
+                }
+
+                var mainVariantIdsPaged = mainVariantIdsToUse
+                    .OrderBy(id => id)
+                    .Skip(filterProduct.StartLength)
+                    .Take(filterProduct.EndLength)
+                    .ToList();
+
+                var resultWithPrice = from pv in _context.ProductVariants.AsNoTracking().Where(x => mainVariantIdsPaged.Contains(x.Id))
+                                     join p in _context.Products.AsNoTracking() on pv.ProductId equals p.Id
+                                     where pv.ParentId == 0
+                                     select new SelectListProductVariantDto
+                                     {
+                                         ProductId = p.Id,
+                                         ProductVariantId = pv.Id,
+                                         ParentId = pv.ParentId,
+                                         ProductName = p.ProductName,
+                                         Description = p.Description,
+                                         AttributeValues = pv.AttributeValueId != 0 ? _context.AttributeValues.AsNoTracking().Where(x => x.Id == pv.AttributeValueId).ToList() : new List<AttributeValue>(),
+                                         ProductPaths = _context.ProductImages
+                                                             .Where(x => x.ProductVariantId == pv.Id)
+                                                             .Take(2)
+                                                             .Select(pi => pi.Path)
+                                                             .ToList(),
+                                     };
+                return resultWithPrice.ToList();
             }
             return null;
         }
@@ -400,6 +531,9 @@ namespace DataAccess.Concrete.EntityFramework
         {
             if (filterProduct.CategoryId == 0 && filterProduct.Attributes.Count == 0)
             {
+                if (filterProduct.EndLength <= 0)
+                    return new List<SelectListProductVariantDto>();
+
                 var result = from p in _context.Products.AsNoTracking().Skip(filterProduct.StartLength).Take(filterProduct.EndLength)
                              join pv in _context.ProductVariants.AsNoTracking() on p.Id equals pv.ProductId
                              where pv.ParentId == 0

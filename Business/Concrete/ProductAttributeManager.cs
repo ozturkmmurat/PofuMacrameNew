@@ -4,6 +4,7 @@ using Core.Utilities.Result.Concrete;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.Dtos;
+using Entities.Dtos.ProductAttribute;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -90,6 +91,31 @@ namespace Business.Concrete
                 _productAttributeDal.AddRange(productAttributesExcluded);
 
             return new SuccessResult();
+        }
+
+        public IDataResult<List<ProductAttributeDto>> GetAllProductAttribute(ProductAttributeDto productAttributeDto)
+        {
+            if (productAttributeDto?.CategoryId == null || !productAttributeDto.CategoryId.Any())
+            {
+                return new ErrorDataResult<List<ProductAttributeDto>>();
+            }
+            var result = _productAttributeDal.GetAllProductAttribute(productAttributeDto);
+            if (result != null)
+            {
+                return new SuccessDataResult<List<ProductAttributeDto>>(result);
+            }
+            return new ErrorDataResult<List<ProductAttributeDto>>();
+        }
+
+        public IDataResult<List<FilterProductAttributeDto>> GetFilterAttributesByProductIds(List<int> productIds)
+        {
+            if (productIds == null || !productIds.Any())
+                return new ErrorDataResult<List<FilterProductAttributeDto>>();
+
+            var result = _productAttributeDal.GetFilterAttributesByProductIds(productIds);
+            if (result != null)
+                return new SuccessDataResult<List<FilterProductAttributeDto>>(result);
+            return new ErrorDataResult<List<FilterProductAttributeDto>>();
         }
 
         public IResult Delete(ProductAttribute productAttribute)

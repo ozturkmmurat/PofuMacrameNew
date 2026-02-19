@@ -16,7 +16,6 @@ namespace Business.Abstract
     {
         IDataResult<List<Product>> GetAll();
         IDataResult<List<SelectProductDto>> GetallProductDto();
-        IDataResult<int> GetTotalProduct(int categoryId);
         IDataResult<SelectProductDetailDto> GetProductDetailDtoByPvId(int productVariantId);
         IDataResult<List<SelectListProductVariantDto>> GetAllProductVariantDtoGroupVariant(FilterProduct filterProduct);
         IDataResult<List<SelectListProductVariantDto>> ProcessProductVariantData(List<SelectListProductVariantDto> processProductVariants);
@@ -26,7 +25,7 @@ namespace Business.Abstract
         /// Ürün + ProductCategory ekler. ProductId 0, MainCategoryId zorunlu.
         /// </summary>
         IResult Add(ProductDto dto);
-        IResult TsaAdd(AddProductVariant addProductVariant);
+        IResult TsaAdd(AddProductVariantDto addProductVariant);
         /// <summary>
         /// Ürün bilgisi + ek kategorileri günceller. ProductId zorunlu; ana kategori değiştirilmez.
         /// </summary>

@@ -1,6 +1,5 @@
-﻿using Business.Abstract.ProductVariants;
+using Business.Abstract.ProductVariants;
 using Entities.Concrete;
-using Entities.Dtos;
 using Entities.Dtos.ProductVariant;
 using Entities.Dtos.ProductVariant.Select;
 using Microsoft.AspNetCore.Http;

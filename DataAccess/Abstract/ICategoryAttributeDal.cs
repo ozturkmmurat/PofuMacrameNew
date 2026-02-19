@@ -14,7 +14,5 @@ namespace DataAccess.Abstract
         List<SelectCategoryAttributeDto> GetAllSelectFilterDto(Expression<Func<SelectCategoryAttributeDto, bool>> filter = null);
         List<ViewCategoryAttributeDto> GetCategorySlicerAttribute(int categoryId);
         List<ViewCategoryAttributeDto> GetAllTrueSlicerAttribute(int categoryId);
-        List<FilterCategoryAttributeDto> GetAllCategoryAttributeFilter(int categoryId);
-        List<CategoryAttributeDto> GetAllCategoryAttribute(CategoryAttributeDto categoryAttributeDto);
     }
 }

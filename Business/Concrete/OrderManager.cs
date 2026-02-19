@@ -191,7 +191,7 @@ namespace Business.Concrete
                 mappingOrder.Data.OrderCode = result.Data;
                 _orderDal.Add(mappingOrder.Data);
                 var resultSubOrder = new SubOrder();
-                foreach (var subOrder in orderDto.subOrders)
+                foreach (var subOrder in orderDto.SubOrders)
                 {
                     resultSubOrder = new SubOrder
                     {
@@ -217,7 +217,7 @@ namespace Business.Concrete
                 mappingOrder.Data.OrderCode = result.Data;
                 _orderDal.Update(mappingOrder.Data);
                 var resultSubOrder = new SubOrder();
-                foreach (var subOrder in orderDto.subOrders)
+                foreach (var subOrder in orderDto.SubOrders)
                 {
                     resultSubOrder = new SubOrder
                     {

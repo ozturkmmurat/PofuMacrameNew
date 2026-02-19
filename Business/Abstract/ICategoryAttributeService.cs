@@ -17,8 +17,6 @@ namespace Business.Abstract
         IDataResult<List<SelectCategoryAttributeDto>> GetAllSlctCategoryByCategoryId(int categoryId);
         IDataResult<List<ViewCategoryAttributeDto>> GetAllDtoTrueSlicer(int categoryId);
         IDataResult<List<ViewCategoryAttributeDto>> GetAllViewDtoTrueSlicerAttribute(int categoryId);
-        IDataResult<List<FilterCategoryAttributeDto>> GetAllCategoryAttributeFilter(int categoryId);
-        IDataResult<List<CategoryAttributeDto>> GetAllCategoryAttribute(CategoryAttributeDto categoryAttributeDto);
         IDataResult<List<CategoryAttribute>> GetByAttributeIds(List<int> attributeIds);
         IDataResult<CategoryAttribute> GetByAttributeIdCategoryId(int attributeId, int categoryId);
         IDataResult<CategoryAttribute> GetByCategoryIdSlicer(int categoryId, bool slicer);

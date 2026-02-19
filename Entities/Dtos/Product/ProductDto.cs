@@ -1,4 +1,5 @@
 using Core.Entities;
+using Entities.Dtos.ProductAttribute;
 using System.Collections.Generic;
 
 namespace Entities.Dtos.Product
@@ -21,5 +22,6 @@ namespace Entities.Dtos.Product
         /// Ek kategoriler. Add'de isteğe bağlı; TsaUpdate'te sadece ek kategoriler güncellenir.
         /// </summary>
         public List<int> CategoryId { get; set; }
+        public List<Entities.Concrete.ProductAttribute> ProductAttributes { get; set; }
     }
 }

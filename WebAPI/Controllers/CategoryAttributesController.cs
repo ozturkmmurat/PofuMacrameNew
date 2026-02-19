@@ -1,6 +1,5 @@
 using Business.Abstract;
 using Entities.Concrete;
-using Entities.Dtos.CategoryAttribute;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -75,29 +74,6 @@ namespace WebAPI.Controllers
         public IActionResult GetAllViewDtoTrueSlicerAttribute(int categoryId)
         {
             var result = _categoryAttributeService.GetAllViewDtoTrueSlicerAttribute(categoryId);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-        }
-
-        [HttpPost("GetAllCategoryAttribute")]
-        public IActionResult GetAllCategoryAttribute(CategoryAttributeDto categoryAttributeDto)
-        {
-            var result = _categoryAttributeService.GetAllCategoryAttribute(categoryAttributeDto);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-        }
-
-        //İlgili kategorinin sahip oldugu ozellik gruplarını ve ozellikleri listelemek icin kullaniliyor. Kullanildigi yerler(Urun filtreleem alani)
-        [HttpGet("GetAllCategoryAttributeFilter")]
-        public IActionResult GetAllCategoryAttributeFilter(int categoryId)
-        {
-            var result = _categoryAttributeService.GetAllCategoryAttributeFilter(categoryId);
             if (result.Success)
             {
                 return Ok(result);

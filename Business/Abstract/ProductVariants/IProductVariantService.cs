@@ -1,4 +1,4 @@
-﻿using Core.Utilities.Result.Abstract;
+using Core.Utilities.Result.Abstract;
 using Entities.Concrete;
 using Entities.Dtos;
 using Entities.Dtos.Product;
@@ -37,7 +37,7 @@ namespace Business.Abstract.ProductVariants
         IDataResult<ProductVariant> GetByParentIdAttrValueId(int productId,int? parentId, int? attributeValueId, int? attributeId);
         IDataResult<ProductVariantAttributeDto> GetProductVariantAttribute(int parentId); //İlgili varyantın attributelerini getirir. Sonuncu varyant dan başlayıp
         IResult Add(ProductVariant variant);
-        IResult AddTsaProductVariant(AddProductVariant addProductVariant);
+        IResult AddTsaProductVariant(AddProductVariantDto addProductVariant);
         IResult AddList(List<ProductVariant> variants);
         IResult Update(ProductVariant variant);
         IResult Delete(ProductVariant variant);

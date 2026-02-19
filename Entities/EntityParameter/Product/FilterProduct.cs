@@ -11,6 +11,8 @@ namespace Entities.EntitiyParameter.Product
         public int CategoryId { get; set; }
         public int StartLength { get; set; }
         public int EndLength { get; set; }
+        public decimal MinPrice { get; set; }
+        public decimal MaxPrice { get; set; }
         public List<FilterAttribute> Attributes { get; set; }
     }
 }

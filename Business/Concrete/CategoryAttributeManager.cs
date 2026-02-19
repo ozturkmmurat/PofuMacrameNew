@@ -170,16 +170,6 @@ namespace Business.Concrete
             return new SuccessResult();
         }
 
-        public IDataResult<List<FilterCategoryAttributeDto>> GetAllCategoryAttributeFilter(int categoryId)
-        {
-            var result = _categoryAttributeDal.GetAllCategoryAttributeFilter(categoryId);
-            if (result != null)
-            {
-                return new SuccessDataResult<List<FilterCategoryAttributeDto>>(result);
-            }
-            return new ErrorDataResult<List<FilterCategoryAttributeDto>>();
-        }
-
         public IResult CheckSlicer(CategoryAttribute categoryAttribute)
         {
             var result = GetByCategoryIdSlicer(categoryAttribute.CategoryId, categoryAttribute.Slicer).Data;
@@ -210,18 +200,5 @@ namespace Business.Concrete
             return new ErrorDataResult<List<CategoryAttribute>>();
         }
 
-        public IDataResult<List<CategoryAttributeDto>> GetAllCategoryAttribute(CategoryAttributeDto categoryAttributeDto)
-        {
-            if (categoryAttributeDto.CategoryId == null || !categoryAttributeDto.CategoryId.Any())
-            {
-                return new ErrorDataResult<List<CategoryAttributeDto>>();
-            }
-            var result = _categoryAttributeDal.GetAllCategoryAttribute(categoryAttributeDto);
-            if (result != null)
-            {
-                return new SuccessDataResult<List<CategoryAttributeDto>>(result);
-            }
-            return new ErrorDataResult<List<CategoryAttributeDto>>();
-        }
     }
 }
