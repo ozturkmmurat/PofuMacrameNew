@@ -58,5 +58,6 @@ namespace DataAccess.Context
         public DbSet<PasswordReset> PasswordResets { get; set; }
         public DbSet<ProductPriceFactor> ProductPriceFactors { get; set; }
         public DbSet<District> Districts { get; set; }
+        public DbSet<SiteContent> SiteContents { get; set; }
     }
 }

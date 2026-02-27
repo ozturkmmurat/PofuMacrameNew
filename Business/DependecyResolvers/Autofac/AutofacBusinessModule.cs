@@ -91,6 +91,9 @@ namespace Business.DependecyResolvers.Autofac
             builder.RegisterType<EfDistrictDal>().As<IDistrictDal>().InstancePerLifetimeScope();
             builder.RegisterType<DistrictManager>().As<IDistrictService>().InstancePerLifetimeScope();
 
+            builder.RegisterType<EfSiteContentDal>().As<ISiteContentDal>().InstancePerLifetimeScope();
+            builder.RegisterType<SiteContentManager>().As<ISiteContentService>().InstancePerLifetimeScope();
+
             builder.RegisterType<AuthManager>().As<IAuthService>().InstancePerLifetimeScope();
             builder.RegisterType<JwtHelper>().As<ITokenHelper>().InstancePerLifetimeScope();
 
