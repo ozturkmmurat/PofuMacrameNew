@@ -1,4 +1,4 @@
-﻿using Business.Abstract;
+using Business.Abstract;
 using Entities.Concrete;
 using Entities.Dtos.Order;
 using Microsoft.AspNetCore.Http;
@@ -42,6 +42,17 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
+        [HttpGet("GetByGuid")]
+        public IActionResult GetByGuid(string guid)
+        {
+            var result = _orderService.GetByGuid(guid);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
         [HttpGet("GetAllUserOrderDto")]
         public IActionResult GetAllUserOrderDto()
         {
@@ -55,9 +66,9 @@ namespace WebAPI.Controllers
 
 
         [HttpGet("GetUserOrderDtoDetail")]
-        public IActionResult GetUserOrderDtoDetail(int orderId, int userId)
+        public IActionResult GetUserOrderDtoDetail(int orderId)
         {
-            var result = _orderService.GetUserOrderDtoDetail(orderId, userId);
+            var result = _orderService.GetUserOrderDtoDetail(orderId);
             if (result.Success)
             {
                 return Ok(result);
@@ -106,6 +117,15 @@ namespace WebAPI.Controllers
             {
                 return Ok(result);
             }
+            return BadRequest(result);
+        }
+
+        [HttpPost("MarkAsShipped")]
+        public IActionResult MarkAsShipped(Order order)
+        {
+            var result = _orderService.MarkAsShipped(order);
+            if (result.Success)
+                return Ok(result);
             return BadRequest(result);
         }
     }

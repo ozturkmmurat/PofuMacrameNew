@@ -1,4 +1,4 @@
-﻿using Business.Abstract;
+using Business.Abstract;
 using Business.Abstract.ProductVariants;
 using Business.BusinessAspects.Autofac;
 using Business.Utilities;
@@ -27,18 +27,21 @@ namespace Business.Concrete
         ISubOrderDal _subOrderDal;
         IProductVariantService _productVariantService;
         IProductImageService _productImageService;
+        IMailService _mailService;
         private IHttpContextAccessor _httpContextAccessor;
         public OrderManager(
             IOrderDal orderDal,
             ISubOrderDal subOrderDal,
             IProductVariantService productVariantService,
-            IProductImageService productImageService)
+            IProductImageService productImageService,
+            IMailService mailService)
         {
             _orderDal = orderDal;
             _subOrderDal = subOrderDal;
             _productVariantService = productVariantService;
             _httpContextAccessor = ServiceTool.ServiceProvider.GetService<IHttpContextAccessor>();
-            _productImageService=productImageService;
+            _productImageService = productImageService;
+            _mailService = mailService;
         }
         public IResult Add(Order order)
         {
@@ -111,12 +114,14 @@ namespace Business.Concrete
         }
 
         [SecuredOperation("user,admin")]
-        public IDataResult<SelectUserOrderDto> GetUserOrderDtoDetail(int orderId, int userId)
+        public IDataResult<SelectUserOrderDto> GetUserOrderDtoDetail(int orderId)
         {
             var roleClaims = _httpContextAccessor.HttpContext.User.ClaimRoles();
             var result = (SelectUserOrderDto)null;
             if (roleClaims.Contains("admin"))
             {
+                var order = _orderDal.Get(x => x.Id == orderId);
+                var userId = order?.UserId ?? 0;
                 result = _orderDal.GetUserOrder(userId, orderId);
             }
             else
@@ -153,6 +158,16 @@ namespace Business.Concrete
             {
                 return new SuccessDataResult<Order>(result);
             }
+            return new ErrorDataResult<Order>();
+        }
+
+        public IDataResult<Order> GetByGuid(string guid)
+        {
+            if (string.IsNullOrWhiteSpace(guid))
+                return new ErrorDataResult<Order>();
+            var result = _orderDal.Get(x => x.Guid == guid);
+            if (result != null)
+                return new SuccessDataResult<Order>(result);
             return new ErrorDataResult<Order>();
         }
 
@@ -243,6 +258,33 @@ namespace Business.Concrete
                 return new SuccessResult();
             }
             return new ErrorResult();
+        }
+
+        [SecuredOperation("admin")]
+        public IResult MarkAsShipped(Order order)
+        {
+            if (order == null || order.Id <= 0)
+                return new ErrorResult("Sipariş bulunamadı.");
+
+            var orderFromDb = _orderDal.Get(x => x.Id == order.Id);
+            if (orderFromDb == null)
+                return new ErrorResult("Sipariş bulunamadı.");
+
+            orderFromDb.OrderStatus = 2; // Kargoya verildi
+            _orderDal.Update(orderFromDb);
+
+            var subOrders = _subOrderDal.GetAll(x => x.OrderId == order.Id);
+            if (subOrders != null && subOrders.Count > 0)
+            {
+                for (int i = 0; i < subOrders.Count; i++)
+                    subOrders[i].SubOrderStatus = 2;
+                _subOrderDal.UpdateRange(subOrders);
+            }
+
+            if (!string.IsNullOrWhiteSpace(orderFromDb.Email))
+                _mailService.OrderShippedToCustomer(orderFromDb.Email,orderFromDb.OrderCode ?? "");
+
+            return new SuccessResult();
         }
     }
 }

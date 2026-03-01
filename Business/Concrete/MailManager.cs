@@ -1,4 +1,4 @@
-﻿using Business.Abstract;
+using Business.Abstract;
 using Business.Constans.Html.Mail;
 using Core.Entities.Concrete;
 using Core.Utilities.Helpers.MailHelper;
@@ -54,16 +54,15 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
-        public IResult CreateOrder()
+        public IResult CreateOrder(string orderCode, string recipientEmail)
         {
             MailDto mailDto = new MailDto();
-            mailDto.MailTitle = "PofuMacrame: Siparişiniz Başarıyla Alınmıştır";
-            mailDto.MailBody = MailHtml.CreateOrder();
+            mailDto.Email = recipientEmail;
+            mailDto.MailTitle = "Siparişiniz Başarıyla Alınmıştır";
+            mailDto.MailBody = MailHtml.CreateOrder(orderCode);
             var sendMailResult = VariableSendMail(mailDto);
             if (sendMailResult.Success)
-            {
                 return new SuccessResult();
-            }
             return new ErrorResult();
         }
 
@@ -80,11 +79,11 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
-        public IResult CancelOrder(string firstName, string lastName, int orderId)
+        public IResult CancelOrder(string firstName, string lastName, string orderCode)
         {
             MailDto mailDto = new MailDto();
             mailDto.MailTitle = "Sipar İptali";
-            mailDto.MailBody = MailHtml.CancelOrder(firstName, lastName, ClaimHelper.GetUserEmail(_httpContextAccessor.HttpContext), orderId);
+            mailDto.MailBody = MailHtml.CancelOrder(firstName, lastName, ClaimHelper.GetUserEmail(_httpContextAccessor.HttpContext), orderCode);
             var sendMailResult = ConstantSendMail(mailDto);
             if (sendMailResult.Success)
             {
@@ -106,16 +105,30 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
-        public IResult OrderShipped(string cargoCompany, string code)
+        public IResult OrderShipped(string orderCode)
         {
             MailDto mailDto = new MailDto();
             mailDto.MailTitle = "Siparişiniz Kargoya Verildi";
-            mailDto.MailBody = MailHtml.OrderShipped(cargoCompany, code);
+            mailDto.MailBody = MailHtml.OrderShipped(orderCode);
             var sendMailResult = VariableSendMail(mailDto);
             if (sendMailResult.Success)
             {
                 return new SuccessResult();
             }
+            return new ErrorResult();
+        }
+
+        public IResult OrderShippedToCustomer(string recipientEmail, string orderCode)
+        {
+            if (string.IsNullOrWhiteSpace(recipientEmail))
+                return new ErrorResult("Alıcı e-posta adresi bulunamadı.");
+            MailDto mailDto = new MailDto();
+            mailDto.Email = recipientEmail;
+            mailDto.MailTitle = "Siparişiniz Kargoya Verildi";
+            mailDto.MailBody = MailHtml.OrderShipped(orderCode);
+            var sendMailResult = VariableSendMail(mailDto);
+            if (sendMailResult.Success)
+                return new SuccessResult();
             return new ErrorResult();
         }
 
@@ -173,7 +186,7 @@ namespace Business.Concrete
         public IResult ForgotPasswordCode(string email, string code)
         {
             MailDto mailDto = new MailDto();
-            mailDto.MailTitle = "PofuMacrame Şifre sıfırlama kodunuz";
+            mailDto.MailTitle = "Şifre sıfırlama kodunuz";
             mailDto.MailBody = MailHtml.ForgotPasswordCode(code);
             mailDto.Email = email;
             VariableSendMail(mailDto);
@@ -182,7 +195,7 @@ namespace Business.Concrete
         public IResult SendPaswordResetLink(string email, string link)
         {
             MailDto mailDto = new MailDto();
-            mailDto.MailTitle = "PofuMacrame Şifre Sıfırlama Linki";
+            mailDto.MailTitle = "Şifre Sıfırlama Linki";
             mailDto.MailBody = MailHtml.ResetPasswordLink(link);
             mailDto.Email = email;
             VariableSendMail(mailDto);

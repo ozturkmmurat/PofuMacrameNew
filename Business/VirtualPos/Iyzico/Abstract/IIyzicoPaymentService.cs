@@ -19,8 +19,6 @@ namespace Business.VirtualPos.Iyzico.Abstract
         IDataResult<Iyzipay.Options> GetOptions();
         IDataResult<CreateCheckoutFormInitializeRequest> MappingBuyer(UserDto userDto, TsaPaymentParameter tsaPaymentParameter, CreateCheckoutFormInitializeRequest request);
         IDataResult<CreateCheckoutFormInitializeRequest> MappingAddress(UserDto userDto, CreateCheckoutFormInitializeRequest request);
-        IResult Test();
-        IResult Test2(string x, string y);
         IDataResult<Object> TsaPayment(TsaPaymentParameter tsaPaymentParameter);
         IDataResult<CheckoutForm> PaymentResult(PaymentResultPostParameter paymentResultPostParameter);
         IDataResult<Refund> RefundProduct(ReturningProduct returningProduct);

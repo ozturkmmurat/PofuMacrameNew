@@ -102,6 +102,8 @@ namespace DataAccess.Concrete.EntityFramework
                                  OrderDate = o.OrderDate,
                                  TotalPrice = o.TotalPrice,
                                  OrderStatus = o.OrderStatus,
+                                 RequestedDeliveryStart = o.RequestedDeliveryStart,
+                                 RequestedDeliveryEnd = o.RequestedDeliveryEnd,
                                  SelectSubOrderDtos = (from so in context.SubOrders
                                                        join pv in context.ProductVariants
                                                        on so.VariantId equals pv.Id

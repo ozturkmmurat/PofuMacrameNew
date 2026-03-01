@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -26,6 +26,17 @@ namespace Core.Utilities.User
         public static int GetUserId(HttpContext httpContext)
         {
             return int.Parse(httpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+        }
+
+        /// <summary>
+        /// Giriş yapmamış (misafir) kullanıcı için 0 döner; hata fırlatmaz.
+        /// </summary>
+        public static int TryGetUserId(HttpContext httpContext)
+        {
+            if (httpContext?.User?.Identity?.IsAuthenticated != true)
+                return 0;
+            var value = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(value, out var id) ? id : 0;
         }
 
         public static int GetCustomerId(HttpContext httpContext)

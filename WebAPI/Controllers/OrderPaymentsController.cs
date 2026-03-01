@@ -21,28 +21,6 @@ namespace WebAPI.Controllers
             _iyzicoPaymentService = iyzicoPaymentService;
         }
 
-        [HttpPost("Test")]
-        public IActionResult Test()
-        {
-            var result = _iyzicoPaymentService.Test();
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-        }
-
-        [HttpPost("Test2")]
-        public IActionResult Test2()
-        {
-            var result = _iyzicoPaymentService.Test2("","");
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-        }
-
         [HttpPost("PaymentResult")]
         public IActionResult PaymentResult(PaymentResultPostParameter paymentResultPostParameter)
         {

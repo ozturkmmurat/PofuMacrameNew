@@ -1,4 +1,4 @@
-﻿using Core.Utilities.Result.Abstract;
+using Core.Utilities.Result.Abstract;
 using Entities.Dtos.Mail;
 using System;
 using System.Collections.Generic;
@@ -13,10 +13,11 @@ namespace Business.Abstract
         IResult Register(string firstName, string lastName, string email);
         IResult ForgotPasswordCode(string email, string code);
         IResult SendPaswordResetLink(string email, string link);
-        IResult CreateOrder();
-        IResult CancelOrder(string firstName, string lastName, int orderId);
+        IResult CreateOrder(string orderCode, string recipientEmail);
+        IResult CancelOrder(string firstName, string lastName, string orderCode);
         IResult RefundingProduct(string firstName, string lastName, int variantId);
-        IResult OrderShipped(string cargoCompany, string code);
+        IResult OrderShipped(string orderCode);
+        IResult OrderShippedToCustomer(string? recipientEmail, string orderCode);
         IResult AdminCancelOrder();
         IResult AdminRefundingProduct();
     }

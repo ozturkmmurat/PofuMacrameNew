@@ -1,4 +1,4 @@
-﻿using Core.Entities;
+using Core.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -22,6 +22,16 @@ namespace Entities.Concrete
         public string PaymentToken { get; set; }
         public string Address { get; set; }
         public string Description { get; set; }
+        public DateTime RequestedDeliveryStart { get; set; }
+        public DateTime RequestedDeliveryEnd { get; set; }
+        public string FullName { get; set; }
+        public string Email { get; set; }
+        public string Phone { get; set; }
+        public string RecipientPhone { get; set; }
+        /// <summary>
+        /// Ödeme callback güvenliği için tek kullanımlık token (GUID). Callback URL'de kullanılır.
+        /// </summary>
+        public string Guid { get; set; }
         public Order()
         {
             OrderDate = DateTime.Now;

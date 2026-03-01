@@ -33,8 +33,9 @@ namespace Business.Constans
         public static string UnSuccessProductStockCheck = "Sepetteki ürünlerin stoğunu kontrol ediniz.";
         public static string UnSuccessProductStockPrice = "Sepetteki ürünlerin fiyatı eşleşmiyor.";
         public static string failCheckOrder = "Böyle bir siparişiniz bulunmamaktadır.";
-        public static string failCancelOrderDate = "Ürün iadesini sipariş ile aynı gün içerisinde verebilirsiniz";
+        public static string failCancelOrderDate = "Ürün iades süresi dolmuş bulunmaktadır.";
         public static string checkSubOrder = "Sipar içerisinde ürün bulunamadı.";
+        public static string PaymentUserData = "Kullanıcı Bilgileri eksik veya hatalı.";
         public static string PaymentMappingBuyerFail = "Adres işlenirken sorun oluştu";
         public static string PasswordResetCode = "Şifre sıfırlama kodu email adresinize gönderilmiştir";
         public static string FailedPasswordResetCode = "Şifre sıfırlama kodu yanlış.";
