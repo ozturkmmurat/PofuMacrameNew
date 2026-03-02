@@ -65,21 +65,10 @@ namespace WebAPI.Controllers
         }
 
 
-        [HttpGet("GetUserOrderDtoDetail")]
-        public IActionResult GetUserOrderDtoDetail(int orderId)
+        [HttpPost("GetUserOrderDtoDetail")]
+        public IActionResult GetUserOrderDtoDetail(Order order)
         {
-            var result = _orderService.GetUserOrderDtoDetail(orderId);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-        }
-
-        [HttpGet("OrderCode")]
-        public IActionResult OrderCode(string orderCode)
-        {
-            var result = _orderService.OrderCode(orderCode);
+            var result = _orderService.GetUserOrderDtoDetail(order);
             if (result.Success)
             {
                 return Ok(result);

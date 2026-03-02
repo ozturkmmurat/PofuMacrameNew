@@ -3,6 +3,8 @@ using Business.Abstract.ProductVariants;
 using Business.BusinessAspects.Autofac;
 using Business.Utilities;
 using Core.Aspects.Autofac.Transaction;
+using Core.Entities.Concrete;
+using Core.Extensions;
 using Core.Utilities.IoC;
 using Core.Utilities.Result.Abstract;
 using Core.Utilities.Result.Concrete;
@@ -17,7 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Core.Extensions;
 
 namespace Business.Concrete
 {
@@ -113,21 +114,32 @@ namespace Business.Concrete
             return new ErrorDataResult<List<SelectUserOrderDto>>();
         }
 
-        [SecuredOperation("user,admin")]
-        public IDataResult<SelectUserOrderDto> GetUserOrderDtoDetail(int orderId)
+        public IDataResult<SelectUserOrderDto> GetUserOrderDtoDetail(Order order)
         {
             var roleClaims = _httpContextAccessor.HttpContext.User.ClaimRoles();
             var result = (SelectUserOrderDto)null;
+
             if (roleClaims.Contains("admin"))
             {
-                var order = _orderDal.Get(x => x.Id == orderId);
+                var getOrder = _orderDal.Get(x => x.Guid == order.Guid);
                 var userId = order?.UserId ?? 0;
-                result = _orderDal.GetUserOrder(userId, orderId);
+                result = _orderDal.GetUserOrder(getOrder.Guid);
             }
-            else
+            else if(roleClaims.Contains("user") && order.Id > 0)
             {
-                result = _orderDal.GetUserOrder(ClaimHelper.GetUserId(_httpContextAccessor.HttpContext), orderId);
+                var getOrder = _orderDal.Get(x => x.Guid == order.Guid);
+                result = _orderDal.GetUserOrder(getOrder.Guid);
             }
+            else if(!string.IsNullOrWhiteSpace(order.OrderCode) && !string.IsNullOrWhiteSpace(order.Email))
+            {
+                var orderTrackingResult = GetOrderTracking(order);
+
+                if (orderTrackingResult.Success == false)
+                    return new ErrorDataResult<SelectUserOrderDto>();
+
+                result =_orderDal.GetUserOrder(orderTrackingResult.Data.Guid);
+            }
+
             if (result != null)
             {
                 for (int i = 0; i < result.SelectSubOrderDtos.Count(); i++)
@@ -187,15 +199,6 @@ namespace Business.Concrete
             return new ErrorDataResult<Order>();
         }
 
-        public IDataResult<Order> OrderCode(string orderCode)
-        {
-            var result = _orderDal.Get(x => x.OrderCode == orderCode);
-            if (result != null)
-            {
-                return new SuccessDataResult<Order>(result);
-            }
-            return new ErrorDataResult<Order>();
-        }
         [TransactionScopeAspect]
         public IResult TsaAdd(OrderDto orderDto)
         {
@@ -285,6 +288,14 @@ namespace Business.Concrete
                 _mailService.OrderShippedToCustomer(orderFromDb.Email,orderFromDb.OrderCode ?? "");
 
             return new SuccessResult();
+        }
+        private IDataResult<Order> GetOrderTracking(Order order)
+        {
+            var result = _orderDal.GetAsNoTracking(x => x.OrderCode == order.OrderCode && x.Email == order.Email);
+            if (result != null)
+                return new SuccessDataResult<Order>(result);
+
+            return new ErrorDataResult<Order>();
         }
     }
 }

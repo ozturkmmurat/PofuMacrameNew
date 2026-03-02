@@ -8,6 +8,7 @@ namespace Entities.Dtos.Order.Select
 {
     public class SelectUserOrderDto : IDto
     {
+        public string Guid { get; set; }
         public int OrderId { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }

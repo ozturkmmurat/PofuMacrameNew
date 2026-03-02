@@ -95,7 +95,8 @@ namespace Business.Concrete
                 getByIdUser.Email = userForUpdateDto.Email;
                 getByIdUser.FirstName = userForUpdateDto.FirstName;
                 getByIdUser.LastName = userForUpdateDto.LastName;
-                getByIdUser.Status = userForUpdateDto.Status;
+                getByIdUser.PhoneNumber = userForUpdateDto.PhoneNumber;
+                getByIdUser.Status = true;
 
                 _userDal.Update(getByIdUser);
             }

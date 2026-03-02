@@ -19,10 +19,10 @@ namespace DataAccess.Concrete.EntityFramework
         {
             _context = context;
         }
-        public bool CheckSubOrder(int orderId, int subOrderId, int userId)
+        public bool CheckSubOrder(string orderGuid, int subOrderId, int userId)
         {
             var result = from so in _context.SubOrders.Where(x => x.Id == subOrderId)
-                         join o in _context.Orders.Where(x => x.Id == orderId && x.UserId == userId)
+                         join o in _context.Orders.Where(x => x.Guid == orderGuid && x.UserId == userId)
                          on so.OrderId equals o.Id
                          select new { so, o };
 
@@ -51,6 +51,7 @@ namespace DataAccess.Concrete.EntityFramework
                          from pi in piGroup.DefaultIfEmpty()
                          select new SelectOrderedProducts
                          {
+                             OrderGuid = o.Guid,
                              OrderId = o.Id,
                              OrderDate = o.OrderDate,
                              OrderCode = o.OrderCode,

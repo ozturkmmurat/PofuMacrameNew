@@ -24,10 +24,13 @@ namespace Entities.Concrete
         public string Description { get; set; }
         public DateTime RequestedDeliveryStart { get; set; }
         public DateTime RequestedDeliveryEnd { get; set; }
-        public string FullName { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
         public string Email { get; set; }
         public string Phone { get; set; }
         public string RecipientPhone { get; set; }
+        public string City { get; set; }
+        public string PostCode { get; set; }
         /// <summary>
         /// Ödeme callback güvenliği için tek kullanımlık token (GUID). Callback URL'de kullanılır.
         /// </summary>

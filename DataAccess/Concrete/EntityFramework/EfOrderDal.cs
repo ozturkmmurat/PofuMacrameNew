@@ -25,6 +25,7 @@ namespace DataAccess.Concrete.EntityFramework
             var result = from o in _context.Orders.Where(x => x.UserId == userId)
                          select new SelectUserOrderDto
                          {
+                             Guid = o.Guid,
                              OrderId = o.Id,
                              OrderDate = o.OrderDate,
                              TotalPrice = o.TotalPrice,
@@ -85,19 +86,18 @@ namespace DataAccess.Concrete.EntityFramework
             }
         }
 
-        public SelectUserOrderDto GetUserOrder(int userId, int orderId)
+        public SelectUserOrderDto GetUserOrder(string guid)
         {
             using (PofuMacrameContext context = new PofuMacrameContext())
             {
-                var result = from o in context.Orders.Where(x => x.UserId == userId && x.Id == orderId)
-                             join u in context.Users.Where(x => x.Id == userId)
-                             on o.UserId equals u.Id
+                var result = from o in context.Orders.Where(x => x.Guid == guid)
                              select new SelectUserOrderDto
                              {
+                                 Guid = o.Guid,
                                  OrderId = o.Id,
-                                 FirstName = u.FirstName,
-                                 LastName = u.LastName,
-                                 PhoneNumber = u.PhoneNumber,
+                                 FirstName = o.FirstName,
+                                 LastName = o.LastName,
+                                 PhoneNumber = o.Phone,
                                  Address = o.Address,
                                  OrderDate = o.OrderDate,
                                  TotalPrice = o.TotalPrice,

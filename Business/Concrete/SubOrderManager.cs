@@ -45,9 +45,9 @@ namespace Business.Concrete
             return new ErrorResult();
         }
 
-        public bool CheckSubOrder(int orderId, int subOrderId, int userId)
+        public bool CheckSubOrder(string orderGuid, int subOrderId, int userId)
         {
-            return _subOrderDal.CheckSubOrder(orderId, subOrderId, userId);
+            return _subOrderDal.CheckSubOrder(orderGuid, subOrderId, userId);
         }
 
         public IResult Delete(SubOrder subOrder)

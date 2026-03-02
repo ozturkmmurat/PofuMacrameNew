@@ -21,7 +21,8 @@ namespace Entities.EntityParameter.Iyzico
         /// <summary>
         /// Misafir sipariş için: Ad Soyad, Email, Telefon, Alıcı Telefonu ve adres bilgileri.
         /// </summary>
-        public string FullName { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
         public string Email { get; set; }
         public string Phone { get; set; }
         public string RecipientPhone { get; set; }

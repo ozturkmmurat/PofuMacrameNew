@@ -6,6 +6,7 @@ namespace Entities.LibraryEntities.Iyzico
 {
     public class ReturningProduct
     {
+        public string OrderGuid { get; set; }
         public int SubOrderId { get; set; }
         public int OrderId { get; set; }
         public string Description { get; set; }

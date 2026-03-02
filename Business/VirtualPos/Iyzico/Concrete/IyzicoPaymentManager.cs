@@ -57,29 +57,29 @@ namespace Business.VirtualPos.Iyzico.Concrete
             _mailService = mailService;
         }
 
-        [SecuredOperation("user,admin")]
+
         public IDataResult<Cancel> CancelOrder(CancelOrder cancelOrder)
         {
+            if (cancelOrder == null || string.IsNullOrWhiteSpace(cancelOrder.Guid?.Trim()))
+                return new ErrorDataResult<Cancel>();
 
-            var roleClaims = _httpContextAccessor.HttpContext.User.ClaimRoles();
-            var orderResult = (Order)null;
-            if (roleClaims.Contains("user"))
+            var roleClaims = _httpContextAccessor.HttpContext?.User?.ClaimRoles() ?? new List<string>();
+            var getOrder = _orderService.GetByGuid(cancelOrder.Guid.Trim());
+            if (getOrder == null || !getOrder.Success || getOrder.Data == null)
+                return new ErrorDataResult<Cancel>();
+
+            var orderResult = getOrder.Data;
+
+            if (orderResult.UserId != 0)
             {
-                var getOrder = _orderService.GetByOrderIdUserId(cancelOrder.OrderId, ClaimHelper.GetUserId(_httpContextAccessor.HttpContext));
-                if (!getOrder.Success)
-                {
+                var currentUserId = ClaimHelper.TryGetUserId(_httpContextAccessor.HttpContext);
+                var isAdmin = roleClaims.Contains("admin");
+                if (!isAdmin && currentUserId != orderResult.UserId)
                     return new ErrorDataResult<Cancel>();
-                }
-                orderResult = getOrder.Data;
-
-            }
-            else if (roleClaims.Contains("admin"))
-            {
-                orderResult = _orderService.GetById(cancelOrder.OrderId).Data;
-
             }
 
-            var subOrders = _subOrderService.GetAllByOrderId(cancelOrder.OrderId);
+            cancelOrder.OrderId = orderResult.Id;
+            var subOrders = _subOrderService.GetAllByOrderId(orderResult.Id);
             if (orderResult != null & orderResult.OrderDate.Date > DateTime.Now.AddDays(-14))
             {
                 if (subOrders.Data == null || subOrders.Data.Count <= 0)
@@ -201,9 +201,8 @@ namespace Business.VirtualPos.Iyzico.Concrete
             if (param == null) return;
             Buyer buyer = new Buyer();
             buyer.Id = "0";
-            var nameParts = (param.FullName ?? "").Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
-            buyer.Name = nameParts.Length > 0 ? nameParts[0] : param.FullName ?? "";
-            buyer.Surname = nameParts.Length > 1 ? nameParts[1] : "";
+            buyer.Name = param.FirstName ?? "";
+            buyer.Surname = param.LastName ?? "";
             buyer.GsmNumber = "+90" + (param.Phone ?? "").TrimStart('0');
             buyer.Email = param.Email ?? "";
             buyer.IdentityNumber = !string.IsNullOrEmpty(param.TcNo) && param.TcNo.Length == 11 ? param.TcNo : "11111111111";
@@ -220,7 +219,7 @@ namespace Business.VirtualPos.Iyzico.Concrete
         private void MappingAddressForGuest(TsaPaymentParameter param, CreateCheckoutFormInitializeRequest request)
         {
             if (param == null) return;
-            var contactName = (param.FullName ?? "").Trim();
+            var contactName = (param.FirstName + " " + param.LastName ?? "").Trim();
             var city = param.City ?? "Istanbul";
             var desc = param.Address ?? "";
             var zip = param.PostCode ?? "";
@@ -302,58 +301,83 @@ namespace Business.VirtualPos.Iyzico.Concrete
             return new SuccessDataResult<CheckoutForm>(data: checkoutForm);
         }
 
-        [SecuredOperation("user,admin")]
         public IDataResult<Refund> RefundProduct(ReturningProduct returningProduct)
         {
-            if (returningProduct.SubOrderId  > 0)
+            if (returningProduct == null || returningProduct.SubOrderId <= 0)
+                return new ErrorDataResult<Refund>();
+
+            if (string.IsNullOrWhiteSpace(returningProduct.OrderGuid))
+                return new ErrorDataResult<Refund>();
+
+            var roleClaims = _httpContextAccessor.HttpContext?.User?.ClaimRoles() ?? new List<string>();
+
+            if (roleClaims.Contains("user"))
             {
-                var roleClaims = _httpContextAccessor.HttpContext.User.ClaimRoles();
-                if (roleClaims.Contains("user"))
-                {
-                    if (!_subOrderService.CheckSubOrder(returningProduct.OrderId, returningProduct.SubOrderId, ClaimHelper.GetUserId(_httpContextAccessor.HttpContext)))
-                    {
-                        return new ErrorDataResult<Refund>();
-                    }
-                }
-
-                var subOrderResult = _subOrderService.GetById(returningProduct.SubOrderId);
-                CreateRefundRequest request = new CreateRefundRequest();
-
-                var sharedJsonResult = ShredJsonData(returningProduct).Data;
-                request.Locale = Locale.TR.ToString();
-                request.PaymentTransactionId = sharedJsonResult.PaymentTransactionId;
-                request.Price = sharedJsonResult.PaidPrice;
-                request.Currency = Currency.TRY.ToString();
-
-                Refund refund = Refund.Create(request, GetOptions().Data);
-
-                if (refund.Status == "success")
-                {
-                    subOrderResult.Data.Id = subOrderResult.Data.Id;
-                    subOrderResult.Data.OrderId = subOrderResult.Data.OrderId;
-                    subOrderResult.Data.VariantId = subOrderResult.Data.VariantId;
-                    subOrderResult.Data.Price = subOrderResult.Data.Price;
-                    subOrderResult.Data.ReturnResultJson = JsonSerializer.Serialize(refund);
-                    subOrderResult.Data.SubOrderStatus = 5; // Urun iade edildi ise => 5 
-                    _subOrderService.Update(subOrderResult.Data);
-                }
-                else
-                {
-                    return new ErrorDataResult<Refund>(message: refund.ErrorMessage);
-                }
-
-                if (roleClaims.Contains("user"))
-                {
-                    _mailService.RefundingProduct(ClaimHelper.GetUserName(_httpContextAccessor.HttpContext), ClaimHelper.GetUserLastName(_httpContextAccessor.HttpContext), subOrderResult.Data.Id);
-                }
-                else if (roleClaims.Contains("admin"))
-                {
-                    _mailService.AdminRefundingProduct();
-                }
-
-                return new SuccessDataResult<Refund>(refund);
+                if (!_subOrderService.CheckSubOrder(returningProduct.OrderGuid, returningProduct.SubOrderId, ClaimHelper.GetUserId(_httpContextAccessor.HttpContext)))
+                    return new ErrorDataResult<Refund>();
             }
-            return new ErrorDataResult<Refund>();
+            else if (!roleClaims.Contains("admin"))
+            {
+                var orderByGuid = _orderService.GetByGuid(returningProduct.OrderGuid.Trim());
+                if (orderByGuid == null || !orderByGuid.Success || orderByGuid.Data == null)
+                    return new ErrorDataResult<Refund>();
+                if (orderByGuid.Data.UserId != 0)
+                    return new ErrorDataResult<Refund>();
+
+                var subOrderCheck = _subOrderService.GetById(returningProduct.SubOrderId);
+                if (subOrderCheck == null || !subOrderCheck.Success || subOrderCheck.Data == null)
+                    return new ErrorDataResult<Refund>();
+                if (subOrderCheck.Data.OrderId != orderByGuid.Data.Id)
+                    return new ErrorDataResult<Refund>();
+
+                returningProduct.OrderId = orderByGuid.Data.Id;
+            }
+
+            var subOrderResult = _subOrderService.GetById(returningProduct.SubOrderId);
+            if (subOrderResult == null || !subOrderResult.Success || subOrderResult.Data == null)
+                return new ErrorDataResult<Refund>();
+
+            if (returningProduct.OrderId <= 0)
+            {
+                var orderForSub = _orderService.GetByGuid(returningProduct.OrderGuid.Trim());
+                if (orderForSub?.Success == true && orderForSub.Data != null && orderForSub.Data.Id == subOrderResult.Data.OrderId)
+                    returningProduct.OrderId = orderForSub.Data.Id;
+                else
+                    return new ErrorDataResult<Refund>();
+            }
+
+            var sharedJsonResult = ShredJsonData(returningProduct);
+            if (sharedJsonResult == null || !sharedJsonResult.Success || sharedJsonResult.Data == null)
+                return new ErrorDataResult<Refund>();
+
+            CreateRefundRequest request = new CreateRefundRequest();
+            request.Locale = Locale.TR.ToString();
+            request.PaymentTransactionId = sharedJsonResult.Data.PaymentTransactionId;
+            request.Price = sharedJsonResult.Data.PaidPrice;
+            request.Currency = Currency.TRY.ToString();
+
+            var options = GetOptions()?.Data;
+            if (options == null)
+                return new ErrorDataResult<Refund>();
+            Refund refund = Refund.Create(request, options);
+            if (refund == null)
+                return new ErrorDataResult<Refund>();
+
+            if (refund.Status != "success")
+                return new ErrorDataResult<Refund>(message: refund.ErrorMessage);
+
+            subOrderResult.Data.ReturnResultJson = JsonSerializer.Serialize(refund);
+            subOrderResult.Data.SubOrderStatus = 5;
+            var updateResult = _subOrderService.Update(subOrderResult.Data);
+            if (updateResult == null || !updateResult.Success)
+                return new ErrorDataResult<Refund>();
+
+            if (roleClaims.Contains("user"))
+                _mailService.RefundingProduct(ClaimHelper.GetUserName(_httpContextAccessor.HttpContext), ClaimHelper.GetUserLastName(_httpContextAccessor.HttpContext), subOrderResult.Data.Id);
+            else if (roleClaims.Contains("admin"))
+                _mailService.AdminRefundingProduct();
+
+            return new SuccessDataResult<Refund>(refund);
         }
 
         public IDataResult<ReturningProduct> ShredJsonData(ReturningProduct returningProduct)
@@ -408,7 +432,8 @@ namespace Business.VirtualPos.Iyzico.Concrete
             }
             else if (userId == 0)
             {
-                if (string.IsNullOrWhiteSpace(tsaPaymentParameter.FullName?.Trim()) ||
+                if (string.IsNullOrWhiteSpace(tsaPaymentParameter.FirstName) ||
+                    string.IsNullOrWhiteSpace(tsaPaymentParameter.LastName) ||
                     string.IsNullOrWhiteSpace(tsaPaymentParameter.Email?.Trim()) ||
                     string.IsNullOrWhiteSpace(tsaPaymentParameter.Phone?.Trim()))
                     return new ErrorDataResult<Object>(Messages.PaymentUserData);
@@ -472,13 +497,16 @@ namespace Business.VirtualPos.Iyzico.Concrete
             order.OrderCode = CreateCodeTime.GenerateOrderCode();
             order.Guid = System.Guid.NewGuid().ToString("N");
             order.UserId = userId > 0 ? userDto.UserId : 0;
-            order.FullName = userId > 0 ? $"{userDto.FirstName} {userDto.LastName}".Trim() : (tsaPaymentParameter.FullName ?? "").Trim();
+            order.FirstName = userId > 0 ? $"{userDto.FirstName ?? ""}" : (tsaPaymentParameter.FirstName ?? "").Trim();
+            order.LastName = userId > 0 ? $"{userDto.LastName ?? ""}" : (tsaPaymentParameter.LastName ?? "").Trim();
             order.Email = userId > 0 ? (userDto.Email ?? "") : (tsaPaymentParameter.Email ?? "").Trim();
             order.Phone = userId > 0 ? (userDto.PhoneNumber ?? "") : (tsaPaymentParameter.Phone ?? "").Trim();
-            order.RecipientPhone = userId > 0 ? (userDto.PhoneNumber ?? "") : (tsaPaymentParameter.RecipientPhone ?? tsaPaymentParameter.Phone ?? "").Trim();
+            order.RecipientPhone = tsaPaymentParameter.RecipientPhone;
             order.ProductPriceFactorId = tsaPaymentParameter.ProductPriceFactorId;
             order.OrderStatus = 0;
             order.Description = tsaPaymentParameter.OrderDescription;
+            order.City = userId > 0 ? (userDto.UserCity ?? "") : (tsaPaymentParameter.City ?? "").Trim();
+            order.PostCode = userId > 0 ? (userDto.PostCode ?? "") : (tsaPaymentParameter.PostCode ?? "").Trim();
             order.Address = userId > 0
                 ? $"Adres Başlığı : {userDto.AddressTitle} Şehir : {userDto.UserCity}  Posta Kodu : {userDto.PostCode} Adres: {userDto.Address} Telefon Numarası: {userDto.PhoneNumber}"
                 : $"Şehir: {tsaPaymentParameter.City ?? ""} Posta Kodu: {tsaPaymentParameter.PostCode ?? ""} Adres: {tsaPaymentParameter.Address ?? ""} Telefon: {order.Phone} Alıcı Telefon : {order.RecipientPhone}";

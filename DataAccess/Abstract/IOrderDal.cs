@@ -14,7 +14,7 @@ namespace DataAccess.Abstract
     {
         List<SelectUserOrderDto> GetAllUserOrder(int userId);
         List<SelectUserOrderDto> GetAllUserOrderAdmin();
-        SelectUserOrderDto GetUserOrder(int userId, int orderId);
+        SelectUserOrderDto GetUserOrder(string guid);
 
     }
 }

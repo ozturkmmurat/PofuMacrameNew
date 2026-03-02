@@ -26,6 +26,6 @@ namespace Business.Abstract
         IResult Delete(SubOrder subOrder);
 
         //Variable
-        bool CheckSubOrder(int orderId, int subOrderId, int userId);
+        bool CheckSubOrder(string orderGuid, int subOrderId, int userId);
     }
 }

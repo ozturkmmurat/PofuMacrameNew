@@ -13,11 +13,9 @@ namespace Business.Abstract
         IDataResult<List<Order>> GetAll();
         IDataResult<List<Order>> GetAllByUserId(int userId);
         IDataResult<List<SelectUserOrderDto>> GetAllUserOrderDto(); //Kullaniciin kendi siparislerini gormesi icin
-        IDataResult<SelectUserOrderDto> GetUserOrderDtoDetail(int orderId);
+        IDataResult<SelectUserOrderDto> GetUserOrderDtoDetail(Order order);
         IDataResult<Order> GetById(int id);
-        IDataResult<Order> GetByOrderIdUserId(int orderId, int userId);
         IDataResult<Order> GetByGuid(string guid);
-        IDataResult<Order> OrderCode(string orderCode);
         IDataResult<string> CreateOrderCode(Order order);
         IDataResult<Order> MappingOrder(OrderDto orderDto);
         IResult Add(Order order);

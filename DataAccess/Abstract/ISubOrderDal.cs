@@ -11,6 +11,6 @@ namespace DataAccess.Abstract
     public interface ISubOrderDal : IEntityRepository<SubOrder>
     {
         List<SelectOrderedProducts> GetAllOrderedProduct();
-        bool CheckSubOrder(int orderId, int subOrderId, int userId);
+        bool CheckSubOrder(string orderGuid, int subOrderId, int userId);
     }
 }

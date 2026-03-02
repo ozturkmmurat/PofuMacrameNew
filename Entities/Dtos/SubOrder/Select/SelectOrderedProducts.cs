@@ -6,6 +6,7 @@ namespace Entities.Dtos.SubOrder.Select
 {
     public class SelectOrderedProducts
     {
+        public string OrderGuid { get; set; }
         public int OrderId { get; set; }
         public int VariantId { get; set; }
         public int ParentId { get; set; }

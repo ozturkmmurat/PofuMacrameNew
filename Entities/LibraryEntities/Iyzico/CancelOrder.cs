@@ -6,6 +6,7 @@ namespace Entities.LibraryEntities.Iyzico
 {
     public class CancelOrder
     {
+        public string Guid { get; set; }
         public int OrderId { get; set; }
         public string PaymentId { get; set; }
         public string Description { get; set; }
